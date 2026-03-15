@@ -11,6 +11,7 @@ export default function Usuarios() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [form, setForm] = useState({
     nome: "",
     email: "",
@@ -44,6 +45,19 @@ export default function Usuarios() {
       dataNascimento: toInputDate(new Date("1990-01-01")),
     });
     setErro("");
+    setUsuarioEditando(null);
+    setModalAberto(true);
+  };
+
+  const abrirEditar = (usuario) => {
+    setForm({
+      nome: usuario.nome,
+      email: usuario.email,
+      senha: "",
+      dataNascimento: toInputDate(usuario.dataNascimento),
+    });
+    setErro("");
+    setUsuarioEditando(usuario.idUsuario);
     setModalAberto(true);
   };
 
@@ -52,7 +66,11 @@ export default function Usuarios() {
     setErro("");
     setSalvando(true);
     try {
-      await usuarioApi.create(form);
+      if (usuarioEditando) {
+        await usuarioApi.update(usuarioEditando, form);
+      } else {
+        await usuarioApi.create(form);
+      }
       setModalAberto(false);
       carregar(lista.page - 1);
     } catch (e) {
@@ -90,7 +108,8 @@ export default function Usuarios() {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Nome</th>
@@ -114,7 +133,14 @@ export default function Usuarios() {
                   <td className="px-6 py-4 font-bold">{u.nome}</td>
                   <td className="px-6 py-4 text-sm">{u.email}</td>
                   <td className="px-6 py-4 text-sm">{u.dataNascimento ? toInputDate(u.dataNascimento) : "—"}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => abrirEditar(u)}
+                      className="text-primary hover:underline text-sm"
+                    >
+                      Editar
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(u.idUsuario)}
@@ -128,7 +154,8 @@ export default function Usuarios() {
             )}
           </tbody>
         </table>
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      </div>
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <span className="text-sm text-slate-500">Total: {lista.totalElements ?? 0} usuários</span>
           <div className="flex gap-2">
             <button
@@ -154,7 +181,7 @@ export default function Usuarios() {
       {modalAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">Novo usuário</h3>
+            <h3 className="text-xl font-bold mb-4">{usuarioEditando ? "Editar usuário" : "Novo usuário"}</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
@@ -184,7 +211,8 @@ export default function Usuarios() {
                   value={form.senha}
                   onChange={(e) => setForm((f) => ({ ...f, senha: e.target.value }))}
                   className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary"
-                  required
+                  required={!usuarioEditando}
+                  placeholder={usuarioEditando ? "Deixe em branco para manter" : ""}
                 />
               </div>
               <div>

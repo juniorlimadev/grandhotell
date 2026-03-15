@@ -24,7 +24,7 @@ public class Reserva {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario", referencedColumnName = "id_usuario")
+    @JoinColumn(name = "id_usuario", referencedColumnName = "\"id_usuário\"")
     private Usuario usuario;
 
     @JsonIgnore

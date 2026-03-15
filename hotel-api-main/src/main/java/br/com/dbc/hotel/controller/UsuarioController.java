@@ -53,9 +53,9 @@ public class UsuarioController {
 
     @PutMapping("/{idUsuario}")
     public ResponseEntity<Map<String, Object>> atualizarUsuario(@PathVariable Integer idUsuario, @RequestBody @Valid UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
-        log.info("Criando novo Usuario");
+        log.info("Atualizando Usuario");
         UsuarioDTO entity = usuarioService.update(idUsuario, usuarioCreateDTO);
-        log.info("Usuario criado com sucesso");
+        log.info("Usuario atualizado com sucesso");
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Usuario atualizado com sucesso.", entity, "Usuario"));
     }
 

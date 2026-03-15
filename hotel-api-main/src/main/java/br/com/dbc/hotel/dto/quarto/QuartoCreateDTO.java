@@ -25,4 +25,8 @@ public class QuartoCreateDTO {
     @NotNull(message = "Ala não pode ser nulo")
     @Pattern(regexp = "ALTA|MEDIA|BAIXA", message = "Ala inválida: Deve ser ALTA, MEDIA ou BAIXA")
     private String alaHotel;
+
+    @Schema(example = "250.0")
+    @NotNull(message = "O valor da diária não pode ser nulo")
+    private Double valorDiaria;
 }

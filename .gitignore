@@ -4,6 +4,8 @@
 .vscode
 *.swp
 *.log
+*.txt
+*.tmp
 
 # Backend (Spring Boot)
 **/target/
@@ -13,6 +15,13 @@
 **/*.jar
 **/*.war
 **/application-cloud.properties
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
 
 # Frontend (Node/React)
 **/node_modules/

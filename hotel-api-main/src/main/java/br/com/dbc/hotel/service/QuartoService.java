@@ -60,6 +60,7 @@ public class QuartoService {
         Quarto quarto = findById(id);
         quarto.setNome(quartoCreateDTO.getNome());
         quarto.setAlaHotel(AlaHotel.fromString(quartoCreateDTO.getAlaHotel()));
+        quarto.setValorDiaria(quartoCreateDTO.getValorDiaria());
 
         quarto = quartoRepository.save(quarto);
         return objectMapper.convertValue(quarto, QuartoDTO.class);

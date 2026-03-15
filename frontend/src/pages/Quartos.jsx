@@ -8,7 +8,7 @@ export default function Quartos() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
-  const [form, setForm] = useState({ nome: "", alaHotel: "MEDIA" });
+  const [form, setForm] = useState({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const navigate = useNavigate();
@@ -23,7 +23,11 @@ export default function Quartos() {
       if (isEdicao && id) {
         const { data } = await quartoApi.getById(id);
         const q = data.Quarto || data;
-        setForm({ nome: q.nome || "", alaHotel: q.alaHotel || "MEDIA" });
+        setForm({ 
+          nome: q.nome || "", 
+          alaHotel: q.alaHotel || "MEDIA",
+          valorDiaria: q.valorDiaria || "" 
+        });
       }
     } catch (e) {
       setErro(e.response?.data?.message || "Erro ao carregar quartos.");
@@ -37,14 +41,18 @@ export default function Quartos() {
       setModalAberto(true);
       quartoApi.getById(id).then(({ data }) => {
         const q = data.Quarto || data;
-        setForm({ nome: q.nome || "", alaHotel: q.alaHotel || "MEDIA" });
+        setForm({ 
+          nome: q.nome || "", 
+          alaHotel: q.alaHotel || "MEDIA",
+          valorDiaria: q.valorDiaria || ""
+        });
       }).catch(() => setErro("Quarto não encontrado."));
     }
     carregar(isEdicao ? undefined : 0);
   }, [id, isEdicao]);
 
   const abrirNovo = () => {
-    setForm({ nome: "", alaHotel: "MEDIA" });
+    setForm({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
     setErro("");
     setModalAberto(true);
     navigate("/quartos/novo", { replace: true });
@@ -103,11 +111,13 @@ export default function Quartos() {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Quarto</th>
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ala</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Valor Diária</th>
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ações</th>
             </tr>
           </thead>
@@ -125,6 +135,9 @@ export default function Quartos() {
                 <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 font-bold">{q.nome}</td>
                   <td className="px-6 py-4 text-sm">{q.alaHotel || "—"}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
+                    {q.valorDiaria ? q.valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "—"}
+                  </td>
                   <td className="px-6 py-4 flex gap-2">
                     <Link
                       to={`/quartos/${q.idQuarto}`}
@@ -145,7 +158,8 @@ export default function Quartos() {
             )}
           </tbody>
         </table>
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      </div>
+      <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <span className="text-sm text-slate-500">
             Total: {lista.totalElements ?? 0} quartos
           </span>
@@ -197,6 +211,18 @@ export default function Quartos() {
                     <option key={a} value={a}>{a}</option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor da Diária (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.valorDiaria}
+                  onChange={(e) => setForm((f) => ({ ...f, valorDiaria: e.target.value }))}
+                  className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary"
+                  required
+                  placeholder="0.00"
+                />
               </div>
               {erro && <p className="text-sm text-red-500">{erro}</p>}
               <div className="flex gap-2 justify-end">

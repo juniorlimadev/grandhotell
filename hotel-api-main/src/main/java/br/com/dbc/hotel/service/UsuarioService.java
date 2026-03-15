@@ -55,14 +55,10 @@ public class UsuarioService {
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
 
         Cargo user = cargoService.findByName("USER");
-
-        Set<Cargo> cargos = usuario.getCargos();
-        if (cargos == null) {
-            cargos = new HashSet<>();
-            usuario.setCargos(cargos);
-        } else {
-            cargos.add(user);
+        if (usuario.getCargos() == null) {
+            usuario.setCargos(new HashSet<>());
         }
+        usuario.getCargos().add(user);
 
         Usuario save = usuarioRepository.save(usuario);
         UsuarioDTO usuarioDTO = objectMapper.convertValue(save, UsuarioDTO.class);
@@ -90,15 +86,10 @@ public class UsuarioService {
         }
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
         Cargo user = cargoService.findByName("USER");
-        Set<Cargo> cargos = usuario.getCargos();
-        if (cargos == null) {
-            cargos = new HashSet<>();
-            usuario.setCargos(cargos);
-        } else {
-            cargos.add(user);
+        if (usuario.getCargos() == null) {
+            usuario.setCargos(new HashSet<>());
         }
-
-        cargos.add(user);
+        usuario.getCargos().add(user);
         usuario.setNome(usuarioCreateDTO.getNome());
 
         Usuario save = usuarioRepository.save(usuario);

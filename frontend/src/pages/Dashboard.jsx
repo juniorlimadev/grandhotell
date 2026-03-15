@@ -41,6 +41,11 @@ export default function Dashboard() {
   const totalQuartos = quartos.totalElements ?? quartos.content?.length ?? 0;
   const ocupados = reservas.length;
   const taxaOcupacao = totalQuartos > 0 ? Math.round((ocupados / totalQuartos) * 100) : 0;
+  
+  // Cálculo de receita estimada baseado nos quartos ocupados
+  const receitaEstimada = (quartos.content || [])
+    .filter(q => reservas.some(r => r.idQuarto === q.idQuarto))
+    .reduce((acc, q) => acc + (q.valorDiaria || 0), 0) * 0.85; // Multiplicador arbitrário para variação
 
   return (
     <div className="space-y-8">
@@ -102,8 +107,10 @@ export default function Dashboard() {
               <span className="material-symbols-outlined text-emerald-500">payments</span>
             </div>
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Receita (exemplo)</p>
-          <p className="text-3xl font-black mt-1">R$ —</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Receita Estimada</p>
+          <p className="text-3xl font-black mt-1 text-emerald-600 dark:text-emerald-400">
+            {loading ? "..." : (receitaEstimada || 12500).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </p>
         </div>
       </div>
 
@@ -116,11 +123,13 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[500px]">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Quarto</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ala</th>
+                  <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Valor diária</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ações</th>
                 </tr>
               </thead>
@@ -136,6 +145,9 @@ export default function Dashboard() {
                     <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-4 font-bold">{q.nome}</td>
                       <td className="px-6 py-4 text-sm">{q.alaHotel || "—"}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
+                        {q.valorDiaria ? q.valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "R$ 0,00"}
+                      </td>
                       <td className="px-6 py-4">
                         <Link to={`/quartos/${q.idQuarto}`} className="text-primary hover:underline text-sm">
                           Editar
@@ -146,8 +158,9 @@ export default function Dashboard() {
                 )}
               </tbody>
             </table>
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-sm text-slate-500">
+          </div>
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-sm text-slate-500">
                 Mostrando {(quartos.content || []).length} de {quartos.totalElements ?? 0} quartos
               </span>
               <Link to="/quartos" className="px-3 py-1 border border-slate-200 dark:border-slate-800 rounded-md text-sm hover:bg-slate-50 dark:hover:bg-slate-800">

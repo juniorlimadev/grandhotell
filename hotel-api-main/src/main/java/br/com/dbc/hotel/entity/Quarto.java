@@ -26,4 +26,7 @@ public class Quarto {
     @Enumerated(EnumType.STRING)
     @Column(name = "ala")
     private AlaHotel alaHotel;
+
+    @Column(name = "valor_diaria")
+    private Double valorDiaria;
 }
