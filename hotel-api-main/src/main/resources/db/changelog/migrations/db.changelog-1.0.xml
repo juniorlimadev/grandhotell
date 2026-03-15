@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet id="1" author="caio.vasconcellos">
+        <sql dbms="postgresql">
+            CREATE TABLE usuario (
+                                     id_usuario numeric NOT NULL,
+                                     nome text NOT NULL,
+                                     email text NOT NULL UNIQUE,
+                                     senha text NOT NULL,
+                                     data_nascimento timestamptz NOT NULL,
+                                     CONSTRAINT pk_usuario PRIMARY KEY (id_usuario)
+            );
+
+            CREATE TABLE quarto (
+                                    id_quarto numeric NOT NULL,
+                                    nome text NOT NULL,
+                                    ala text NOT NULL,
+                                    CONSTRAINT pk_quarto PRIMARY KEY (id_quarto)
+            );
+
+            CREATE TABLE reserva (
+                                     id_reserva numeric NOT NULL,
+                                     id_usuario numeric NOT NULL,
+                                     id_quarto numeric,
+                                     dt_inicio timestamptz NOT NULL,
+                                     dt_fim timestamptz NOT NULL,
+                                     status text NOT NULL,
+                                     CONSTRAINT pk_reserva PRIMARY KEY (id_reserva),
+                                     CONSTRAINT fk_reserva_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+                                     CONSTRAINT fk_reserva_quarto FOREIGN KEY (id_quarto) REFERENCES quarto(id_quarto)
+            );
+
+            CREATE SEQUENCE seq_usuario START 1 NO CYCLE;
+
+            CREATE SEQUENCE seq_quarto START 1 NO CYCLE;
+
+            CREATE SEQUENCE seq_reserva START 1 NO CYCLE;
+
+        </sql>
+    </changeSet>
+</databaseChangeLog>

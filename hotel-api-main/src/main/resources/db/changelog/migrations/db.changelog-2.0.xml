@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet id="1" author="caio.vasconcellos">
+        <sql dbms="postgresql">
+            CREATE TABLE cargo (
+                                   id_cargo numeric NOT NULL,
+                                   titulo text NOT NULL,
+                                   CONSTRAINT pk_cargo PRIMARY KEY (id_cargo)
+            );
+
+            CREATE TABLE usuario_cargo (
+                                           id_usuario numeric NOT NULL,
+                                           id_cargo numeric NOT NULL,
+                                           CONSTRAINT pk_usuario_cargo PRIMARY KEY (id_usuario, id_cargo),
+                                           CONSTRAINT fk_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
+                                           CONSTRAINT fk_cargo FOREIGN KEY (id_cargo) REFERENCES cargo (id_cargo)
+            );
+
+            CREATE SEQUENCE seq_cargo START 1 NO CYCLE;
+
+
+
+        </sql>
+    </changeSet>
+</databaseChangeLog>

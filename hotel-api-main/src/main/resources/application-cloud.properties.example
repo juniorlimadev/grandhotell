@@ -1,0 +1,18 @@
+# Copie este arquivo para application-cloud.properties e preencha com os dados do seu banco na nuvem.
+# Exemplos: Neon (neon.tech), Supabase, ElephantSQL, Railway, etc.
+
+spring.application.name=API-HOTEL
+spring.datasource.url=jdbc:postgresql://SEU_HOST:5432/SEU_BANCO?sslmode=require
+spring.datasource.username=SEU_USUARIO
+spring.datasource.password=SUA_SENHA
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=none
+spring.liquibase.change-log=classpath:/db/changelog/db.changelog-master.xml
+
+server.error.include-message=always
+server.error.include-binding-errors=always
+
+jwt.secret=teste123
+jwt.expiration=86400000

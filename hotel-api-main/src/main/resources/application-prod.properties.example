@@ -1,0 +1,11 @@
+# Perfil de produção: use variáveis de ambiente para credenciais.
+# Defina no ambiente (Render, Railway, etc.):
+#   SPRING_DATASOURCE_URL, SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD
+#   JWT_SECRET, JWT_EXPIRATION (opcional)
+# Ou renomeie este arquivo para application-prod.properties e preencha (não commite senhas).
+
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD}
+jwt.secret=${JWT_SECRET}
+jwt.expiration=${JWT_EXPIRATION:86400000}
