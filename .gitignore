@@ -9,9 +9,6 @@
 
 # Backend (Spring Boot)
 **/target/
-**/.mvn/
-**/mvnw
-**/mvnw.cmd
 **/*.jar
 **/*.war
 **/application-cloud.properties
