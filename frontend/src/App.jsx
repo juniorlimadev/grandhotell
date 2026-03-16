@@ -6,7 +6,6 @@ import Dashboard from "./pages/Dashboard";
 import Quartos from "./pages/Quartos";
 import Reservas from "./pages/Reservas";
 import Usuarios from "./pages/Usuarios";
-import Usuarios from "./pages/Usuarios";
 import Notificacoes from "./pages/Notificacoes";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
