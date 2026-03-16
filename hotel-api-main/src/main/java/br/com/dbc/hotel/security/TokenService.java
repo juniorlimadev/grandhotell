@@ -52,31 +52,36 @@ public class TokenService {
 
     public UsernamePasswordAuthenticationToken isValid(String token) throws RegraDeNegocioException {
         try {
-        if (token == null || token.trim().isEmpty()) {
-            throw new RegraDeNegocioException("Token invalido! Um token valido deve ser fornecido.", HttpStatus.BAD_REQUEST);
-        }
-        if (token != null) {
+            if (token == null || token.trim().isEmpty()) {
+                throw new RegraDeNegocioException("Token invalido! Um token valido deve ser fornecido.", HttpStatus.BAD_REQUEST);
+            }
+
             Claims body = Jwts.parser()
                     .setSigningKey(secret)
                     .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
                     .getBody();
-            String user = body.get("id", Object.class).toString();
-            if (user != null) {
-                List<String> cargos = body.get(CARGOS_CLAIM, List.class);
-                List<SimpleGrantedAuthority> authorities = cargos.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .toList();
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =
-                        new UsernamePasswordAuthenticationToken(user, null, authorities);
-                return usernamePasswordAuthenticationToken;
+
+            Object idObj = body.get("id");
+            if (idObj == null) {
+                return null;
             }
-        }
-        return null;
+
+            String user = idObj.toString();
+            List<String> cargos = (List<String>) body.get(CARGOS_CLAIM);
+            if (cargos == null) {
+                cargos = List.of();
+            }
+
+            List<SimpleGrantedAuthority> authorities = cargos.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList();
+
+            return new UsernamePasswordAuthenticationToken(user, null, authorities);
+
         } catch (ExpiredJwtException e) {
             throw new AuthenticationCredentialsNotFoundException("Token expirado");
         } catch (MalformedJwtException | SignatureException | IllegalArgumentException e) {
             throw new AuthenticationCredentialsNotFoundException("Token inválido");
         }
-
     }
 }

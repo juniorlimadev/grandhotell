@@ -39,12 +39,13 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/usuario").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/quarto/**").hasAnyRole("USER", "ADMIN")
-                .antMatchers("/quarto/**").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/reserva/**").hasAnyRole("USER", "ADMIN")
-                .antMatchers(HttpMethod.POST, "/reserva/**").hasAnyRole("USER", "ADMIN")
-                .antMatchers(HttpMethod.PUT, "/reserva/**").hasAnyRole("USER", "ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/reserva/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/quarto/**").hasAnyRole("USER", "ADMIN", "GESTAO_QUARTOS")
+                .antMatchers("/quarto/**").hasAnyRole("ADMIN", "GESTAO_QUARTOS")
+                .antMatchers(HttpMethod.GET, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
+                .antMatchers(HttpMethod.POST, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
+                .antMatchers(HttpMethod.PUT, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
+                .antMatchers(HttpMethod.DELETE, "/reserva/**").hasAnyRole("ADMIN", "GESTAO_RESERVAS")
+
                 .anyRequest().authenticated()
         );
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService, objectMapper), UsernamePasswordAuthenticationFilter.class);

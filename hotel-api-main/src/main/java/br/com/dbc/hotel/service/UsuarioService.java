@@ -86,17 +86,28 @@ public class UsuarioService {
         }
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
         usuario.setFotoUrl(usuarioCreateDTO.getFotoUrl());
-        Cargo user = cargoService.findByName("USER");
-        if (usuario.getCargos() == null) {
+        if (usuarioCreateDTO.getCargos() != null && !usuarioCreateDTO.getCargos().isEmpty()) {
             usuario.setCargos(new HashSet<>());
+            for (String cargoNome : usuarioCreateDTO.getCargos()) {
+                usuario.getCargos().add(cargoService.findByName(cargoNome));
+            }
+        } else if (usuario.getCargos() == null || usuario.getCargos().isEmpty()) {
+            usuario.setCargos(new HashSet<>());
+            usuario.getCargos().add(cargoService.findByName("USER"));
         }
-        usuario.getCargos().add(user);
         usuario.setNome(usuarioCreateDTO.getNome());
 
         Usuario save = usuarioRepository.save(usuario);
         UsuarioDTO usuarioDTO = objectMapper.convertValue(save, UsuarioDTO.class);
+        
+        Set<String> cargosNomes = save.getCargos().stream()
+                .map(Cargo::getAuthority)
+                .collect(Collectors.toSet());
+        usuarioDTO.setCargos(cargosNomes);
+        
         atualizarUsuarioColunasExternas(usuario, usuarioDTO);
         return usuarioDTO;
+
     }
 
     public void delete(Integer id) throws RegraDeNegocioException {
