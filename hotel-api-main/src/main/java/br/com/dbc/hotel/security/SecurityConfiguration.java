@@ -78,6 +78,6 @@ public class SecurityConfiguration {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return org.springframework.security.crypto.password.NoOpPasswordEncoder.getInstance();
+        return new Pbkdf2PasswordEncoder();
     }
 }

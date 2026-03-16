@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
@@ -15,6 +15,12 @@ export default function Layout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Iniciais do nome para o Avatar
+  const getInitials = (name) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   const handleLogout = () => {
     logout();
@@ -66,9 +72,9 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 p-2">
-            <div className="size-8 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xs">person</span>
+          <div className="flex items-center gap-3 p-2 group">
+            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm">
+              {getInitials(user?.nome)}
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-xs font-medium truncate">{user?.nome || "Usuário"}</p>
@@ -162,7 +168,13 @@ export default function Layout() {
                 </button>
                 {showSettings && (
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-2">
-                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
+                    <button 
+                      onClick={() => {
+                        setShowSettings(false);
+                        navigate("/usuarios");
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                    >
                       <span className="material-symbols-outlined text-lg">account_circle</span>
                       <span>Minha Conta</span>
                     </button>

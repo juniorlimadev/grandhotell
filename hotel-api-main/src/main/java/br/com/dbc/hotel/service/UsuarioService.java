@@ -15,7 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.password.Pbkdf2PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
@@ -28,6 +28,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final CargoService cargoService;
     private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public CustomPageDTO<UsuarioDTO> findAll(int page, int size, String sortField) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortField));
@@ -50,8 +51,7 @@ public class UsuarioService {
         }
         String emailLower = usuario.getEmail().trim().toLowerCase();
         usuario.setEmail(emailLower);
-        Pbkdf2PasswordEncoder encoder = new Pbkdf2PasswordEncoder();
-        usuario.setSenha(encoder.encode(usuarioCreateDTO.getSenha()));
+        usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
 
         Cargo user = cargoService.findByName("USER");
@@ -81,8 +81,7 @@ public class UsuarioService {
         usuario.setEmail(emailLower);
 
         if (usuarioCreateDTO.getSenha() != null && !usuarioCreateDTO.getSenha().isEmpty()) {
-            Pbkdf2PasswordEncoder encoder = new Pbkdf2PasswordEncoder();
-            usuario.setSenha(encoder.encode(usuarioCreateDTO.getSenha()));
+            usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
         }
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
         Cargo user = cargoService.findByName("USER");

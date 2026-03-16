@@ -13,6 +13,24 @@ function toInputDate(d) {
   }
 }
 
+function formatDate(d) {
+  if (!d) return "";
+  try {
+    if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
+      const [day, month, year] = d.split("-");
+      return `${day}/${month}/${year}`;
+    }
+    const date = typeof d === "string" ? (d.includes(" ") ? new Date(d.split(" ")[0]) : new Date(d)) : d;
+    if (isNaN(date.getTime())) return "—";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "—";
+  }
+}
+
 export default function Usuarios() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
@@ -141,7 +159,7 @@ export default function Usuarios() {
                 <tr key={u.idUsuario} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 font-bold">{u.nome}</td>
                   <td className="px-6 py-4 text-sm">{u.email}</td>
-                  <td className="px-6 py-4 text-sm">{u.dataNascimento ? toInputDate(u.dataNascimento) : "—"}</td>
+                  <td className="px-6 py-4 text-sm">{formatDate(u.dataNascimento)}</td>
                   <td className="px-6 py-4 flex gap-2">
                     <button
                       type="button"
