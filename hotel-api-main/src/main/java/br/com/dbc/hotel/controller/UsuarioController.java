@@ -1,12 +1,14 @@
 package br.com.dbc.hotel.controller;
 
 import br.com.dbc.hotel.dto.usuario.UsuarioCreateDTO;
+import br.com.dbc.hotel.dto.usuario.UsuarioSenhaUpdateDTO;
 import br.com.dbc.hotel.dto.usuario.UsuarioDTO;
 import br.com.dbc.hotel.dto.custompage.CustomPageDTO;
 import br.com.dbc.hotel.entity.Usuario;
 import br.com.dbc.hotel.exceptions.NotFoundException;
 import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +61,15 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Usuario atualizado com sucesso.", entity, "Usuario"));
     }
 
+    @PutMapping("/mudar-senha/{idUsuario}")
+    @Operation(summary = "Mudar senha do usuário", description = "Recebe senha antiga e nova para atualizar")
+    public ResponseEntity<Map<String, Object>> mudarSenha(@PathVariable Integer idUsuario, @RequestBody @Valid UsuarioSenhaUpdateDTO usuarioSenhaUpdateDTO) throws RegraDeNegocioException, NotFoundException {
+        log.info("Mudando senha para Usuario ID {}", idUsuario);
+        usuarioService.updatePassword(idUsuario, usuarioSenhaUpdateDTO.getSenhaAntiga(), usuarioSenhaUpdateDTO.getNovaSenha());
+        log.info("Senha mudada com sucesso");
+        return ResponseEntity.ok(messageResponse("Senha atualizada com sucesso."));
+    }
+
     @DeleteMapping("/{idUsuario}")
     public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer idUsuario) throws RegraDeNegocioException {
         log.info("Deletando Usuario com ID {}", idUsuario);
@@ -67,3 +78,4 @@ public class UsuarioController {
         return ResponseEntity.ok(messageResponse("Usuario deletado com sucesso."));
     }
 }
+

@@ -53,6 +53,9 @@ export default function Reservas() {
   const [salvando, setSalvando] = useState(false);
   const [dtInicio, setDtInicio] = useState(toInputDate(new Date()));
   const [dtFim, setDtFim] = useState(toInputDate(new Date(Date.now() + 30 * 24 * 3600 * 1000)));
+  const [busca, setBusca] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc"); // desc, asc
+  const [sortField, setSortField] = useState("id"); // id, nome, data
 
   const carregarReservas = async () => {
     try {
@@ -62,6 +65,31 @@ export default function Reservas() {
       setReservas([]);
     }
   };
+
+  const reservasFiltradas = reservas
+    .filter((r) => {
+      const termo = busca.toLowerCase();
+      const nomeHospede = (r.hospedeNome || "").toLowerCase();
+      const nomeUsuario = (r.usuario?.nome || "").toLowerCase();
+      const id = String(r.idReserva);
+      return nomeHospede.includes(termo) || nomeUsuario.includes(termo) || id.includes(termo);
+    })
+    .sort((a, b) => {
+      if (sortField === "id") {
+        return sortOrder === "asc" ? a.idReserva - b.idReserva : b.idReserva - a.idReserva;
+      }
+      if (sortField === "nome") {
+        const nomeA = (a.hospedeNome || a.usuario?.nome || "").toLowerCase();
+        const nomeB = (b.hospedeNome || b.usuario?.nome || "").toLowerCase();
+        return sortOrder === "asc" ? nomeA.localeCompare(nomeB) : nomeB.localeCompare(nomeA);
+      }
+      if (sortField === "data") {
+        const dataA = new Date(a.dtInicio);
+        const dataB = new Date(b.dtInicio);
+        return sortOrder === "asc" ? dataA - dataB : dataB - dataA;
+      }
+      return 0;
+    });
 
   useEffect(() => {
     let cancelled = false;
@@ -194,18 +222,52 @@ export default function Reservas() {
               type="date"
               value={dtInicio}
               onChange={(e) => setDtInicio(e.target.value)}
-              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium"
+              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary"
             />
             <span className="text-slate-400 text-xs font-bold uppercase">até</span>
             <input
               type="date"
               value={dtFim}
               onChange={(e) => setDtFim(e.target.value)}
-              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium"
+              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-medium focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>
+
+        <div className="h-8 w-px bg-slate-100 dark:bg-slate-800 mx-2 hidden lg:block"></div>
+
+        <div className="flex-1 min-w-[200px] relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+          <input 
+            type="text"
+            placeholder="Buscar por hóspede ou #id..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-slate-400">sort</span>
+          <select 
+            value={`${sortField}-${sortOrder}`}
+            onChange={(e) => {
+              const [field, order] = e.target.value.split("-");
+              setSortField(field);
+              setSortOrder(order);
+            }}
+            className="bg-transparent border-none text-xs font-bold uppercase tracking-wider focus:ring-0 cursor-pointer"
+          >
+            <option value="id-desc">Últimas (ID ↓)</option>
+            <option value="id-asc">Primeiras (ID ↑)</option>
+            <option value="nome-asc">Hóspede (A-Z)</option>
+            <option value="nome-desc">Hóspede (Z-A)</option>
+            <option value="data-desc">Mais Recentes</option>
+            <option value="data-asc">Mais Antigas</option>
+          </select>
+        </div>
       </div>
+
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
@@ -229,12 +291,13 @@ export default function Reservas() {
                   </div>
                 </td>
               </tr>
-            ) : reservas.length === 0 ? (
+            ) : reservasFiltradas.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic text-sm">Nenhuma reserva encontrada neste período.</td>
               </tr>
             ) : (
-              reservas.map((r) => (
+              reservasFiltradas.map((r) => (
+
                 <tr key={r.idReserva} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
                     <span className="font-black text-slate-300 group-hover:text-primary transition-colors">#{r.idReserva}</span>

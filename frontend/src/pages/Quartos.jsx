@@ -12,6 +12,9 @@ export default function Quartos() {
   const [form, setForm] = useState({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
+  const [busca, setBusca] = useState("");
+  const [sortField, setSortField] = useState("nome");
+  const [sortDir, setSortDir] = useState("ASC");
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdicao = !!id && id !== "novo";
@@ -19,7 +22,7 @@ export default function Quartos() {
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
-      const res = await quartoApi.list(page, 10);
+      const res = await quartoApi.list(page, 10, sortField, sortDir);
       setLista(res.data);
       if (isEdicao && id) {
         const { data } = await quartoApi.getById(id);
@@ -36,6 +39,15 @@ export default function Quartos() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    carregar(0);
+  }, [sortField, sortDir]);
+
+  const quartosFiltrados = (lista.content || []).filter(q => 
+    q.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+    q.alaHotel?.toLowerCase().includes(busca.toLowerCase())
+  );
 
   useEffect(() => {
     if (isEdicao && id) {
@@ -107,12 +119,45 @@ export default function Quartos() {
         <button
           type="button"
           onClick={abrirNovo}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 rounded-lg text-sm font-bold hover:brightness-95"
+          className="flex items-center gap-2 px-6 py-3 bg-primary text-slate-900 rounded-xl text-sm font-bold hover:brightness-95 shadow-lg shadow-primary/20 transition-all active:scale-95"
         >
           <span className="material-symbols-outlined text-lg">add</span>
           Adicionar Quarto
         </button>
       </div>
+
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex flex-wrap gap-6 items-center shadow-sm">
+        <div className="flex-1 min-w-[250px] relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+          <input 
+            type="text"
+            placeholder="Pesquisar por nome ou ala..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-slate-400">sort</span>
+          <select 
+            value={`${sortField}-${sortDir}`}
+            onChange={(e) => {
+              const [field, dir] = e.target.value.split("-");
+              setSortField(field);
+              setSortDir(dir);
+            }}
+            className="bg-transparent border-none text-xs font-bold uppercase tracking-wider focus:ring-0 cursor-pointer"
+          >
+            <option value="idQuarto-DESC">Últimos Criados</option>
+            <option value="nome-ASC">Nome (A-Z)</option>
+            <option value="nome-DESC">Nome (Z-A)</option>
+            <option value="valorDiaria-ASC">Menor Preço</option>
+            <option value="valorDiaria-DESC">Maior Preço</option>
+          </select>
+        </div>
+      </div>
+
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
@@ -130,12 +175,13 @@ export default function Quartos() {
               <tr>
                 <td colSpan={3} className="px-6 py-8 text-center text-slate-500">Carregando...</td>
               </tr>
-            ) : (lista.content || []).length === 0 ? (
+            ) : quartosFiltrados.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">Nenhum quarto cadastrado.</td>
+                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">Nenhum quarto encontrado.</td>
               </tr>
             ) : (
-              (lista.content || []).map((q) => (
+              quartosFiltrados.map((q) => (
+
                 <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 font-bold">{q.nome}</td>
                   <td className="px-6 py-4 text-sm">{q.alaHotel || "—"}</td>

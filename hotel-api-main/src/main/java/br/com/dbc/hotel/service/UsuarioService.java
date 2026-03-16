@@ -108,6 +108,17 @@ public class UsuarioService {
 
 
 
+    public void updatePassword(Integer id, String senhaAntiga, String novaSenha) throws RegraDeNegocioException, NotFoundException {
+        Usuario usuario = findById(id);
+
+        if (!passwordEncoder.matches(senhaAntiga, usuario.getSenha())) {
+            throw new RegraDeNegocioException("Senha antiga incorreta.", HttpStatus.BAD_REQUEST);
+        }
+
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuarioRepository.save(usuario);
+    }
+
     public void atualizarUsuarioColunasExternas(Usuario usuario, UsuarioDTO usuarioDTO) throws RegraDeNegocioException {
         if(usuario.getCargos() != null){
             usuarioDTO.setCargos(
@@ -139,3 +150,4 @@ public class UsuarioService {
     }
 
 }
+

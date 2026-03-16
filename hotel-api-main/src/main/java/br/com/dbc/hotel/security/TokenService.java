@@ -41,7 +41,8 @@ public class TokenService {
                         .setIssuer("hotel-api")
                         .setSubject(usuario.getEmail())
                         .claim("nome", usuario.getNome())
-                        .claim(Claims.ID, usuario.getIdUsuario().toString())
+                        .claim("id", usuario.getIdUsuario())
+                        .claim("fotoUrl", usuario.getFotoUrl())
                         .claim(CARGOS_CLAIM, cargos)
                         .setIssuedAt(now)
                         .setExpiration(exp)
@@ -59,7 +60,7 @@ public class TokenService {
                     .setSigningKey(secret)
                     .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
                     .getBody();
-            String user = body.get(Claims.ID, String.class);
+            String user = body.get("id", Object.class).toString();
             if (user != null) {
                 List<String> cargos = body.get(CARGOS_CLAIM, List.class);
                 List<SimpleGrantedAuthority> authorities = cargos.stream()

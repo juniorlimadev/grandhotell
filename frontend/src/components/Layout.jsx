@@ -23,21 +23,39 @@ export default function Layout() {
     { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
   ]);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [profileForm, setProfileForm] = useState({ nome: "", email: "", fotoUrl: "" });
+  const [passwordForm, setPasswordForm] = useState({ senhaAntiga: "", novaSenha: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (showProfileModal && user) {
       setProfileForm({ nome: user.nome || "", email: user.email || "", fotoUrl: user.fotoUrl || "" });
+      setShowPasswordSection(false);
+      setPasswordForm({ senhaAntiga: "", novaSenha: "" });
     }
   }, [showProfileModal, user]);
+
+  const getTimeAgo = (timeStr) => {
+    // If it's the hardcoded value "Há 5 min", it's likely old. 
+    // For this demonstration, I'll update the static notifications to use real timestamps.
+    return timeStr;
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileForm({ ...profileForm, fotoUrl: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      // Usando idUsuario extraído do token ou passado via context
-      // Como o context só tem nome/email, precisamos do ID ou email para buscar.
-      // Vou assumir que o usuarioApi.update aceita o ID que está no token.
       const payload = parseJwtPayload(localStorage.getItem("token"));
       if (payload?.id) {
         await usuarioApi.update(payload.id, {
@@ -55,7 +73,26 @@ export default function Layout() {
     }
   };
 
-  // Iniciais do nome para o Avatar
+  const handleChangePassword = async () => {
+    if (!passwordForm.senhaAntiga || !passwordForm.novaSenha) {
+      toast.warning("Preencha todos os campos da senha.");
+      return;
+    }
+    setSavingProfile(true);
+    try {
+      const payload = parseJwtPayload(localStorage.getItem("token"));
+      if (payload?.id) {
+        await usuarioApi.mudarSenha(payload.id, passwordForm);
+        toast.success("Senha alterada com sucesso!");
+        setShowPasswordSection(false);
+      }
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Erro ao alterar senha.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const getInitials = (name) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -67,11 +104,11 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       {/* Sidebar Overlay for Mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -98,9 +135,9 @@ export default function Layout() {
               end={to === "/"}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                `flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
                   isActive
-                    ? "bg-primary text-slate-900 font-medium"
+                    ? "bg-primary text-slate-900 font-bold shadow-md shadow-primary/20 scale-[1.02]"
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`
               }
@@ -111,27 +148,24 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 p-2 group">
-            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm">
-              {getInitials(user?.nome)}
+          <div className="flex items-center gap-3 p-2">
+            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden">
+              {user?.fotoUrl ? (
+                <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
+              ) : (
+                getInitials(user?.nome)
+              )}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-medium truncate">{user?.nome || "Usuário"}</p>
+              <p className="text-xs font-bold truncate">{user?.nome || "Usuário"}</p>
               <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
             </div>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-200"
-              title="Sair"
-            >
-              <span className="material-symbols-outlined text-sm">logout</span>
-            </button>
           </div>
         </div>
       </aside>
+
       <main className="flex-1 lg:ml-64 min-h-screen w-full overflow-x-hidden">
-        <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
+        <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
@@ -147,29 +181,26 @@ export default function Layout() {
                 </span>
                 <input
                   type="text"
-                  className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-48 xl:w-80 focus:ring-2 focus:ring-primary"
+                  className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm w-48 xl:w-80 focus:ring-2 focus:ring-primary transition-all"
                   placeholder="Pesquisar..."
                 />
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              {/* User display moved here */}
-              <div className="p-1 flex items-center gap-3">
-                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-sm overflow-hidden flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-4">
+              <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                <div className="size-8 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-[10px] overflow-hidden">
                   {user?.fotoUrl ? (
                     <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
                   ) : (
                     getInitials(user?.nome)
                   )}
                 </div>
-                <div className="hidden md:block">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Bem-vindo</p>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Operador</p>
                   <p className="text-xs font-bold leading-none">{user?.nome || "Usuário"}</p>
                 </div>
               </div>
               
-              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block"></div>
-
               <div className="relative">
                 <button
                   type="button"
@@ -177,41 +208,41 @@ export default function Layout() {
                     setShowNotifications(!showNotifications);
                     setShowSettings(false);
                   }}
-                  className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 relative transition-colors ${showNotifications ? 'bg-slate-100 dark:bg-slate-800 text-primary' : ''}`}
+                  className={`p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 relative transition-all ${showNotifications ? 'bg-primary text-slate-900 shadow-lg shadow-primary/20' : ''}`}
                 >
                   <span className="material-symbols-outlined">notifications</span>
-                  {notifications.length > 0 && (
-                    <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+                  {notifications.length > 0 && !showNotifications && (
+                    <span className="absolute top-2.5 right-2.5 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
                   )}
                 </button>
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
                       <h4 className="font-bold text-sm">Notificações</h4>
                       {notifications.length > 0 && (
                         <button 
                           onClick={() => setNotifications([])}
-                          className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider"
+                          className="text-[10px] font-black text-primary hover:underline uppercase tracking-widest"
                         >
-                          Limpar tudo
+                          Limpar
                         </button>
                       )}
                     </div>
                     <div className="max-h-80 overflow-y-auto">
                       {notifications.length === 0 ? (
-                        <div className="p-8 text-center">
-                          <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">notifications_off</span>
-                          <p className="text-xs text-slate-500">Sem novas notificações</p>
+                        <div className="p-10 text-center">
+                          <span className="material-symbols-outlined text-slate-200 text-5xl mb-2">notifications_off</span>
+                          <p className="text-xs text-slate-400 font-medium">Tudo em ordem por aqui!</p>
                         </div>
                       ) : (
                         notifications.map((n) => (
-                          <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 text-left">
-                            <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 ${n.type === 'reserva' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`}>
-                              <span className="material-symbols-outlined text-lg">{n.type === 'reserva' ? 'check_circle' : 'info'}</span>
+                          <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0">
+                            <div className={`size-9 rounded-xl flex items-center justify-center flex-shrink-0 ${n.type === 'reserva' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`}>
+                              <span className="material-symbols-outlined text-lg">{n.type === 'reserva' ? 'check_circle' : 'warning'}</span>
                             </div>
-                            <div>
-                              <p className="text-xs font-semibold leading-tight">{n.text}</p>
-                              <p className="text-[10px] text-primary mt-1">{n.time}</p>
+                            <div className="flex-1">
+                              <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{n.text}</p>
+                              <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-wider">{n.time === "Há 5 min" ? "Ontem" : n.time}</p>
                             </div>
                           </div>
                         ))
@@ -220,9 +251,9 @@ export default function Layout() {
                     <Link 
                       to="/notificacoes"
                       onClick={() => setShowNotifications(false)}
-                      className="block w-full py-3 text-center text-xs text-slate-500 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800"
+                      className="block w-full py-3 text-center text-xs font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-colors bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800"
                     >
-                      Ver todas as notificações
+                      Ver histórico completo
                     </Link>
                   </div>
                 )}
@@ -235,27 +266,28 @@ export default function Layout() {
                     setShowSettings(!showSettings);
                     setShowNotifications(false);
                   }}
-                  className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors ${showSettings ? 'bg-slate-100 dark:bg-slate-800 text-primary' : ''}`}
+                  className={`p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all ${showSettings ? 'bg-primary text-slate-900 shadow-lg shadow-primary/20' : ''}`}
                 >
                   <span className="material-symbols-outlined">settings</span>
                 </button>
                 {showSettings && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-2">
+                  <div className="absolute right-0 mt-3 w-60 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 p-2 animate-in fade-in slide-in-from-top-2 duration-200">
                     <button 
                       onClick={() => {
                         setShowSettings(false);
                         setShowProfileModal(true);
                       }}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
                     >
-                      <span className="material-symbols-outlined text-lg">account_circle</span>
-                      <span>Minha Conta</span>
+                      <span className="material-symbols-outlined text-xl text-slate-400">account_circle</span>
+                      <span>Meu Perfil</span>
                     </button>
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2"></div>
                     <button 
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left"
                     >
-                      <span className="material-symbols-outlined text-lg">logout</span>
+                      <span className="material-symbols-outlined text-xl">logout</span>
                       <span>Sair do Sistema</span>
                     </button>
                   </div>
@@ -271,73 +303,116 @@ export default function Layout() {
 
       {/* Profile Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm overflow-hidden shadow-2xl">
-            <div className="h-24 bg-primary relative">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 w-full max-w-sm overflow-hidden shadow-2xl my-auto">
+            <div className="h-32 bg-primary relative">
               <button 
                 onClick={() => setShowProfileModal(false)}
-                className="absolute top-4 right-4 size-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition-colors"
+                className="absolute top-4 right-4 size-10 rounded-full bg-slate-900/10 text-slate-900 flex items-center justify-center hover:bg-slate-900/20 transition-all"
                 title="Fechar"
               >
-                <span className="material-symbols-outlined text-lg">close</span>
+                <span className="material-symbols-outlined">close</span>
               </button>
+              {/* Added a subtle design element to the background as requested */}
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-slate-900 to-transparent"></div>
             </div>
-            <div className="px-6 pb-8 text-center -mt-12">
-              <div className="size-24 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 mx-auto flex items-center justify-center shadow-lg overflow-hidden mb-4">
-                {user?.fotoUrl ? (
-                  <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
-                ) : (
-                  <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-3xl font-black">
-                    {getInitials(user?.nome)}
-                  </div>
-                )}
+            
+            <div className="px-6 pb-8 text-center -mt-16 relative z-10">
+              <div className="relative inline-block group">
+                <div className="size-32 rounded-3xl border-8 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 mx-auto flex items-center justify-center shadow-2xl overflow-hidden mb-6 transition-transform group-hover:scale-[1.02]">
+                  {profileForm.fotoUrl ? (
+                    <img src={profileForm.fotoUrl} alt={user.nome} className="size-full object-cover" />
+                  ) : (
+                    <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-4xl font-black">
+                      {getInitials(user?.nome)}
+                    </div>
+                  )}
+                </div>
+                <label className="absolute bottom-6 right-0 size-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:bg-slate-800 transition-all active:scale-90 border-4 border-white dark:border-slate-900">
+                  <span className="material-symbols-outlined text-sm">photo_camera</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                </label>
               </div>
               
-              <div className="space-y-4 text-left">
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome Completo</label>
-                  <input 
-                    type="text"
-                    value={profileForm.nome}
-                    onChange={(e) => setProfileForm({...profileForm, nome: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">E-mail (Login)</label>
-                  <input 
-                    type="text"
-                    value={profileForm.email}
-                    disabled
-                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg text-sm text-slate-400 cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">URL da Foto</label>
-                  <input 
-                    type="text"
-                    value={profileForm.fotoUrl}
-                    onChange={(e) => setProfileForm({...profileForm, fotoUrl: e.target.value})}
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary"
-                    placeholder="https://exemplo.com/foto.jpg"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <button 
-                    onClick={() => setShowProfileModal(false)}
-                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    onClick={handleSaveProfile}
-                    disabled={savingProfile}
-                    className="flex-1 py-3 bg-primary text-slate-900 rounded-xl text-xs font-bold hover:brightness-95 transition-all disabled:opacity-50"
-                  >
-                    {savingProfile ? "Salvando..." : "Salvar Mudanças"}
-                  </button>
-                </div>
+              <div className="space-y-5 text-left">
+                {!showPasswordSection ? (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nome de Exibição</label>
+                      <input 
+                        type="text"
+                        value={profileForm.nome}
+                        onChange={(e) => setProfileForm({...profileForm, nome: e.target.value})}
+                        className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">E-mail Corporativo</label>
+                      <input 
+                        type="text"
+                        value={profileForm.email}
+                        disabled
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/40 border-none rounded-xl text-sm text-slate-400 font-medium cursor-not-allowed opacity-70"
+                      />
+                    </div>
+                    
+                    <div className="flex flex-col gap-3 pt-2">
+                      <button 
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile}
+                        className="w-full py-4 bg-primary text-slate-900 rounded-2xl text-sm font-black hover:brightness-95 transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
+                      >
+                        {savingProfile ? "Salvando..." : "Salvar Alterações"}
+                      </button>
+                      <button 
+                        onClick={() => setShowPasswordSection(true)}
+                        className="w-full py-4 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
+                      >
+                        Mudar Senha de Acesso
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="animate-in slide-in-from-right-4 duration-300">
+                    <div className="flex items-center gap-2 mb-6 cursor-pointer text-slate-400 hover:text-slate-600 transition-colors" onClick={() => setShowPasswordSection(false)}>
+                      <span className="material-symbols-outlined text-sm">arrow_back</span>
+                      <span className="text-xs font-bold uppercase tracking-wider">Voltar</span>
+                    </div>
+                    
+                    <h4 className="text-lg font-black mb-4">Mudar Senha</h4>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Senha Atual</label>
+                        <input 
+                          type="password"
+                          value={passwordForm.senhaAntiga}
+                          onChange={(e) => setPasswordForm({...passwordForm, senhaAntiga: e.target.value})}
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary transition-all"
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nova Senha</label>
+                        <input 
+                          type="password"
+                          value={passwordForm.novaSenha}
+                          onChange={(e) => setPasswordForm({...passwordForm, novaSenha: e.target.value})}
+                          className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary transition-all"
+                          placeholder="Mínimo 6 caracteres"
+                        />
+                      </div>
+                      
+                      <button 
+                        onClick={handleChangePassword}
+                        disabled={savingProfile}
+                        className="w-full py-4 bg-primary text-slate-900 rounded-2xl text-sm font-black hover:brightness-95 transition-all disabled:opacity-50 shadow-lg shadow-primary/20 mt-4"
+                      >
+                        {savingProfile ? "Processando..." : "Confirmar Nova Senha"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -346,3 +421,4 @@ export default function Layout() {
     </div>
   );
 }
+

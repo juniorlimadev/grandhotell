@@ -99,4 +99,6 @@ export const usuarioApi = {
     return api.put(`/usuario/${id}`, d);
   },
   delete: (id) => api.delete(`/usuario/${id}`),
+  mudarSenha: (id, data) => api.put(`/usuario/mudar-senha/${id}`, data),
 };
+
