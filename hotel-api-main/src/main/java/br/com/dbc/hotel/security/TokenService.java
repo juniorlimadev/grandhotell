@@ -39,6 +39,8 @@ public class TokenService {
         return TOKEN_PREFIX + " " +
                 Jwts.builder()
                         .setIssuer("hotel-api")
+                        .setSubject(usuario.getEmail())
+                        .claim("nome", usuario.getNome())
                         .claim(Claims.ID, usuario.getIdUsuario().toString())
                         .claim(CARGOS_CLAIM, cargos)
                         .setIssuedAt(now)

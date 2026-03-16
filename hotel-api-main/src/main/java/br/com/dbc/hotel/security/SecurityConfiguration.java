@@ -36,12 +36,14 @@ public class SecurityConfiguration {
         .authorizeHttpRequests((authz) -> authz
                 .antMatchers("/auth", "/").permitAll()
                 .antMatchers(HttpMethod.POST, "/usuario").permitAll()
+                .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
+                .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/usuario").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/usuario").hasRole("ADMIN")
                 .antMatchers("/quarto").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/quarto").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.GET, "/reserva/quartos-livres").hasAnyRole("USER", "ADMIN")
-                .antMatchers(HttpMethod.GET, "/reserva/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/reserva/**").hasAnyRole("USER", "ADMIN")
+                .antMatchers(HttpMethod.DELETE, "/reserva/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
         );
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService, objectMapper), UsernamePasswordAuthenticationFilter.class);

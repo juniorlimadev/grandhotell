@@ -15,6 +15,11 @@ export default function Layout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "Nova reserva realizada no quarto 102", time: "Há 5 min", type: "reserva" },
+    { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
+  ]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Iniciais do nome para o Avatar
   const getInitials = (name) => {
@@ -114,6 +119,19 @@ export default function Layout() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {/* User display moved here */}
+              <div className="flex items-center gap-2 px-2">
+                <div className="size-8 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-xs shadow-sm">
+                  {getInitials(user?.nome)}
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Bem-vindo</p>
+                  <p className="text-xs font-bold leading-none">{user?.nome || "Usuário"}</p>
+                </div>
+              </div>
+              
+              <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1 hidden sm:block"></div>
+
               <div className="relative">
                 <button
                   type="button"
@@ -124,25 +142,42 @@ export default function Layout() {
                   className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 relative transition-colors ${showNotifications ? 'bg-slate-100 dark:bg-slate-800 text-primary' : ''}`}
                 >
                   <span className="material-symbols-outlined">notifications</span>
-                  <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+                  {notifications.length > 0 && (
+                    <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900" />
+                  )}
                 </button>
                 {showNotifications && (
                   <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 overflow-hidden">
-                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                       <h4 className="font-bold text-sm">Notificações</h4>
-                      <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black">2 NOVAS</span>
+                      {notifications.length > 0 && (
+                        <button 
+                          onClick={() => setNotifications([])}
+                          className="text-[10px] font-bold text-primary hover:underline uppercase tracking-wider"
+                        >
+                          Limpar tudo
+                        </button>
+                      )}
                     </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      <div className="p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
-                        <p className="text-xs font-bold mb-1">Nova Reserva Confirmada</p>
-                        <p className="text-[10px] text-slate-500 line-clamp-2">O hóspede João Silva acabou de reservar a Suíte Presidencial para o próximo fim de semana.</p>
-                        <p className="text-[10px] text-primary mt-2">Há 5 minutos</p>
-                      </div>
-                      <div className="p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer">
-                        <p className="text-xs font-bold mb-1">Manutenção Necessária</p>
-                        <p className="text-[10px] text-slate-500 line-clamp-2">Ar condicionado do quarto 402 relatado com problemas técnicos.</p>
-                        <p className="text-[10px] text-primary mt-2">Há 2 horas</p>
-                      </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">notifications_off</span>
+                          <p className="text-xs text-slate-500">Sem novas notificações</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3 border-b border-slate-50 dark:border-slate-800/50 last:border-0 text-left">
+                            <div className={`size-8 rounded-lg flex items-center justify-center flex-shrink-0 ${n.type === 'reserva' ? 'bg-emerald-100 text-emerald-600' : 'bg-orange-100 text-orange-600'}`}>
+                              <span className="material-symbols-outlined text-lg">{n.type === 'reserva' ? 'check_circle' : 'info'}</span>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold leading-tight">{n.text}</p>
+                              <p className="text-[10px] text-primary mt-1">{n.time}</p>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <Link 
                       to="/reservas"
@@ -171,7 +206,7 @@ export default function Layout() {
                     <button 
                       onClick={() => {
                         setShowSettings(false);
-                        navigate("/usuarios");
+                        setShowProfileModal(true);
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left"
                     >
@@ -195,6 +230,51 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 w-full max-w-sm overflow-hidden shadow-2xl">
+            <div className="h-24 bg-primary relative">
+              <button 
+                onClick={() => setShowProfileModal(false)}
+                className="absolute top-4 right-4 size-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/40 transition-colors"
+                title="Fechar"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            <div className="px-6 pb-8 text-center -mt-12">
+              <div className="size-24 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 mx-auto flex items-center justify-center shadow-lg overflow-hidden mb-4">
+                <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-3xl font-black">
+                  {getInitials(user?.nome)}
+                </div>
+              </div>
+              <h3 className="text-xl font-bold">{user?.nome || "Usuário"}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{user?.email}</p>
+              
+              <div className="space-y-3">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 text-left">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Preferências</p>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-sm font-medium">Tema Escuro</span>
+                    <button className="material-symbols-outlined text-primary">toggle_on</button>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    setShowProfileModal(false);
+                    navigate("/usuarios");
+                  }}
+                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Gerenciar sistema
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
