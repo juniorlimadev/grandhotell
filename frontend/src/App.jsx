@@ -7,6 +7,8 @@ import Quartos from "./pages/Quartos";
 import Reservas from "./pages/Reservas";
 import Usuarios from "./pages/Usuarios";
 import Relatorios from "./pages/Relatorios";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -23,6 +25,7 @@ function ProtectedRoute({ children }) {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route
@@ -43,5 +46,18 @@ export default function App() {
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <ToastContainer 
+      position="top-right"
+      autoClose={4000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="colored"
+    />
+    </>
   );
 }

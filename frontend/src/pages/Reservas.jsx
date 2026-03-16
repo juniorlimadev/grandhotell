@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { reservaApi, quartoApi, usuarioApi } from "../services/api";
+import { toast } from "react-toastify";
 
 function toInputDate(d) {
   if (!d) return "";
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toISOString().slice(0, 10);
+  try {
+    const date = typeof d === "string" ? new Date(d) : d;
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
 }
 
 function formatDate(d) {
@@ -103,21 +109,23 @@ export default function Reservas() {
         dtFim: form.dtFim,
       });
       setModalAberto(false);
+      toast.success("Reserva criada com sucesso!");
       carregarReservas();
     } catch (e) {
-      setErro(e.response?.data?.message || "Erro ao criar reserva.");
+      toast.error(e.response?.data?.message || "Erro ao criar reserva.");
     } finally {
       setSalvando(false);
     }
   };
 
   const handleDelete = async (idReserva) => {
-    if (!window.confirm("Cancelar esta reserva?")) return;
+    if (!window.confirm("Deseja realmente cancelar esta reserva?")) return;
     try {
       await reservaApi.delete(idReserva);
+      toast.success("Reserva cancelada com sucesso!");
       carregarReservas();
     } catch (e) {
-      alert(e.response?.data?.message || "Erro ao excluir.");
+      toast.error(e.response?.data?.message || "Erro ao cancelar reserva.");
     }
   };
 
@@ -264,7 +272,6 @@ export default function Reservas() {
                   ))}
                 </select>
               </div>
-              {erro && <p className="text-sm text-red-500">{erro}</p>}
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={() => setModalAberto(false)} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
                   Cancelar

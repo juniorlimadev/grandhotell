@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
+import { toast } from "react-toastify";
 
 function formatDate(d) {
   if (!d) return "";
@@ -28,8 +29,11 @@ export default function Dashboard() {
           setQuartos(qRes.data);
           setReservas(Array.isArray(rRes.data) ? rRes.data : []);
         }
-      } catch {
-        if (!cancelled) setQuartos({ content: [], totalElements: 0 });
+      } catch (e) {
+        if (!cancelled) {
+          setQuartos({ content: [], totalElements: 0 });
+          toast.error("Erro ao carregar dados do painel.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -109,7 +113,7 @@ export default function Dashboard() {
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Receita Estimada</p>
           <p className="text-3xl font-black mt-1 text-emerald-600 dark:text-emerald-400">
-            {loading ? "..." : (receitaEstimada || 12500).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {loading ? "..." : (receitaEstimada || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </p>
         </div>
       </div>

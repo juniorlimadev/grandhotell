@@ -7,7 +7,6 @@ const navItems = [
   { to: "/quartos", icon: "bed", label: "Gestão de Quartos" },
   { to: "/reservas", icon: "calendar_month", label: "Reservas" },
   { to: "/usuarios", icon: "group", label: "Gestão de Usuários" },
-  { to: "/relatorios", icon: "analytics", label: "Análise de Receita" },
 ];
 
 export default function Layout() {
@@ -139,9 +138,13 @@ export default function Layout() {
                         <p className="text-[10px] text-primary mt-2">Há 2 horas</p>
                       </div>
                     </div>
-                    <button className="w-full py-3 text-xs text-slate-500 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800">
-                      Ver todas as notificações
-                    </button>
+                    <Link 
+                      to="/reservas"
+                      onClick={() => setShowNotifications(false)}
+                      className="block w-full py-3 text-center text-xs text-slate-500 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800"
+                    >
+                      Ver todos os registros
+                    </Link>
                   </div>
                 )}
               </div>
@@ -159,21 +162,9 @@ export default function Layout() {
                 </button>
                 {showSettings && (
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-2">
-                    <div className="p-2 mb-1">
-                      <h4 className="font-bold text-xs uppercase text-slate-400">Preferências</h4>
-                    </div>
-                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
-                      <span className="material-symbols-outlined text-lg">dark_mode</span>
-                      <span>Alternar Tema</span>
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
-                      <span className="material-symbols-outlined text-lg">language</span>
-                      <span>Idioma: PT-BR</span>
-                    </button>
-                    <div className="my-2 border-t border-slate-100 dark:border-slate-800"></div>
                     <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left">
                       <span className="material-symbols-outlined text-lg">account_circle</span>
-                      <span>Meu Perfil</span>
+                      <span>Minha Conta</span>
                     </button>
                     <button 
                       onClick={handleLogout}

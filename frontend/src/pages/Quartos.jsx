@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { quartoApi } from "../services/api";
+import { toast } from "react-toastify";
 
 const ALAS = ["ALTA", "MEDIA", "BAIXA"];
 
@@ -30,7 +31,7 @@ export default function Quartos() {
         });
       }
     } catch (e) {
-      setErro(e.response?.data?.message || "Erro ao carregar quartos.");
+      toast.error(e.response?.data?.message || "Erro ao carregar quartos.");
     } finally {
       setLoading(false);
     }
@@ -71,25 +72,28 @@ export default function Quartos() {
     try {
       if (isEdicao) {
         await quartoApi.update(id, form);
+        toast.success("Quarto atualizado com sucesso!");
       } else {
         await quartoApi.create(form);
+        toast.success("Quarto criado com sucesso!");
       }
       fecharModal();
       carregar(lista.page - 1);
     } catch (e) {
-      setErro(e.response?.data?.message || "Erro ao salvar.");
+      toast.error(e.response?.data?.message || "Erro ao salvar.");
     } finally {
       setSalvando(false);
     }
   };
 
   const handleDelete = async (idQuarto) => {
-    if (!window.confirm("Excluir este quarto?")) return;
+    if (!window.confirm("Deseja realmente excluir este quarto?")) return;
     try {
       await quartoApi.delete(idQuarto);
+      toast.success("Quarto excluído com sucesso!");
       carregar(lista.page - 1);
     } catch (e) {
-      alert(e.response?.data?.message || "Erro ao excluir.");
+      toast.error(e.response?.data?.message || "Erro ao excluir quarto.");
     }
   };
 
@@ -224,7 +228,6 @@ export default function Quartos() {
                   placeholder="0.00"
                 />
               </div>
-              {erro && <p className="text-sm text-red-500">{erro}</p>}
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={fecharModal} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
                   Cancelar

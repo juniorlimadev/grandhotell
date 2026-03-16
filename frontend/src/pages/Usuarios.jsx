@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { usuarioApi } from "../services/api";
+import { toast } from "react-toastify";
 
 function toInputDate(d) {
   if (!d) return "";
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toISOString().slice(0, 10);
+  try {
+    const date = typeof d === "string" ? new Date(d) : d;
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().slice(0, 10);
+  } catch {
+    return "";
+  }
 }
 
 export default function Usuarios() {
@@ -27,7 +33,7 @@ export default function Usuarios() {
       const res = await usuarioApi.list(page, 10);
       setLista(res.data);
     } catch (e) {
-      setErro(e.response?.data?.message || "Erro ao carregar usuários.");
+      toast.error(e.response?.data?.message || "Erro ao carregar usuários.");
     } finally {
       setLoading(false);
     }
@@ -68,25 +74,28 @@ export default function Usuarios() {
     try {
       if (usuarioEditando) {
         await usuarioApi.update(usuarioEditando, form);
+        toast.success("Usuário atualizado com sucesso!");
       } else {
         await usuarioApi.create(form);
+        toast.success("Usuário criado com sucesso!");
       }
       setModalAberto(false);
       carregar(lista.page - 1);
     } catch (e) {
-      setErro(e.response?.data?.message || "Erro ao salvar. Verifique e-mail único e dados.");
+      toast.error(e.response?.data?.message || "Erro ao salvar. Verifique os dados.");
     } finally {
       setSalvando(false);
     }
   };
 
   const handleDelete = async (idUsuario) => {
-    if (!window.confirm("Excluir este usuário?")) return;
+    if (!window.confirm("Deseja realmente excluir este usuário?")) return;
     try {
       await usuarioApi.delete(idUsuario);
+      toast.success("Usuário excluído com sucesso!");
       carregar(lista.page - 1);
     } catch (e) {
-      alert(e.response?.data?.message || "Erro ao excluir.");
+      toast.error(e.response?.data?.message || "Erro ao excluir usuário.");
     }
   };
 
@@ -225,7 +234,6 @@ export default function Usuarios() {
                   required
                 />
               </div>
-              {erro && <p className="text-sm text-red-500">{erro}</p>}
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={() => setModalAberto(false)} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
                   Cancelar
