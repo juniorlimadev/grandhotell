@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { authApi } from "../services/api";
 
-function parseJwtPayload(token) {
+export function parseJwtPayload(token) {
   try {
     const base64Url = token.split(".")[1];
     if (!base64Url) return null;
@@ -30,8 +30,10 @@ export function AuthProvider({ children }) {
     const payload = parseJwtPayload(t);
     if (payload) {
       setUser({
+        id: payload.id,
         email: payload.sub || payload.email || "Usuário",
         nome: payload.nome || payload.sub || "Usuário",
+        fotoUrl: payload.fotoUrl,
       });
     } else {
       setUser({ email: "Usuário", nome: "Usuário" });

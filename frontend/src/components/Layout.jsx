@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, parseJwtPayload } from "../contexts/AuthContext";
+import { usuarioApi } from "../services/api";
+import { toast } from "react-toastify";
 
 const navItems = [
   { to: "/", icon: "dashboard", label: "Dashboard" },
