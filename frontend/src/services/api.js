@@ -63,6 +63,17 @@ export const reservaApi = {
       idQuarto: data.idQuarto,
       dtInicio: toBackendDate(data.dtInicio),
       dtFim: toBackendDate(data.dtFim),
+      hospedeNome: data.hospedeNome,
+      observacoes: data.observacoes,
+    }),
+  update: (id, data) =>
+    api.put(`/reserva/${id}`, {
+      idUsuario: data.idUsuario,
+      idQuarto: data.idQuarto,
+      dtInicio: toBackendDate(data.dtInicio),
+      dtFim: toBackendDate(data.dtFim),
+      hospedeNome: data.hospedeNome,
+      observacoes: data.observacoes,
     }),
   delete: (id) => api.delete(`/reserva/${id}`),
 };

@@ -7,6 +7,7 @@ const navItems = [
   { to: "/quartos", icon: "bed", label: "Gestão de Quartos" },
   { to: "/reservas", icon: "calendar_month", label: "Reservas" },
   { to: "/usuarios", icon: "group", label: "Gestão de Usuários" },
+  { to: "/notificacoes", icon: "notifications", label: "Notificações" },
 ];
 
 export default function Layout() {
@@ -20,6 +21,37 @@ export default function Layout() {
     { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
   ]);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileForm, setProfileForm] = useState({ nome: "", email: "", fotoUrl: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (showProfileModal && user) {
+      setProfileForm({ nome: user.nome || "", email: user.email || "", fotoUrl: user.fotoUrl || "" });
+    }
+  }, [showProfileModal, user]);
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      // Usando idUsuario extraído do token ou passado via context
+      // Como o context só tem nome/email, precisamos do ID ou email para buscar.
+      // Vou assumir que o usuarioApi.update aceita o ID que está no token.
+      const payload = parseJwtPayload(localStorage.getItem("token"));
+      if (payload?.id) {
+        await usuarioApi.update(payload.id, {
+          ...user,
+          nome: profileForm.nome,
+          fotoUrl: profileForm.fotoUrl
+        });
+        toast.success("Perfil atualizado! Faça login novamente para ver todas as mudanças.");
+        setShowProfileModal(false);
+      }
+    } catch (e) {
+      toast.error("Erro ao atualizar perfil.");
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   // Iniciais do nome para o Avatar
   const getInitials = (name) => {
@@ -120,9 +152,13 @@ export default function Layout() {
             </div>
             <div className="flex items-center gap-4">
               {/* User display moved here */}
-              <div className="flex items-center gap-2 px-2">
-                <div className="size-8 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-xs shadow-sm">
-                  {getInitials(user?.nome)}
+              <div className="p-1 flex items-center gap-3">
+                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-sm overflow-hidden flex-shrink-0">
+                  {user?.fotoUrl ? (
+                    <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
+                  ) : (
+                    getInitials(user?.nome)
+                  )}
                 </div>
                 <div className="hidden md:block">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Bem-vindo</p>
@@ -180,11 +216,11 @@ export default function Layout() {
                       )}
                     </div>
                     <Link 
-                      to="/reservas"
+                      to="/notificacoes"
                       onClick={() => setShowNotifications(false)}
                       className="block w-full py-3 text-center text-xs text-slate-500 hover:text-primary transition-colors bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800"
                     >
-                      Ver todos os registros
+                      Ver todas as notificações
                     </Link>
                   </div>
                 )}
@@ -246,30 +282,60 @@ export default function Layout() {
             </div>
             <div className="px-6 pb-8 text-center -mt-12">
               <div className="size-24 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 mx-auto flex items-center justify-center shadow-lg overflow-hidden mb-4">
-                <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-3xl font-black">
-                  {getInitials(user?.nome)}
-                </div>
-              </div>
-              <h3 className="text-xl font-bold">{user?.nome || "Usuário"}</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{user?.email}</p>
-              
-              <div className="space-y-3">
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 text-left">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Preferências</p>
-                  <div className="flex items-center justify-between py-1">
-                    <span className="text-sm font-medium">Tema Escuro</span>
-                    <button className="material-symbols-outlined text-primary">toggle_on</button>
+                {user?.fotoUrl ? (
+                  <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
+                ) : (
+                  <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-3xl font-black">
+                    {getInitials(user?.nome)}
                   </div>
+                )}
+              </div>
+              
+              <div className="space-y-4 text-left">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome Completo</label>
+                  <input 
+                    type="text"
+                    value={profileForm.nome}
+                    onChange={(e) => setProfileForm({...profileForm, nome: e.target.value})}
+                    className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary"
+                  />
                 </div>
-                <button 
-                  onClick={() => {
-                    setShowProfileModal(false);
-                    navigate("/usuarios");
-                  }}
-                  className="w-full py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                >
-                  Gerenciar sistema
-                </button>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">E-mail (Login)</label>
+                  <input 
+                    type="text"
+                    value={profileForm.email}
+                    disabled
+                    className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800/50 border-none rounded-lg text-sm text-slate-400 cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">URL da Foto</label>
+                  <input 
+                    type="text"
+                    value={profileForm.fotoUrl}
+                    onChange={(e) => setProfileForm({...profileForm, fotoUrl: e.target.value})}
+                    className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary"
+                    placeholder="https://exemplo.com/foto.jpg"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <button 
+                    onClick={() => setShowProfileModal(false)}
+                    className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold hover:bg-slate-200 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleSaveProfile}
+                    disabled={savingProfile}
+                    className="flex-1 py-3 bg-primary text-slate-900 rounded-xl text-xs font-bold hover:brightness-95 transition-all disabled:opacity-50"
+                  >
+                    {savingProfile ? "Salvando..." : "Salvar Mudanças"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

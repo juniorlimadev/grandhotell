@@ -41,4 +41,10 @@ public class Reserva {
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private StatusQuarto statusQuarto;
+
+    @Column(name = "hospede_nome")
+    private String hospedeNome;
+
+    @Column(name = "observacoes")
+    private String observacoes;
 }

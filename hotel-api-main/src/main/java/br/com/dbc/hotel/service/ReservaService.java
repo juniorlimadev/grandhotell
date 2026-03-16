@@ -92,6 +92,8 @@ public class ReservaService {
         reserva.setUsuario(usuario);
         reserva.setQuarto(quarto);
         reserva.setStatusQuarto(StatusQuarto.OCUPADO);
+        reserva.setHospedeNome(reservaCreateDTO.getHospedeNome());
+        reserva.setObservacoes(reservaCreateDTO.getObservacoes());
         Reserva reservaSalva = reservaRepository.save(reserva);
         ReservaDTO reservaDTO = objectMapper.convertValue(reservaSalva, ReservaDTO.class);
         atualizarReservaColunasExternas(reservaSalva, reservaDTO);
@@ -101,6 +103,45 @@ public class ReservaService {
     public void deletarReserva(Integer idReserva) throws RegraDeNegocioException {
         Reserva byId = findById(idReserva);
         reservaRepository.delete(byId);
+    }
+
+    public ReservaDTO update(Integer idReserva, ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
+        Reserva reserva = findById(idReserva);
+        
+        if (reservaCreateDTO.getDtInicio().isAfter(reservaCreateDTO.getDtFim())) {
+            throw new RegraDeNegocioException("A data de início não pode ser após a data de fim.", HttpStatus.BAD_REQUEST);
+        }
+
+        Usuario usuario = usuarioService.findById(reservaCreateDTO.getIdUsuario());
+        Quarto quarto = quartoService.findById(reservaCreateDTO.getIdQuarto());
+
+        // Conflito de datas (ignorando a própria reserva que está sendo editada)
+        List<Reserva> reservas = buscarReservasPorQuarto(quarto.getIdQuarto());
+        LocalDate dtInicio = reservaCreateDTO.getDtInicio();
+        LocalDate dtFim = reservaCreateDTO.getDtFim();
+
+        for (Reserva r : reservas) {
+            if (r.getIdReserva().equals(idReserva)) continue;
+            LocalDate rDtInicio = r.getDtInicio();
+            LocalDate rDtFim = r.getDtFim();
+            if ((dtInicio.isBefore(rDtFim) && dtFim.isAfter(rDtInicio)) ||
+                (dtInicio.isEqual(rDtInicio) || dtInicio.isAfter(rDtInicio)) &&
+                (dtFim.isBefore(rDtFim) || dtFim.isEqual(rDtFim))) {
+                throw new RegraDeNegocioException("A reserva conflita com outra reserva existente.", HttpStatus.BAD_REQUEST);
+            }
+        }
+
+        reserva.setUsuario(usuario);
+        reserva.setQuarto(quarto);
+        reserva.setDtInicio(reservaCreateDTO.getDtInicio());
+        reserva.setDtFim(reservaCreateDTO.getDtFim());
+        reserva.setHospedeNome(reservaCreateDTO.getHospedeNome());
+        reserva.setObservacoes(reservaCreateDTO.getObservacoes());
+
+        Reserva reservaSalva = reservaRepository.save(reserva);
+        ReservaDTO reservaDTO = objectMapper.convertValue(reservaSalva, ReservaDTO.class);
+        atualizarReservaColunasExternas(reservaSalva, reservaDTO);
+        return reservaDTO;
     }
 
     public CustomPageDateDTO<QuartoDTO> buscarQuartosLivresPorAlaEData(Integer page,

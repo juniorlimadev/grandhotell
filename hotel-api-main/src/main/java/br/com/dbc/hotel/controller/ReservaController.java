@@ -84,6 +84,14 @@ public class ReservaController {
         return ResponseEntity.ok(createResponseMessage("Reserva encontrada", reservaDTOS, "Reservas"));
     }
 
+    @PutMapping("/{idReserva}")
+    public ResponseEntity<Map<String, Object>> atualizarReserva(@PathVariable Integer idReserva, @RequestBody @Valid ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
+        log.info("Atualizando Reserva");
+        ReservaDTO entity = reservaService.update(idReserva, reservaCreateDTO);
+        log.info("Reserva atualizada com sucesso");
+        return ResponseEntity.ok(createResponseMessage("Reserva atualizada com sucesso.", entity, "Reserva"));
+    }
+
     @DeleteMapping("/{idReserva}")
     public ResponseEntity<Map<String,Object>> deletarReserva(@PathVariable Integer idReserva) throws RegraDeNegocioException {
         reservaService.deletarReserva(idReserva);

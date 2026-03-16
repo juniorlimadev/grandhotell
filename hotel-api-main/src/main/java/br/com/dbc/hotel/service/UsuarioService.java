@@ -53,6 +53,7 @@ public class UsuarioService {
         usuario.setEmail(emailLower);
         usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
+        usuario.setFotoUrl(usuarioCreateDTO.getFotoUrl());
 
         Cargo user = cargoService.findByName("USER");
         if (usuario.getCargos() == null) {
@@ -84,6 +85,7 @@ public class UsuarioService {
             usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
         }
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
+        usuario.setFotoUrl(usuarioCreateDTO.getFotoUrl());
         Cargo user = cargoService.findByName("USER");
         if (usuario.getCargos() == null) {
             usuario.setCargos(new HashSet<>());

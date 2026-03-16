@@ -42,4 +42,6 @@ public class UsuarioCreateDTO {
     @NotNull(message = "A data nascimento não pode ser nulo")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="dd-MM-yyyy")
     private LocalDate dataNascimento;
+
+    private String fotoUrl;
 }

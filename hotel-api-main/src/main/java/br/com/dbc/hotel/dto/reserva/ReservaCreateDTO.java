@@ -31,4 +31,8 @@ public class ReservaCreateDTO {
     @NotNull(message = "A data de fim não pode ser nulo")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="dd-MM-yyyy")
     private LocalDate dtFim;
+
+    private String hospedeNome;
+
+    private String observacoes;
 }

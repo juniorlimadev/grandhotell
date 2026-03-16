@@ -31,7 +31,7 @@ export default function Dashboard() {
     async function load() {
       try {
         const [qRes, rRes] = await Promise.all([
-          quartoApi.list(0, 5),
+          quartoApi.list(0, 50),
           reservaApi.quartosOcupados(new Date(), new Date(Date.now() + 30 * 24 * 3600 * 1000)),
         ]);
         if (!cancelled) {
