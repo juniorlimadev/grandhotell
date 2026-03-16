@@ -63,22 +63,39 @@ export default function Usuarios() {
   }, []);
 
   const permissoesDisponiveis = [
-    { id: "USER", label: "Acesso Básico" },
     { id: "ADMIN", label: "Gestão de Usuários" },
     { id: "GESTAO_QUARTOS", label: "Gestão de Quartos" },
     { id: "GESTAO_RESERVAS", label: "Gestão de Reservas" },
   ];
 
-  const handleToggleCargo = (cargoId) => {
+  const handleToggleAll = () => {
     setForm(f => {
-      const exists = f.cargos.includes(cargoId);
-      if (exists) {
-        return { ...f, cargos: f.cargos.filter(id => id !== cargoId) };
+      const allSelected = permissoesDisponiveis.every(p => f.cargos.includes(p.id));
+      if (allSelected) {
+        // Se todos marcados, desmarca todos (mantém o USER que é básico)
+        return { ...f, cargos: ["USER"] };
       } else {
-        return { ...f, cargos: [...f.cargos, cargoId] };
+        // Marca todos + USER
+        const allIds = ["USER", ...permissoesDisponiveis.map(p => p.id)];
+        return { ...f, cargos: [...new Set(allIds)] };
       }
     });
   };
+
+  const handleToggleCargo = (cargoId) => {
+    setForm(f => {
+      const exists = f.cargos.includes(cargoId);
+      const newCargos = exists 
+        ? f.cargos.filter(id => id !== cargoId) 
+        : [...f.cargos, cargoId];
+      
+      // Garante que USER sempre esteja presente
+      if (!newCargos.includes("USER")) newCargos.push("USER");
+      
+      return { ...f, cargos: newCargos };
+    });
+  };
+
 
   const abrirNovo = () => {
     setForm({
@@ -287,7 +304,18 @@ export default function Usuarios() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Permissões de Acesso</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Permissões de Acesso</label>
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      checked={permissoesDisponiveis.every(p => form.cargos.includes(p.id))}
+                      onChange={handleToggleAll}
+                      className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
+                    />
+                    <span className="text-[10px] font-black uppercase text-primary tracking-widest group-hover:underline">Acesso Completo</span>
+                  </label>
+                </div>
                 <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                   {permissoesDisponiveis.map(p => (
                     <label key={p.id} className="flex items-center gap-2 cursor-pointer group">
@@ -304,6 +332,7 @@ export default function Usuarios() {
                   ))}
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Data de nascimento</label>
                 <input

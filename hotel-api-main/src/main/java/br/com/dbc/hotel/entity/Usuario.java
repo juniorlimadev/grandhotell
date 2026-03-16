@@ -40,8 +40,10 @@ public class Usuario implements UserDetails {
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
+    @Lob
     @Column(name = "foto_url")
     private String fotoUrl;
+
 
     @JsonIgnore
     @ManyToMany

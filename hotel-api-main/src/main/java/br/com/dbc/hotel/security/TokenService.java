@@ -67,10 +67,16 @@ public class TokenService {
             }
 
             String user = idObj.toString();
-            List<String> cargos = (List<String>) body.get(CARGOS_CLAIM);
-            if (cargos == null) {
-                cargos = List.of();
+            Object cargosClaim = body.get(CARGOS_CLAIM);
+            List<String> cargos = new java.util.ArrayList<>();
+            if (cargosClaim instanceof List<?>) {
+                for (Object item : (List<?>) cargosClaim) {
+                    if (item instanceof String) {
+                        cargos.add((String) item);
+                    }
+                }
             }
+
 
             List<SimpleGrantedAuthority> authorities = cargos.stream()
                     .map(SimpleGrantedAuthority::new)
