@@ -44,10 +44,16 @@ export function AuthProvider({ children }) {
           const payload = parseJwtPayload(token);
           if (payload?.id) {
             const { data } = await usuarioApi.getById(payload.id);
+            const usuario =
+              data?.Usuario ||
+              data?.usuario ||
+              data?.data ||
+              data;
+
             setUser(prev => ({
               ...prev,
-              ...data,
-              cargos: data.cargos || prev.cargos
+              ...usuario,
+              cargos: usuario?.cargos || prev?.cargos || []
             }));
           }
         } catch (e) {

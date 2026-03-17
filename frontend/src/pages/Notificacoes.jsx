@@ -1,13 +1,41 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Notificacoes() {
   const [filter, setFilter] = useState("todos");
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "Nova reserva realizada no quarto 102", timestamp: new Date("2026-03-15T15:00:00"), type: "reserva", date: "15/03/2026" },
-    { id: 2, text: "Check-out pendente para amanhã", timestamp: new Date("2026-03-15T10:00:00"), type: "alerta", date: "15/03/2026" },
-    { id: 3, text: "Limpeza concluída no quarto 205", timestamp: new Date("2026-03-15T08:00:00"), type: "limpeza", date: "15/03/2026" },
-    { id: 4, text: "Novo usuário registrado: João Silva", timestamp: new Date("2026-03-14T09:00:00"), type: "sistema", date: "14/03/2026" },
-  ]);
+  const [notifications, setNotifications] = useState(() => {
+    const stored = localStorage.getItem("grandhotel_notifications");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.map((n) => ({
+          ...n,
+          timestamp: n.timestamp ? new Date(n.timestamp) : new Date(),
+        }));
+      } catch {
+        // ignora erro e volta para padrão
+      }
+    }
+    const initial = [
+      { id: 1, text: "Nova reserva realizada no quarto 102", timestamp: new Date("2026-03-15T15:00:00"), type: "reserva", date: "15/03/2026" },
+      { id: 2, text: "Check-out pendente para amanhã", timestamp: new Date("2026-03-15T10:00:00"), type: "alerta", date: "15/03/2026" },
+      { id: 3, text: "Limpeza concluída no quarto 205", timestamp: new Date("2026-03-15T08:00:00"), type: "limpeza", date: "15/03/2026" },
+      { id: 4, text: "Novo usuário registrado: João Silva", timestamp: new Date("2026-03-14T09:00:00"), type: "sistema", date: "14/03/2026" },
+    ];
+    localStorage.setItem("grandhotel_notifications", JSON.stringify(initial));
+    return initial;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(
+      "grandhotel_notifications",
+      JSON.stringify(
+        notifications.map((n) => ({
+          ...n,
+          timestamp: n.timestamp instanceof Date ? n.timestamp.toISOString() : n.timestamp,
+        }))
+      )
+    );
+  }, [notifications]);
 
   const getTimeAgo = (timestamp) => {
     const now = new Date("2026-03-16T19:11:29-03:00"); // Current time as per user context
@@ -27,9 +55,7 @@ export default function Notificacoes() {
     : notifications.filter(n => n.type === filter);
 
   const clearNotifications = () => {
-    if (window.confirm("Deseja realmente limpar todas as notificações?")) {
-      setNotifications([]);
-    }
+    setNotifications([]);
   };
 
   return (

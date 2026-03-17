@@ -26,15 +26,44 @@ export default function Layout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "Nova reserva realizada no quarto 102", time: "Há 5 min", type: "reserva" },
-    { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
-  ]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [notifications, setNotifications] = useState(() => {
+    const stored = localStorage.getItem("grandhotel_notifications");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        return parsed.map((n) => ({
+          ...n,
+          timestamp: n.timestamp ? new Date(n.timestamp) : new Date(),
+        }));
+      } catch {
+        // se der erro, volta para o estado padrão
+      }
+    }
+    const initial = [
+      { id: 1, text: "Nova reserva realizada no quarto 102", time: "Há 5 min", type: "reserva" },
+      { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
+    ];
+    localStorage.setItem("grandhotel_notifications", JSON.stringify(initial));
+    return initial;
+  });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [profileForm, setProfileForm] = useState({ nome: "", email: "", fotoUrl: "" });
   const [passwordForm, setPasswordForm] = useState({ senhaAntiga: "", novaSenha: "" });
   const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem(
+      "grandhotel_notifications",
+      JSON.stringify(
+        notifications.map((n) => ({
+          ...n,
+          timestamp: n.timestamp instanceof Date ? n.timestamp.toISOString() : n.timestamp,
+        }))
+      )
+    );
+  }, [notifications]);
 
   useEffect(() => {
     if (showProfileModal && user) {
@@ -137,15 +166,18 @@ export default function Layout() {
       <aside className={`
         w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-transform duration-300 lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        ${sidebarCollapsed ? "lg:w-24" : "lg:w-64"}
       `}>
-        <div className="p-6 flex items-center gap-3">
+        <div className="p-6 flex items-center justify-between gap-3">
           <div className="size-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="material-symbols-outlined text-slate-900">apartment</span>
           </div>
-          <div>
-            <h1 className="text-sm font-bold leading-tight">Grand Hotel</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Console Administrativo</p>
-          </div>
+          {!sidebarCollapsed && (
+            <div>
+              <h1 className="text-sm font-bold leading-tight">Grand Hotel</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Console Administrativo</p>
+            </div>
+          )}
         </div>
         <nav className="flex-1 px-4 space-y-1">
           {filteredNavItems.map(({ to, icon, label }) => (
@@ -164,7 +196,7 @@ export default function Layout() {
               }
             >
               <span className="material-symbols-outlined">{icon}</span>
-              <span className="text-sm">{label}</span>
+              {!sidebarCollapsed && <span className="text-sm">{label}</span>}
             </NavLink>
           ))}
         </nav>
@@ -177,15 +209,17 @@ export default function Layout() {
                 getInitials(user?.nome)
               )}
             </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold truncate">{user?.nome || "Usuário"}</p>
-              <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="flex-1 overflow-hidden">
+                <p className="text-xs font-bold truncate">{user?.nome || "Usuário"}</p>
+                <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
 
-      <main className="flex-1 lg:ml-64 min-h-screen w-full overflow-x-hidden">
+      <main className={`flex-1 min-h-screen w-full overflow-x-hidden lg:ml-64 ${sidebarCollapsed ? "lg:ml-24" : ""}`}>
         <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -195,6 +229,16 @@ export default function Layout() {
                 className="p-2 -ml-2 lg:hidden text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
               >
                 <span className="material-symbols-outlined">menu</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSidebarCollapsed((prev) => !prev)}
+                className="hidden lg:inline-flex p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
+              >
+                <span className="material-symbols-outlined">
+                  {sidebarCollapsed ? "chevron_right" : "chevron_left"}
+                </span>
               </button>
               <div className="relative hidden sm:block">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
