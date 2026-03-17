@@ -5,16 +5,23 @@ import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 
 const navItems = [
-  { to: "/", icon: "dashboard", label: "Dashboard" },
-  { to: "/quartos", icon: "bed", label: "Gestão de Quartos" },
-  { to: "/reservas", icon: "calendar_month", label: "Reservas" },
-  { to: "/usuarios", icon: "group", label: "Gestão de Usuários" },
-  { to: "/notificacoes", icon: "notifications", label: "Notificações" },
+  { to: "/", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
+  { to: "/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/usuarios", icon: "group", label: "Gestão de Usuários", permission: ["ADMIN"] },
+  { to: "/notificacoes", icon: "notifications", label: "Notificações", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
 ];
 
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Filtra itens de navegação baseado nas permissões do usuário
+  const filteredNavItems = navItems.filter(item => {
+    if (!item.permission) return true;
+    return item.permission.some(p => user?.cargos?.includes(p));
+  });
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -58,11 +65,23 @@ export default function Layout() {
     try {
       const payload = parseJwtPayload(localStorage.getItem("token"));
       if (payload?.id) {
+        const formatDateForApi = (dateStr) => {
+          if (!dateStr) return "";
+          if (dateStr.includes("-") && dateStr.split("-")[0].length === 2) return dateStr; // Já está no formato dd-mm-yyyy
+          const [year, month, day] = dateStr.split("-");
+          return `${day}-${month}-${year}`;
+        };
+
         await usuarioApi.update(payload.id, {
-          ...user,
           nome: profileForm.nome,
-          fotoUrl: profileForm.fotoUrl
+          fotoUrl: profileForm.fotoUrl,
+          email: user.email,
+          dataNascimento: formatDateForApi(user.dataNascimento),
+          cargos: user.cargos,
+          senha: "" // Senha vazia para não alterar
         });
+
+
         toast.success("Perfil atualizado! Faça login novamente para ver todas as mudanças.");
         setShowProfileModal(false);
       }
@@ -128,7 +147,8 @@ export default function Layout() {
           </div>
         </div>
         <nav className="flex-1 px-4 space-y-1">
-          {navItems.map(({ to, icon, label }) => (
+          {filteredNavItems.map(({ to, icon, label }) => (
+
             <NavLink
               key={to}
               to={to}

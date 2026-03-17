@@ -44,7 +44,9 @@ public class TokenService {
                         .claim("nome", usuario.getNome())
                         .claim("id", usuario.getIdUsuario())
                         .claim("fotoUrl", usuario.getFotoUrl())
+                        .claim("dataNascimento", usuario.getDataNascimento())
                         .claim(CARGOS_CLAIM, cargos)
+
                         .setIssuedAt(now)
                         .setExpiration(exp)
                         .signWith(SignatureAlgorithm.HS256, secret)

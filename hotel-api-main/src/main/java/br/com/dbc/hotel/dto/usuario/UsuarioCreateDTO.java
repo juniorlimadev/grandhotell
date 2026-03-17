@@ -34,14 +34,12 @@ public class UsuarioCreateDTO {
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Schema(example = "Senha do Usuario")
-    @NotBlank(message = "A senha não pode ser vazio")
-    @NotNull(message = "A senha não pode ser nulo")
     private String senha;
 
     @Schema(type = "string", example = "10-10-2005", pattern = "dd-MM-yyyy")
-    @NotNull(message = "A data nascimento não pode ser nulo")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="dd-MM-yyyy")
     private LocalDate dataNascimento;
+
 
     private String fotoUrl;
 
