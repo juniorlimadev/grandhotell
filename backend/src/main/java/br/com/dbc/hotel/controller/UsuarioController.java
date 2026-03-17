@@ -59,7 +59,8 @@ public class UsuarioController {
      */
     @PostMapping()
     public ResponseEntity<Map<String, Object>> salvar(@RequestBody @Valid UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
-        log.info("Criando novo usuário: {}", usuarioCreateDTO.getLogin());
+        // Usa o e-mail como identificador no log para evitar dependência de campos inexistentes
+        log.info("Criando novo usuário: {}", usuarioCreateDTO.getEmail());
         UsuarioDTO entity = usuarioService.save(usuarioCreateDTO);
         log.info("Usuário criado com sucesso");
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Usuário criado com sucesso.", entity, "Usuario"));
