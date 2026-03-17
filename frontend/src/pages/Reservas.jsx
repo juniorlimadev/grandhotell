@@ -1,35 +1,8 @@
-import { useState, useEffect } from "react";
-import { reservaApi, quartoApi, usuarioApi, api } from "../services/api";
+import { useState, useEffect, useMemo } from "react";
+import { reservaApi, quartoApi, usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
+import { toInputDate, formatDate } from "../utils/date-utils";
 
-function toInputDate(d) {
-  if (!d) return "";
-  try {
-    const date = typeof d === "string" ? new Date(d) : d;
-    if (isNaN(date.getTime())) return "";
-    return date.toISOString().slice(0, 10);
-  } catch {
-    return "";
-  }
-}
-
-function formatDate(d) {
-  if (!d) return "";
-  try {
-    if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
-      const [day, month, year] = d.split("-");
-      return `${day}/${month}/${year}`;
-    }
-    const date = typeof d === "string" ? new Date(d) : d;
-    if (isNaN(date.getTime())) return "—";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return "—";
-  }
-}
 
 export default function Reservas() {
   const [reservas, setReservas] = useState([]);
@@ -66,30 +39,35 @@ export default function Reservas() {
     }
   };
 
-  const reservasFiltradas = reservas
-    .filter((r) => {
-      const termo = busca.toLowerCase();
-      const nomeHospede = (r.hospedeNome || "").toLowerCase();
-      const nomeUsuario = (r.usuario?.nome || "").toLowerCase();
-      const id = String(r.idReserva);
-      return nomeHospede.includes(termo) || nomeUsuario.includes(termo) || id.includes(termo);
-    })
-    .sort((a, b) => {
-      if (sortField === "id") {
-        return sortOrder === "asc" ? a.idReserva - b.idReserva : b.idReserva - a.idReserva;
-      }
-      if (sortField === "nome") {
-        const nomeA = (a.hospedeNome || a.usuario?.nome || "").toLowerCase();
-        const nomeB = (b.hospedeNome || b.usuario?.nome || "").toLowerCase();
-        return sortOrder === "asc" ? nomeA.localeCompare(nomeB) : nomeB.localeCompare(nomeA);
-      }
-      if (sortField === "data") {
-        const dataA = new Date(a.dtInicio);
-        const dataB = new Date(b.dtInicio);
-        return sortOrder === "asc" ? dataA - dataB : dataB - dataA;
-      }
-      return 0;
-    });
+  // Aplica filtro e ordenação em memória apenas quando dependências mudam
+  const reservasFiltradas = useMemo(
+    () =>
+      reservas
+        .filter((r) => {
+          const termo = busca.toLowerCase();
+          const nomeHospede = (r.hospedeNome || "").toLowerCase();
+          const nomeUsuario = (r.usuario?.nome || "").toLowerCase();
+          const id = String(r.idReserva);
+          return nomeHospede.includes(termo) || nomeUsuario.includes(termo) || id.includes(termo);
+        })
+        .sort((a, b) => {
+          if (sortField === "id") {
+            return sortOrder === "asc" ? a.idReserva - b.idReserva : b.idReserva - a.idReserva;
+          }
+          if (sortField === "nome") {
+            const nomeA = (a.hospedeNome || a.usuario?.nome || "").toLowerCase();
+            const nomeB = (b.hospedeNome || b.usuario?.nome || "").toLowerCase();
+            return sortOrder === "asc" ? nomeA.localeCompare(nomeB) : nomeB.localeCompare(nomeA);
+          }
+          if (sortField === "data") {
+            const dataA = new Date(a.dtInicio);
+            const dataB = new Date(b.dtInicio);
+            return sortOrder === "asc" ? dataA - dataB : dataB - dataA;
+          }
+          return 0;
+        }),
+    [reservas, busca, sortField, sortOrder]
+  );
 
   useEffect(() => {
     let cancelled = false;

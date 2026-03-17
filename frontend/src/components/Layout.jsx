@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
-import { useAuth, parseJwtPayload } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
+import { parseJwtPayload } from "../utils/jwt-utils";
 import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 
@@ -43,11 +44,6 @@ export default function Layout() {
     }
   }, [showProfileModal, user]);
 
-  const getTimeAgo = (timeStr) => {
-    // If it's the hardcoded value "Há 5 min", it's likely old. 
-    // For this demonstration, I'll update the static notifications to use real timestamps.
-    return timeStr;
-  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -65,19 +61,23 @@ export default function Layout() {
     try {
       const payload = parseJwtPayload(localStorage.getItem("token"));
       if (payload?.id) {
-        const formatDateForApi = (dateStr) => {
-          if (!dateStr) return "";
-          if (dateStr.includes("-") && dateStr.split("-")[0].length === 2) return dateStr; // Já está no formato dd-mm-yyyy
-          const [year, month, day] = dateStr.split("-");
-          return `${day}-${month}-${year}`;
-        };
+        // Garante que os cargos enviados para o backend sejam sempre strings válidas
+        const normalizedCargos = Array.isArray(user.cargos)
+          ? user.cargos
+              .map((c) =>
+                typeof c === "string"
+                  ? c
+                  : c?.titulo || c?.nome || null
+              )
+              .filter(Boolean)
+          : [];
 
         await usuarioApi.update(payload.id, {
           nome: profileForm.nome,
           fotoUrl: profileForm.fotoUrl,
           email: user.email,
-          dataNascimento: formatDateForApi(user.dataNascimento),
-          cargos: user.cargos,
+          dataNascimento: user.dataNascimento,
+          cargos: normalizedCargos,
           senha: "" // Senha vazia para não alterar
         });
 
@@ -85,8 +85,9 @@ export default function Layout() {
         toast.success("Perfil atualizado! Faça login novamente para ver todas as mudanças.");
         setShowProfileModal(false);
       }
-    } catch (e) {
-      toast.error("Erro ao atualizar perfil.");
+    } catch (err) {
+      const mensagem = err?.response?.data?.message || "Erro ao atualizar perfil.";
+      toast.error(mensagem);
     } finally {
       setSavingProfile(false);
     }
@@ -105,8 +106,8 @@ export default function Layout() {
         toast.success("Senha alterada com sucesso!");
         setShowPasswordSection(false);
       }
-    } catch (e) {
-      toast.error(e.response?.data?.message || "Erro ao alterar senha.");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erro ao alterar senha.");
     } finally {
       setSavingProfile(false);
     }

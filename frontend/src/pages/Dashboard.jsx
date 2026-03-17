@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
@@ -28,7 +28,7 @@ export default function Dashboard() {
           setQuartos(qRes.data);
           setReservas(Array.isArray(rRes.data) ? rRes.data : []);
         }
-      } catch (e) {
+      } catch {
         if (!cancelled) {
           setQuartos({ content: [], totalElements: 0 });
           toast.error("Erro ao carregar dados do painel.");
@@ -45,23 +45,39 @@ export default function Dashboard() {
   const totalQuartos = quartos.totalElements ?? quartos.content?.length ?? 0;
   const ocupados = reservas.length;
   const taxaOcupacao = totalQuartos > 0 ? Math.round((ocupados / totalQuartos) * 100) : 0;
-  
+
+  // Indexa quartos por id uma vez para evitar buscas O(n²) ao calcular receita
+  const diariaPorQuarto = useMemo(() => {
+    const mapa = new Map();
+    (quartos.content || []).forEach((q) => {
+      mapa.set(q.idQuarto, q.valorDiaria || 0);
+    });
+    return mapa;
+  }, [quartos]);
+
   /**
    * Cálculo de receita estimada baseado nos quartos ocupados e duração das reservas.
-   * Itera sobre as reservas ativas, encontra o quarto correspondente e calcula o valor total das diárias.
+   * Usa o mapa de diárias para garantir custo O(n) mesmo com muitas reservas/quartos.
    */
-  const receitaEstimada = reservas.reduce((acc, r) => {
-    const quarto = (quartos.content || []).find(q => q.idQuarto === r.idQuarto);
-    if (!quarto) return acc;
-    
-    // Converte datas para cálculo de diferença de dias
-    const d1 = new Date(r.dtInicio.includes("-") ? r.dtInicio.split("-").reverse().join("-") : r.dtInicio);
-    const d2 = new Date(r.dtFim.includes("-") ? r.dtFim.split("-").reverse().join("-") : r.dtFim);
-    const diffTime = Math.abs(d2 - d1);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
-    
-    return acc + (quarto.valorDiaria || 0) * diffDays;
-  }, 0);
+  const receitaEstimada = useMemo(
+    () =>
+      reservas.reduce((acc, r) => {
+        const diaria = diariaPorQuarto.get(r.idQuarto) ?? 0;
+        if (!diaria) return acc;
+
+        const d1 = new Date(
+          r.dtInicio.includes("-") ? r.dtInicio.split("-").reverse().join("-") : r.dtInicio
+        );
+        const d2 = new Date(
+          r.dtFim.includes("-") ? r.dtFim.split("-").reverse().join("-") : r.dtFim
+        );
+        const diffTime = Math.abs(d2 - d1);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1;
+
+        return acc + diaria * diffDays;
+      }, 0),
+    [reservas, diariaPorQuarto]
+  );
 
 
   return (

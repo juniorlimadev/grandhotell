@@ -65,12 +65,19 @@ export function toBackendDate(value) {
       return `${day}-${month}-${year}`;
     }
     
+    // Se já estiver no formato DD-MM-YYYY
+    if (typeof value === "string" && value.includes("-") && value.split("-")[0].length === 2) {
+      return value;
+    }
+
     const d = typeof value === "string" ? new Date(value + "T12:00:00") : value;
+    if (isNaN(d.getTime())) return value;
+    
     const day = String(d.getDate()).padStart(2, "0");
     const month = String(d.getMonth() + 1).padStart(2, "0");
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
   } catch {
-    return "";
+    return value;
   }
 }

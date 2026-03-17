@@ -1,19 +1,8 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { authApi, usuarioApi } from "../services/api";
 
-export function parseJwtPayload(token) {
-  try {
-    const base64Url = token.split(".")[1];
-    if (!base64Url) return null;
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
+import { parseJwtPayload } from "../utils/jwt-utils";
 
 const AuthContext = createContext(null);
 
@@ -82,7 +71,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => setToken(null);
 
-  const value = { token, user, login, logout, isAuthenticated: !!token };
+  const value = { token, user, login, logout, loading, isAuthenticated: !!token };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

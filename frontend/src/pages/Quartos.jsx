@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { quartoApi } from "../services/api";
 import { toast } from "react-toastify";
@@ -11,7 +11,6 @@ export default function Quartos() {
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
   const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
   const [busca, setBusca] = useState("");
   const [sortField, setSortField] = useState("nome");
   const [sortDir, setSortDir] = useState("ASC");
@@ -19,30 +18,17 @@ export default function Quartos() {
   const { id } = useParams();
   const isEdicao = !!id && id !== "novo";
 
-  const carregar = async (page = 0) => {
+  const carregar = useCallback(async (page = 0) => {
     setLoading(true);
     try {
       const res = await quartoApi.list(page, 10, sortField, sortDir);
       setLista(res.data);
-      if (isEdicao && id) {
-        const { data } = await quartoApi.getById(id);
-        const q = data.Quarto || data;
-        setForm({ 
-          nome: q.nome || "", 
-          alaHotel: q.alaHotel || "MEDIA",
-          valorDiaria: q.valorDiaria || "" 
-        });
-      }
     } catch (e) {
       toast.error(e.response?.data?.message || "Erro ao carregar quartos.");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    carregar(0);
-  }, [sortField, sortDir]);
+  }, [sortField, sortDir, isEdicao, id]);
 
   const quartosFiltrados = (lista.content || []).filter(q => 
     q.nome?.toLowerCase().includes(busca.toLowerCase()) ||
@@ -50,36 +36,36 @@ export default function Quartos() {
   );
 
   useEffect(() => {
+    carregar(0);
     if (isEdicao && id) {
       setModalAberto(true);
-      quartoApi.getById(id).then(({ data }) => {
-        const q = data.Quarto || data;
-        setForm({ 
-          nome: q.nome || "", 
-          alaHotel: q.alaHotel || "MEDIA",
-          valorDiaria: q.valorDiaria || ""
-        });
-      }).catch(() => setErro("Quarto não encontrado."));
+      quartoApi
+        .getById(id)
+        .then(({ data }) => {
+          const q = data.Quarto || data;
+          setForm({
+            nome: q.nome || "",
+            alaHotel: q.alaHotel || "MEDIA",
+            valorDiaria: q.valorDiaria || "",
+          });
+        })
+        .catch(() => toast.error("Quarto não encontrado."));
     }
-    carregar(isEdicao ? undefined : 0);
-  }, [id, isEdicao]);
+  }, [carregar, id, isEdicao]);
 
   const abrirNovo = () => {
     setForm({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
-    setErro("");
     setModalAberto(true);
     navigate("/quartos/novo", { replace: true });
   };
 
   const fecharModal = () => {
     setModalAberto(false);
-    setErro("");
     navigate("/quartos");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErro("");
     setSalvando(true);
     try {
       if (isEdicao) {

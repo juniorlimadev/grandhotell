@@ -89,7 +89,6 @@ export default function Usuarios() {
       dataNascimento: toInputDate(new Date("1990-01-01")),
       cargos: ["USER"],
     });
-    setErro("");
     setUsuarioEditando(null);
     setModalAberto(true);
   };
@@ -102,14 +101,12 @@ export default function Usuarios() {
       dataNascimento: toInputDate(usuario.dataNascimento),
       cargos: Array.isArray(usuario.cargos) ? usuario.cargos : [],
     });
-    setErro("");
     setUsuarioEditando(usuario.idUsuario);
     setModalAberto(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErro("");
     setSalvando(true);
     try {
       const payload = { ...form };
