@@ -3,8 +3,8 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-
-    <include file="db/changelog/migrations/db.changelog-3.0.xml"/>
-    <include file="db/changelog/migrations/db.changelog-4.0.xml"/>
-    <include file="db/changelog/migrations/db.changelog-5.0.xml"/>
+    <changeSet id="5" author="antigravity">
+        <modifyDataType tableName="USUARIO" columnName="foto_url" newDataType="TEXT"/>
+        <modifyDataType tableName="RESERVA" columnName="observacoes" newDataType="TEXT"/>
+    </changeSet>
 </databaseChangeLog>

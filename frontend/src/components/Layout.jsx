@@ -196,9 +196,15 @@ export default function Layout() {
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Operador</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">
+                    {user?.cargos?.includes('ADMIN') ? 'Administrador' : 
+                     user?.cargos?.includes('GESTAO_QUARTOS') ? 'Gestor de Quartos' :
+                     user?.cargos?.includes('GESTAO_RESERVAS') ? 'Gestor de Reservas' : 
+                     'Operador'}
+                  </p>
                   <p className="text-xs font-bold leading-none">{user?.nome || "Usuário"}</p>
                 </div>
+
               </div>
               
               <div className="relative">

@@ -33,8 +33,9 @@ public class TokenService {
         Date exp = new Date(now.getTime() + Long.parseLong(expiration));
 
         List<String> cargos = usuario.getCargos().stream()
-                .map(cargo -> "ROLE_" + cargo.getAuthority())
+                .map(br.com.dbc.hotel.entity.Cargo::getAuthority)
                 .toList();
+
 
         return TOKEN_PREFIX + " " +
                 Jwts.builder()
@@ -79,7 +80,7 @@ public class TokenService {
 
 
             List<SimpleGrantedAuthority> authorities = cargos.stream()
-                    .map(SimpleGrantedAuthority::new)
+                    .map(c -> new SimpleGrantedAuthority("ROLE_" + c))
                     .toList();
 
             return new UsernamePasswordAuthenticationToken(user, null, authorities);
