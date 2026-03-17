@@ -1,5 +1,10 @@
 import axios from "axios";
+import { toBackendDate } from "../utils/date-utils";
 
+/**
+ * Configuração central da API do Grand Hotel.
+ * Define a baseURL, interceptores de requisição (Token JWT) e resposta (Erros 401).
+ */
 const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 export const api = axios.create({
@@ -7,12 +12,14 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// Interceptor para injetar o token JWT em cada requisição
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
+// Interceptor para lidar com erros globais (Ex: redirecionamento de login se o token expirar)
 api.interceptors.response.use(
   (r) => r,
   (err) => {
@@ -24,10 +31,17 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Endpoints de Autenticação
+ */
 export const authApi = {
   login: (login, senha) => api.post("/auth", { login, senha }),
 };
 
+/**
+ * Endpoints de Quartos
+ * Gerencia a listagem e operações de CRUD básico.
+ */
 export const quartoApi = {
   list: (page = 0, size = 10, sort = "nome", sortDirection = "ASC") =>
     api.get("/quarto", { params: { page, size, sort, sortDirection } }),
@@ -37,23 +51,29 @@ export const quartoApi = {
   delete: (id) => api.delete(`/quarto/${id}`),
 };
 
-function toBackendDate(value) {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value + "T12:00:00") : value;
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
-}
-
+/**
+ * Endpoints de Reservas
+ * Gerencia a ocupação e disponibilidade dos quartos.
+ */
 export const reservaApi = {
   quartosLivres: (page = 0, size = 10, dtInicio, dtFim, ala, sortField = "nome", sortDirection = "ASC") =>
     api.get("/reserva/quartos-livres", {
-      params: { page, size, dtInicio: toBackendDate(dtInicio), dtFim: toBackendDate(dtFim), ala, sortField, sortDirection },
+      params: { 
+        page, 
+        size, 
+        dtInicio: toBackendDate(dtInicio), 
+        dtFim: toBackendDate(dtFim), 
+        ala, 
+        sortField, 
+        sortDirection 
+      },
     }),
   quartosOcupados: (dtInicio, dtFim) =>
     api.get("/reserva/quartos-ocupados", {
-      params: { dtInicio: toBackendDate(dtInicio), dtFim: toBackendDate(dtFim) },
+      params: { 
+        dtInicio: toBackendDate(dtInicio), 
+        dtFim: toBackendDate(dtFim) 
+      },
     }),
   getById: (id) => api.get(`/reserva/${id}`),
   getByUsuario: (nome) => api.get(`/reserva/usuario/${encodeURIComponent(nome)}`),
@@ -78,27 +98,30 @@ export const reservaApi = {
   delete: (id) => api.delete(`/reserva/${id}`),
 };
 
+/**
+ * Endpoints de Usuários
+ * Gerencia acesso e permissões (Cargos).
+ */
 export const usuarioApi = {
   list: (page = 0, size = 10, sort = "nome") =>
     api.get("/usuario", { params: { page, size, sort } }),
   getById: (id) => api.get(`/usuario/${id}`),
   create: (data) => {
     const d = { ...data };
-    if (d.dataNascimento && typeof d.dataNascimento === "string" && d.dataNascimento.length === 10) {
-      const [y, m, day] = d.dataNascimento.split("-");
-      d.dataNascimento = `${day}-${m}-${y}`;
+    if (d.dataNascimento) {
+      d.dataNascimento = toBackendDate(d.dataNascimento);
     }
     return api.post("/usuario", d);
   },
   update: (id, data) => {
     const d = { ...data };
-    if (d.dataNascimento && typeof d.dataNascimento === "string" && d.dataNascimento.length === 10) {
-      const [y, m, day] = d.dataNascimento.split("-");
-      d.dataNascimento = `${day}-${m}-${y}`;
+    if (d.dataNascimento) {
+      d.dataNascimento = toBackendDate(d.dataNascimento);
     }
     return api.put(`/usuario/${id}`, d);
   },
   delete: (id) => api.delete(`/usuario/${id}`),
   mudarSenha: (id, data) => api.put(`/usuario/mudar-senha/${id}`, data),
 };
+
 

@@ -2,34 +2,24 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
+import { formatDate } from "../utils/date-utils";
 
-function formatDate(d) {
-  if (!d) return "";
-  try {
-    if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
-      const [day, month, year] = d.split("-");
-      return `${day}/${month}/${year}`;
-    }
-    const date = typeof d === "string" ? new Date(d) : d;
-    if (isNaN(date.getTime())) return "—";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return "—";
-  }
-}
-
+/**
+ * Componente Dashboard
+ * Apresenta uma visão geral do sistema, incluindo estatísticas de ocupação,
+ * receita estimada e atalhos para as principais funcionalidades.
+ */
 export default function Dashboard() {
   const [quartos, setQuartos] = useState({ content: [], totalElements: 0 });
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Busca dados iniciais para o painel
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
+        // Busca quartos (para contagem total) e reservas do mês atual simultaneamente
         const [qRes, rRes] = await Promise.all([
           quartoApi.list(0, 50),
           reservaApi.quartosOcupados(new Date(), new Date(Date.now() + 30 * 24 * 3600 * 1000)),
@@ -51,16 +41,20 @@ export default function Dashboard() {
     return () => { cancelled = true; };
   }, []);
 
+  // Lógica de Negócio para o Painel
   const totalQuartos = quartos.totalElements ?? quartos.content?.length ?? 0;
   const ocupados = reservas.length;
   const taxaOcupacao = totalQuartos > 0 ? Math.round((ocupados / totalQuartos) * 100) : 0;
   
-  // Cálculo de receita estimada baseado nos quartos ocupados e duração das reservas
+  /**
+   * Cálculo de receita estimada baseado nos quartos ocupados e duração das reservas.
+   * Itera sobre as reservas ativas, encontra o quarto correspondente e calcula o valor total das diárias.
+   */
   const receitaEstimada = reservas.reduce((acc, r) => {
     const quarto = (quartos.content || []).find(q => q.idQuarto === r.idQuarto);
     if (!quarto) return acc;
     
-    // Cálculo de dias
+    // Converte datas para cálculo de diferença de dias
     const d1 = new Date(r.dtInicio.includes("-") ? r.dtInicio.split("-").reverse().join("-") : r.dtInicio);
     const d2 = new Date(r.dtFim.includes("-") ? r.dtFim.split("-").reverse().join("-") : r.dtFim);
     const diffTime = Math.abs(d2 - d1);
@@ -68,6 +62,7 @@ export default function Dashboard() {
     
     return acc + (quarto.valorDiaria || 0) * diffDays;
   }, 0);
+
 
   return (
     <div className="space-y-8">

@@ -1,41 +1,23 @@
 import { useState, useEffect } from "react";
 import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
+import { formatDate, toInputDate } from "../utils/date-utils";
 
-function toInputDate(d) {
-  if (!d) return "";
-  try {
-    const date = typeof d === "string" ? new Date(d) : d;
-    if (isNaN(date.getTime())) return "";
-    return date.toISOString().slice(0, 10);
-  } catch {
-    return "";
-  }
-}
-
-function formatDate(d) {
-  if (!d) return "";
-  try {
-    if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
-      const [day, month, year] = d.split("-");
-      return `${day}/${month}/${year}`;
-    }
-    const date = typeof d === "string" ? (d.includes(" ") ? new Date(d.split(" ")[0]) : new Date(d)) : d;
-    if (isNaN(date.getTime())) return "—";
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch {
-    return "—";
-  }
-}
-
+/**
+ * Componente de Gestão de Usuários.
+ * Permite listar, criar, editar e excluir usuários do sistema, além de gerenciar permissões (cargos).
+ */
 export default function Usuarios() {
+  // Estado para armazenar a lista paginada de usuários
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
+  
+  // Controle de Modal e Edição
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
+  const [salvando, setSalvando] = useState(false);
+  
+  // Formulário de Usuário com valores padrão
   const [form, setForm] = useState({
     nome: "",
     email: "",
@@ -43,9 +25,10 @@ export default function Usuarios() {
     dataNascimento: toInputDate(new Date("1990-01-01")),
     cargos: [],
   });
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState("");
 
+  /**
+   * Carrega a lista de usuários da API de forma paginada.
+   */
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
@@ -61,6 +44,7 @@ export default function Usuarios() {
   useEffect(() => {
     carregar(0);
   }, []);
+
 
   const permissoesDisponiveis = [
     { id: "ADMIN", label: "Gestão de Usuários" },

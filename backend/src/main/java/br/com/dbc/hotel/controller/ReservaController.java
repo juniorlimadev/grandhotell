@@ -33,30 +33,42 @@ public class ReservaController {
 
     private final ReservaService reservaService;
 
+    /**
+     * Retorna todas as reservas vinculadas a um quarto específico.
+     */
     @GetMapping("/quarto/{idQuarto}")
-    public ResponseEntity<Map<String, Object>> retornarUsuarioPorIdQuarto(@PathVariable Integer idQuarto){
+    public ResponseEntity<Map<String, Object>> listarPorQuarto(@PathVariable Integer idQuarto) {
+        log.info("Buscando reservas para o quarto ID: {}", idQuarto);
         List<Reserva> reservas = reservaService.buscarReservasPorQuarto(idQuarto);
-        return ResponseEntity.ok(createResponseMessage("Reservas por quarto encontrado com sucesso", reservas, "Reservas"));
+        return ResponseEntity.ok(createResponseMessage("Reservas por quarto encontradas com sucesso", reservas, "Reservas"));
     }
 
+    /**
+     * Cria uma nova reserva.
+     */
     @PostMapping()
-    public ResponseEntity<Map<String, Object>> adicionarUsuario(@RequestBody @Valid ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
-        log.info("Criando novo Quarto");
+    public ResponseEntity<Map<String, Object>> criar(@RequestBody @Valid ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
+        log.info("Iniciando criação de nova Reserva");
         ReservaDTO entity = reservaService.save(reservaCreateDTO);
-        log.info("Quarto criado com sucesso");
+        log.info("Reserva criada com sucesso");
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Reserva criada com sucesso.", entity, "Reserva"));
     }
 
+    /**
+     * Busca reservas que estejam ocupadas dentro de um intervalo de datas.
+     */
     @GetMapping("/quartos-ocupados")
     public ResponseEntity<List<ReservaDTO>> buscarReservasPorIntervalo(
             @RequestParam("dtInicio") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtInicio,
             @RequestParam("dtFim") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtFim) throws RegraDeNegocioException {
-
+        log.info("Buscando reservas no intervalo: {} até {}", dtInicio, dtFim);
         List<ReservaDTO> reservas = reservaService.buscarReservasPorIntervalo(dtInicio, dtFim);
-
         return ResponseEntity.ok(reservas);
     }
 
+    /**
+     * Busca quartos disponíveis (livres) para reserva em um intervalo de datas e ala.
+     */
     @GetMapping("/quartos-livres")
     public CustomPageDateDTO<QuartoDTO> buscarQuartosLivresPorAlaEData(
             @RequestParam(defaultValue = "0") Integer page,
@@ -68,33 +80,50 @@ public class ReservaController {
             @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtInicio,
             @RequestParam(defaultValue = "#{T(java.time.LocalDate).now().plusDays(1)}")
             @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtFim) throws RegraDeNegocioException{
-
+        log.info("Buscando quartos livres na ala {} de {} até {}", ala, dtInicio, dtFim);
         return reservaService.buscarQuartosLivresPorAlaEData(page, size, sortField, sortDirection, ala, dtInicio, dtFim);
     }
 
+    /**
+     * Busca os detalhes de uma reserva específica pelo ID.
+     */
     @GetMapping("/{idReserva}")
-    public ResponseEntity<Map<String,Object>> buscarReservaPorId(@PathVariable Integer idReserva) throws NotFoundException {
+    public ResponseEntity<Map<String,Object>> buscarPorId(@PathVariable Integer idReserva) throws NotFoundException {
+        log.info("Buscando reserva com ID: {}", idReserva);
         Reserva byId = reservaService.findById(idReserva);
         return ResponseEntity.ok(createResponseMessage("Reserva encontrada", byId, "Reserva"));
     }
 
+    /**
+     * Lista todas as reservas associadas a um nome de usuário.
+     */
     @GetMapping("/usuario/{nomeUsuario}")
-    public ResponseEntity<Map<String,Object>> buscarUsuarioPorId(@PathVariable String nomeUsuario){
+    public ResponseEntity<Map<String,Object>> listarPorNomeUsuario(@PathVariable String nomeUsuario){
+        log.info("Buscando reservas para o usuário: {}", nomeUsuario);
         List<ReservaDTO> reservaDTOS = reservaService.buscarReservasPorNomeUsuario(nomeUsuario);
-        return ResponseEntity.ok(createResponseMessage("Reserva encontrada", reservaDTOS, "Reservas"));
+        return ResponseEntity.ok(createResponseMessage("Reservas encontradas", reservaDTOS, "Reservas"));
     }
 
+    /**
+     * Atualiza os dados de uma reserva existente.
+     */
     @PutMapping("/{idReserva}")
-    public ResponseEntity<Map<String, Object>> atualizarReserva(@PathVariable Integer idReserva, @RequestBody @Valid ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
-        log.info("Atualizando Reserva");
+    public ResponseEntity<Map<String, Object>> atualizar(@PathVariable Integer idReserva, @RequestBody @Valid ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
+        log.info("Atualizando Reserva ID: {}", idReserva);
         ReservaDTO entity = reservaService.update(idReserva, reservaCreateDTO);
         log.info("Reserva atualizada com sucesso");
         return ResponseEntity.ok(createResponseMessage("Reserva atualizada com sucesso.", entity, "Reserva"));
     }
 
+    /**
+     * Cancela/Deleta uma reserva.
+     */
     @DeleteMapping("/{idReserva}")
-    public ResponseEntity<Map<String,Object>> deletarReserva(@PathVariable Integer idReserva) throws RegraDeNegocioException {
+    public ResponseEntity<Map<String,Object>> deletar(@PathVariable Integer idReserva) throws RegraDeNegocioException {
+        log.info("Cancelando reserva ID: {}", idReserva);
         reservaService.deletarReserva(idReserva);
+        log.info("Reserva deletada com sucesso");
         return ResponseEntity.ok(messageResponse("Reserva deletada com sucesso."));
     }
 }
+

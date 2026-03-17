@@ -31,46 +31,62 @@ public class QuartoController {
 
     private final QuartoService quartoService;
 
+    /**
+     * Lista todos os quartos cadastrados com paginação.
+     */
     @GetMapping()
-    public ResponseEntity<CustomPageDTO<QuartoDTO>> encontrarTodosQuartos(@RequestParam(defaultValue = "0") int page,
-                                                                           @RequestParam(defaultValue = "10") int size,
-                                                                           @RequestParam(defaultValue = "nome") String sort,
-                                                                          @RequestParam(defaultValue = "ASC") String sortDirection){
-        log.info("Listando todos quartos");
+    public ResponseEntity<CustomPageDTO<QuartoDTO>> listarTodos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nome") String sort,
+            @RequestParam(defaultValue = "ASC") String sortDirection) {
+        log.info("Iniciando listagem de todos os quartos");
         CustomPageDTO<QuartoDTO> quartoDto = quartoService.findAll(page, size, sort, sortDirection);
         log.info("Quartos listados com sucesso");
         return ResponseEntity.ok(quartoDto);
     }
 
+    /**
+     * Busca um quarto específico pelo ID.
+     */
     @GetMapping("/{idQuarto}")
-    public ResponseEntity<Map<String, Object>> retornarUsuarioPorId(@PathVariable Integer idQuarto) throws NotFoundException {
+    public ResponseEntity<Map<String, Object>> buscarPorId(@PathVariable Integer idQuarto) throws NotFoundException {
+        log.info("Buscando quarto com ID: {}", idQuarto);
         Quarto quarto = quartoService.findById(idQuarto);
         return ResponseEntity.ok(createResponseMessage("Quarto encontrado com sucesso", quarto, "Quarto"));
     }
 
+    /**
+     * Cadastra um novo quarto no sistema.
+     */
     @PostMapping()
-    public ResponseEntity<Map<String, Object>> adicionarUsuario(@RequestBody @Valid QuartoCreateDTO quartoCreateDTO) throws RegraDeNegocioException {
-        log.info("Criando novo Quarto");
+    public ResponseEntity<Map<String, Object>> salvar(@RequestBody @Valid QuartoCreateDTO quartoCreateDTO) throws RegraDeNegocioException {
+        log.info("Criando novo Quarto: {}", quartoCreateDTO.getNome());
         QuartoDTO entity = quartoService.save(quartoCreateDTO);
         log.info("Quarto criado com sucesso");
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Quarto criado com sucesso.", entity, "Quarto"));
     }
 
+    /**
+     * Atualiza os dados de um quarto existente.
+     */
     @PutMapping("/{idQuarto}")
-    public ResponseEntity<Map<String, Object>> atualizarUsuario(@PathVariable Integer idQuarto, @RequestBody @Valid QuartoCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
-        log.info("Criando novo Quarto");
-        QuartoDTO entity = quartoService.update(idQuarto, usuarioCreateDTO);
-        log.info("Quarto criado com sucesso");
-        return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Quarto atualizado com sucesso.", entity, "Quarto"));
+    public ResponseEntity<Map<String, Object>> atualizar(@PathVariable Integer idQuarto, @RequestBody @Valid QuartoCreateDTO quartoUpdateDTO) throws RegraDeNegocioException {
+        log.info("Atualizando Quarto com ID: {}", idQuarto);
+        QuartoDTO entity = quartoService.update(idQuarto, quartoUpdateDTO);
+        log.info("Quarto atualizado com sucesso");
+        return ResponseEntity.status(HttpStatus.OK).body(createResponseMessage("Quarto atualizado com sucesso.", entity, "Quarto"));
     }
 
-    @DeleteMapping("/{idUsuario}")
-    public ResponseEntity<Map<String, Object>> delete(@PathVariable Integer idUsuario) throws RegraDeNegocioException {
-        log.info("Deletando Quarto com ID {}", idUsuario);
-        quartoService.delete(idUsuario);
+    /**
+     * Remove um quarto do sistema.
+     */
+    @DeleteMapping("/{idQuarto}")
+    public ResponseEntity<Map<String, Object>> deletar(@PathVariable Integer idQuarto) throws RegraDeNegocioException {
+        log.info("Deletando Quarto com ID {}", idQuarto);
+        quartoService.delete(idQuarto);
         log.info("Quarto deletado com sucesso");
         return ResponseEntity.ok(messageResponse("Quarto deletado com sucesso."));
     }
-
-
 }
+

@@ -1,26 +1,28 @@
-# Common
+# OS
 .DS_Store
-.idea
-.vscode
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
 *.swp
 *.log
-*.txt
 *.tmp
 
-# Backend (Spring Boot)
+# Java / Spring
 **/target/
 **/*.jar
 **/*.war
-**/application-cloud.properties
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+**/bin/
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings
+**/.springBeans
+**/.sts4-cache
 
-# Frontend (Node/React)
+# Node / Frontend
 **/node_modules/
 **/dist/
 **/.env
@@ -28,6 +30,13 @@
 **/.env.development.local
 **/.env.test.local
 **/.env.production.local
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
 
-# OS files
-Thumbs.db
+# Other
+system.properties
+mvnw
+mvnw.cmd
+.mvn/
+hotel-api-main/
