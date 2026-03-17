@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { authApi } from "../services/api";
+import { authApi, usuarioApi } from "../services/api";
 
 export function parseJwtPayload(token) {
   try {
@@ -45,14 +45,33 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (token) {
-      localStorage.setItem("token", token);
-      updateUserFromToken(token);
-    } else {
-      localStorage.removeItem("token");
-      setUser(null);
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      if (token) {
+        localStorage.setItem("token", token);
+        updateUserFromToken(token);
+        
+        // Fetch full profile to get fotoUrl and other details accurately
+        try {
+          const payload = parseJwtPayload(token);
+          if (payload?.id) {
+            const { data } = await usuarioApi.getById(payload.id);
+            setUser(prev => ({
+              ...prev,
+              ...data,
+              cargos: data.cargos || prev.cargos
+            }));
+          }
+        } catch (e) {
+          console.error("Erro ao carregar perfil completo:", e);
+        }
+      } else {
+        localStorage.removeItem("token");
+        setUser(null);
+      }
+      setLoading(false);
+    };
+
+    initAuth();
   }, [token, updateUserFromToken]);
 
   const login = async (email, senha) => {

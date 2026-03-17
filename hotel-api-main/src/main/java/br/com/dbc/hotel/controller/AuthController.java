@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.transaction.annotation.Transactional;
 import javax.validation.Valid;
 
 @RestController
@@ -32,6 +33,7 @@ public class AuthController{
     private final TokenService tokenService;
 
     @PostMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<TokenDTO> auth(@RequestBody @Valid LoginDTO loginDTO) throws Exception {
         try {
             UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =

@@ -36,6 +36,9 @@ public class TokenService {
                 .map(br.com.dbc.hotel.entity.Cargo::getAuthority)
                 .toList();
 
+        String dataNascimentoStr = usuario.getDataNascimento() != null 
+                ? usuario.getDataNascimento().toString() 
+                : null;
 
         return TOKEN_PREFIX + " " +
                 Jwts.builder()
@@ -43,10 +46,8 @@ public class TokenService {
                         .setSubject(usuario.getEmail())
                         .claim("nome", usuario.getNome())
                         .claim("id", usuario.getIdUsuario())
-                        .claim("fotoUrl", usuario.getFotoUrl())
-                        .claim("dataNascimento", usuario.getDataNascimento())
+                        .claim("dataNascimento", dataNascimentoStr)
                         .claim(CARGOS_CLAIM, cargos)
-
                         .setIssuedAt(now)
                         .setExpiration(exp)
                         .signWith(SignatureAlgorithm.HS256, secret)

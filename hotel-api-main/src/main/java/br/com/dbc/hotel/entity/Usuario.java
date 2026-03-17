@@ -46,7 +46,7 @@ public class Usuario implements UserDetails {
 
 
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "USUARIO_CARGO",
             joinColumns = @JoinColumn(name = "id_usuario"),
