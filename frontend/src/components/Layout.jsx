@@ -85,9 +85,9 @@ export default function Layout() {
 
     // Evita payload gigante (base64 do arquivo inteiro) deixando a foto muito pesada no banco.
     // Redimensiona/comprime antes de salvar.
-    const MAX_BYTES = 0.5 * 1024 * 1024; // 500KB
+    const MAX_BYTES = 10 * 1024 * 1024; // 10MB (limite para seleção, será comprimido depois)
     if (file.size > MAX_BYTES) {
-      toast.error("Escolha uma foto menor (até 500KB).");
+      toast.error("Escolha uma foto menor (até 10MB).");
       return;
     }
 
