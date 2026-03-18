@@ -41,6 +41,7 @@ public class Usuario implements UserDetails {
     private LocalDate dataNascimento;
 
     @Lob
+    @javax.persistence.Basic(fetch = javax.persistence.FetchType.LAZY)
     @Column(name = "foto_url")
     private String fotoUrl;
 
