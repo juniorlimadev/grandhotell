@@ -3,7 +3,9 @@ package br.com.dbc.hotel.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -40,9 +42,12 @@ public class Usuario implements UserDetails {
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
+    @JsonIgnore
     @Lob
     @javax.persistence.Basic(fetch = javax.persistence.FetchType.LAZY)
     @Column(name = "foto_url")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private String fotoUrl;
 
 

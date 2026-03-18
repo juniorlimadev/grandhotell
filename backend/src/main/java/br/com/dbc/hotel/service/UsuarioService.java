@@ -134,6 +134,10 @@ public class UsuarioService {
 
     private UsuarioDTO entidadeParaDTO(Usuario usuario) {
         UsuarioDTO dto = objectMapper.convertValue(usuario, UsuarioDTO.class);
+        
+        // Copia a foto manualmente pois ela é @JsonIgnore na entidade (para evitar carga no login)
+        dto.setFotoUrl(usuario.getFotoUrl());
+
         if (usuario.getCargos() != null) {
             dto.setCargos(usuario.getCargos().stream()
                     .map(Cargo::getTitulo)

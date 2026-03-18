@@ -85,9 +85,9 @@ export default function Layout() {
 
     // Evita payload gigante (base64 do arquivo inteiro) deixando a foto muito pesada no banco.
     // Redimensiona/comprime antes de salvar.
-    const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5MB
+    const MAX_BYTES = 0.5 * 1024 * 1024; // 500KB
     if (file.size > MAX_BYTES) {
-      toast.error("Escolha uma foto menor (até ~1.5MB).");
+      toast.error("Escolha uma foto menor (até 500KB).");
       return;
     }
 
@@ -95,7 +95,7 @@ export default function Layout() {
     reader.onloadend = () => {
       const img = new Image();
       img.onload = () => {
-        const MAX_DIM = 512; // mantém boa qualidade, mas reduz bastante o tamanho
+        const MAX_DIM = 256; // mantém boa qualidade para avatar, mas reduz bastante o tamanho
         const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
         const canvas = document.createElement("canvas");
         canvas.width = Math.round(img.width * scale);
@@ -108,7 +108,7 @@ export default function Layout() {
         }
 
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.75);
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.6);
         setProfileForm({ ...profileForm, fotoUrl: resizedDataUrl });
       };
       img.onerror = () => toast.error("Não foi possível ler a imagem selecionada.");
