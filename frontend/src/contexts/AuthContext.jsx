@@ -33,41 +33,56 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const normalizeUsuario = (data) => {
+    // Backend costuma retornar algo como { Usuario: ... } ou { usuario: ... } (ou ainda "data")
+    return data?.Usuario || data?.usuario || data?.data || data;
+  };
+
+  const refreshUser = useCallback(async () => {
+    const t = localStorage.getItem("token");
+    if (!t) return;
+
+    const payload = parseJwtPayload(t);
+    if (!payload?.id) return;
+
+    try {
+      const { data } = await usuarioApi.getById(payload.id);
+      const usuario = normalizeUsuario(data);
+      setUser((prev) => ({
+        ...(prev || {}),
+        ...(usuario || {}),
+        cargos: usuario?.cargos || prev?.cargos || [],
+      }));
+    } catch (e) {
+      // Se falhar, não quebra a UI: mantém o que já tinha do token.
+      console.error("Erro ao atualizar perfil (refreshUser):", e);
+    }
+  }, []);
+
   useEffect(() => {
+    let cancelled = false;
+
     const initAuth = async () => {
       if (token) {
         localStorage.setItem("token", token);
         updateUserFromToken(token);
-        
-        // Fetch full profile to get fotoUrl and other details accurately
-        try {
-          const payload = parseJwtPayload(token);
-          if (payload?.id) {
-            const { data } = await usuarioApi.getById(payload.id);
-            const usuario =
-              data?.Usuario ||
-              data?.usuario ||
-              data?.data ||
-              data;
 
-            setUser(prev => ({
-              ...prev,
-              ...usuario,
-              cargos: usuario?.cargos || prev?.cargos || []
-            }));
-          }
-        } catch (e) {
-          console.error("Erro ao carregar perfil completo:", e);
-        }
+        // Libera a UI imediatamente; o refresh do perfil (foto, etc.) roda em background.
+        if (!cancelled) setLoading(false);
+
+        refreshUser();
       } else {
         localStorage.removeItem("token");
         setUser(null);
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     };
 
     initAuth();
-  }, [token, updateUserFromToken]);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, updateUserFromToken, refreshUser]);
 
   const login = async (email, senha) => {
     const { data } = await authApi.login(email, senha);
@@ -77,7 +92,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => setToken(null);
 
-  const value = { token, user, login, logout, loading, isAuthenticated: !!token };
+  const value = { token, user, login, logout, refreshUser, loading, isAuthenticated: !!token };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

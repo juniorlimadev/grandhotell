@@ -7,6 +7,7 @@ import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.security.TokenService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +25,7 @@ import javax.validation.Valid;
 @RestController
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/auth")
 @Tag(name = "Autenticação", description = "Endpoints para gerenciamento de autenticações")
 public class AuthController{
@@ -53,6 +55,14 @@ public class AuthController{
 
         } catch (BadCredentialsException e) {
             throw new RegraDeNegocioException("E-mail ou senha inválidos. Tente novamente.", HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            // Evita mensagem genérica de "erro interno" quando o problema for temporário
+            // (ex: indisponibilidade/intermitência do banco no plano free).
+            log.error("Falha ao autenticar usuário: {}", loginDTO.getLogin(), e);
+            throw new RegraDeNegocioException(
+                    "Não foi possível autenticar agora. Tente novamente em instantes.",
+                    HttpStatus.SERVICE_UNAVAILABLE
+            );
         }
     }
 

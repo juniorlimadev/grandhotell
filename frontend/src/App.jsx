@@ -9,15 +9,12 @@ import Usuarios from "./pages/Usuarios";
 import Notificacoes from "./pages/Notificacoes";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import LoadingScreen from "./components/LoadingScreen";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <p className="text-slate-500">Carregando...</p>
-      </div>
-    );
+    return <LoadingScreen title="Carregando sua sessão..." subtitle="Aguarde um instante" />;
   }
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;

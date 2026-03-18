@@ -14,7 +14,7 @@ const navItems = [
 ];
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   
   // Filtra itens de navegação baseado nas permissões do usuário
@@ -76,13 +76,45 @@ export default function Layout() {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileForm({ ...profileForm, fotoUrl: reader.result });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (!file.type?.startsWith("image/")) {
+      toast.error("Arquivo selecionado não é uma imagem.");
+      return;
     }
+
+    // Evita payload gigante (base64 do arquivo inteiro) deixando a foto muito pesada no banco.
+    // Redimensiona/comprime antes de salvar.
+    const MAX_BYTES = 1.5 * 1024 * 1024; // 1.5MB
+    if (file.size > MAX_BYTES) {
+      toast.error("Escolha uma foto menor (até ~1.5MB).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 512; // mantém boa qualidade, mas reduz bastante o tamanho
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          toast.error("Não foi possível processar a imagem.");
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.75);
+        setProfileForm({ ...profileForm, fotoUrl: resizedDataUrl });
+      };
+      img.onerror = () => toast.error("Não foi possível ler a imagem selecionada.");
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSaveProfile = async () => {
@@ -110,6 +142,8 @@ export default function Layout() {
           senha: "" // Senha vazia para não alterar
         });
 
+        // Atualiza o "user" do contexto imediatamente para refletir a nova foto no topo.
+        await refreshUser();
 
         toast.success("Perfil atualizado! Faça login novamente para ver todas as mudanças.");
         setShowProfileModal(false);
