@@ -11,6 +11,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "./components/LoadingScreen";
 
+import Home from "./pages/Home";
+
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   if (loading) {
@@ -24,9 +26,10 @@ export default function App() {
   return (
     <>
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route
-        path="/"
+        path="/admin"
         element={
           <ProtectedRoute>
             <Layout />

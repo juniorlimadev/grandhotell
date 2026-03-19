@@ -73,7 +73,7 @@ public class ReservaService {
     public ReservaDTO save(ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
         validarDatas(reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim());
         
-        Usuario usuario = usuarioService.findById(reservaCreateDTO.getIdUsuario());
+        Usuario usuario = reservaCreateDTO.getIdUsuario() != null ? usuarioService.findById(reservaCreateDTO.getIdUsuario()) : null;
         Quarto quarto = quartoService.findById(reservaCreateDTO.getIdQuarto());
         
         validarConflitos(quarto.getIdQuarto(), reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim(), null);
@@ -102,7 +102,7 @@ public class ReservaService {
         Reserva reserva = findById(idReserva);
         validarDatas(reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim());
 
-        Usuario usuario = usuarioService.findById(reservaCreateDTO.getIdUsuario());
+        Usuario usuario = reservaCreateDTO.getIdUsuario() != null ? usuarioService.findById(reservaCreateDTO.getIdUsuario()) : null;
         Quarto quarto = quartoService.findById(reservaCreateDTO.getIdQuarto());
 
         validarConflitos(quarto.getIdQuarto(), reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim(), idReserva);
@@ -112,6 +112,7 @@ public class ReservaService {
         reserva.setDtInicio(reservaCreateDTO.getDtInicio());
         reserva.setDtFim(reservaCreateDTO.getDtFim());
         reserva.setHospedeNome(reservaCreateDTO.getHospedeNome());
+        reserva.setHospedeEmail(reservaCreateDTO.getHospedeEmail());
         reserva.setObservacoes(reservaCreateDTO.getObservacoes());
 
         Reserva reservaSalva = reservaRepository.save(reserva);

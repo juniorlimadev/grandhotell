@@ -29,4 +29,19 @@ public class Quarto {
 
     @Column(name = "valor_diaria")
     private Double valorDiaria;
+
+    @Column(name = "descricao")
+    private String descricao;
+
+    @Column(name = "foto_url")
+    private String fotoUrl;
+
+    @Column(name = "avaliacao")
+    private Double avaliacao;
+
+    @Column(name = "tipo")
+    private String tipo;
+
+    @Column(name = "tags")
+    private String tags; 
 }

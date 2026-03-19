@@ -1,0 +1,364 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { quartoApi } from "../services/api";
+import { toast } from "react-toastify";
+
+export default function Home() {
+  const [quartos, setQuartos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalBooking, setModalBooking] = useState(false);
+  const [quartoSelecionado, setQuartoSelecionado] = useState(null);
+  const [formReserva, setFormReserva] = useState({
+    hospedeNome: "",
+    email: "",
+    dtInicio: "",
+    dtFim: "",
+    observacoes: ""
+  });
+  const [reservando, setReservando] = useState(false);
+
+  useEffect(() => {
+    const carregar = async () => {
+      try {
+        const res = await quartoApi.list(0, 9, "idQuarto", "DESC");
+        setQuartos(res.data.content || []);
+      } catch (e) {
+        console.error("Erro ao carregar quartos para a Home", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    carregar();
+  }, []);
+
+  const abrirReserva = (quarto) => {
+    setQuartoSelecionado(quarto);
+    setFormReserva({ ...formReserva, dtInicio: "", dtFim: "" });
+    setModalBooking(true);
+  };
+
+  const handleReserva = async (e) => {
+    e.preventDefault();
+    setReservando(true);
+    try {
+      const payload = {
+        ...formReserva,
+        idQuarto: quartoSelecionado.idQuarto,
+        idUsuario: null // Hóspede sem login
+      };
+      await reservaApi.create(payload);
+      toast.success(`Parabéns ${formReserva.hospedeNome}! Sua reserva para o ${quartoSelecionado.nome} foi confirmada.`);
+      setModalBooking(false);
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Erro ao realizar reserva. Verifique as datas.");
+    } finally {
+      setReservando(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    toast.info("Integração com Google Login sendo processada pelo servidor seguro...");
+    // Mocking a redirect/login
+    setTimeout(() => {
+        window.location.href = "/login";
+    }, 1500);
+  };
+
+  return (
+    <div className="bg-[#faf8ff] text-[#131b30] min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
+      {/* TopNavBar */}
+      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-sm flex justify-between items-center px-4 md:px-8 h-20">
+        <div className="text-xl font-extrabold tracking-tighter text-[#006972]">
+           GrandHotel
+        </div>
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Início</a>
+          <a href="#quartos" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
+          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Pacotes</a>
+          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Sobre Nós</a>
+        </div>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleGoogleLogin}
+            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
+          >
+            <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
+            Entrar com Google
+          </button>
+          <Link 
+            to="/login"
+            className="px-6 py-2.5 bg-[#006972] hover:bg-[#004f56] text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg shadow-[#006972]/20"
+          >
+            Acesso Admin
+          </Link>
+        </div>
+      </nav>
+
+      <main className="pt-20">
+        {/* Hero Banner */}
+        <section className="relative h-[600px] flex items-center px-8 md:px-20 overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            <img 
+              className="w-full h-full object-cover" 
+              src="https://images.unsplash.com/photo-1571896349842-337edd2eb820?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+              alt="Luxury hotel room with view"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#131b30]/80 via-[#131b30]/30 to-transparent"></div>
+          </div>
+          <div className="relative z-10 max-w-3xl text-white">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#8edce6]/20 backdrop-blur-md rounded-full mb-8 border border-white/10">
+               <span className="material-symbols-outlined text-[#8edce6] text-lg">verified</span>
+               <span className="text-[10px] uppercase font-black tracking-[0.2em]">Oásis Urbano • Luxo • Conforto</span>
+            </div>
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1]">
+              Sua jornada de <br/>
+              <span className="text-[#8edce6]">serenidade</span> <br/>
+              começa aqui.
+            </h1>
+            <p className="text-lg md:text-xl opacity-90 font-medium max-w-xl mb-12 leading-relaxed">
+              Descubra um refúgio de sofisticação onde cada detalhe foi planejado para proporcionar sua melhor estadia.
+            </p>
+            <div className="flex flex-wrap gap-4">
+                 <a href="#quartos" className="bg-[#006972] text-white px-12 py-6 rounded-2xl font-black text-sm shadow-2xl shadow-[#006972]/40 hover:scale-105 hover:-translate-y-1 transition-all">
+                    Visualizar Acomodações
+                 </a>
+                 <button className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-12 py-6 rounded-2xl font-black text-sm hover:bg-white/20 transition-all">
+                    Tour Virtual
+                 </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Search Bar (Pill Style) */}
+        <section className="px-8 -mt-16 relative z-20">
+          <div className="max-w-6xl mx-auto bg-white rounded-[2.5rem] shadow-2xl shadow-[#131b30]/15 p-5 flex flex-col md:flex-row items-center gap-3 border border-slate-100">
+            <div className="flex-1 flex items-center gap-5 px-10 py-5 border-r border-slate-100 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">calendar_today</span>
+               <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800" type="date" />
+               </div>
+            </div>
+            <div className="flex-1 flex items-center gap-5 px-10 py-5 border-r border-slate-100 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">calendar_month</span>
+               <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800" type="date" />
+               </div>
+            </div>
+            <div className="flex-1 flex items-center gap-5 px-10 py-5 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">person_add</span>
+               <div className="flex flex-col">
+                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
+               </div>
+            </div>
+            <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-14 py-6 rounded-3xl font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
+              Verificando Datas
+            </button>
+          </div>
+        </section>
+
+        {/* Rooms Grid */}
+        <section id="quartos" className="py-32 px-8 max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
+            <div>
+              <h2 className="text-4xl font-black tracking-tighter text-[#131b30] mb-4">Acomodações de Luxo</h2>
+              <p className="text-slate-500 font-medium text-lg">Encontre o refúgio perfeito para sua próxima estadia inesquecível.</p>
+            </div>
+            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+              <button className="px-6 py-2.5 rounded-xl bg-white text-[#006972] text-xs font-black shadow-sm">Todos</button>
+              <button className="px-6 py-2.5 rounded-xl text-slate-500 text-xs font-black hover:bg-white/50 transition-all">Suítes</button>
+              <button className="px-6 py-2.5 rounded-xl text-slate-500 text-xs font-black hover:bg-white/50 transition-all">Premium</button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="bg-white rounded-3xl h-[450px] animate-pulse border border-slate-100"></div>
+              ))
+            ) : quartos.map((q) => (
+              <div key={q.idQuarto} className="bg-white rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,105,114,0.1)] border border-slate-100">
+                <div className="relative h-72 overflow-hidden">
+                  <img 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    src={q.fotoUrl || "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80"} 
+                    alt={q.nome} 
+                  />
+                  <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg">
+                    <span className="text-[10px] font-black text-[#006972] uppercase tracking-widest">{q.tipo || "Premium"}</span>
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col flex-1">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-2xl font-black text-[#131b30] group-hover:text-[#006972] transition-colors">{q.nome}</h3>
+                    <div className="flex items-center gap-1.5 text-[#006972] bg-[#8edce6]/30 px-3 py-1 rounded-xl">
+                      <span className="material-symbols-outlined text-base fill-1">star</span>
+                      <span className="text-sm font-black">{q.avaliacao || "5.0"}</span>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-slate-500 line-clamp-2 mb-6 font-medium leading-relaxed">
+                    {q.descricao || "Experiência de luxo com vista panorâmica e acabamento de alto padrão para seu total descanso."}
+                  </p>
+
+                  <div className="flex gap-4 mb-8">
+                    { (q.tags || "Wi-Fi, Piscina, Ar").split(",").map(tag => (
+                       <div key={tag} className="flex items-center gap-1.5 text-slate-400 group-hover:text-[#006972] transition-colors">
+                          <span className="text-[10px] font-black uppercase tracking-tighter">{tag.trim()}</span>
+                       </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto flex justify-between items-center border-t border-slate-50 pt-6">
+                    <div>
+                      <span className="text-3xl font-black text-[#006972]">
+                         {q.valorDiaria?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                      <span className="text-xs text-slate-400 font-bold tracking-tight block mt-1 uppercase">por noite</span>
+                    </div>
+                    <button 
+                       onClick={() => abrirReserva(q)}
+                       className="bg-[#006972] text-white px-8 py-4 rounded-2xl font-black text-sm hover:brightness-110 transition-all shadow-lg shadow-[#006972]/20 active:scale-95"
+                    >
+                      Reservar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      {/* Booking Modal */}
+      {modalBooking && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#131b30]/60 backdrop-blur-md">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl p-10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8">
+                    <button onClick={() => setModalBooking(false)} className="size-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all">
+                        <span className="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div className="mb-10 text-center">
+                    <h3 className="text-3xl font-black text-[#131b30] mb-2">Finalizar Reserva</h3>
+                    <p className="text-slate-500 font-medium">Você selecionou o <span className="text-[#006972] font-black">{quartoSelecionado?.nome}</span></p>
+                </div>
+
+                <form onSubmit={handleReserva} className="space-y-6">
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nome Completo</label>
+                        <input 
+                            required
+                            value={formReserva.hospedeNome}
+                            onChange={e => setFormReserva({...formReserva, hospedeNome: e.target.value})}
+                            className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold placeholder:text-slate-300" 
+                            placeholder="Seu nome como no documento"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">E-mail para Confirmação</label>
+                        <input 
+                            required
+                            type="email"
+                            value={formReserva.hospedeEmail}
+                            onChange={e => setFormReserva({...formReserva, hospedeEmail: e.target.value})}
+                            className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold placeholder:text-slate-300" 
+                            placeholder="exemplo@email.com"
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Check-in</label>
+                            <input 
+                                required
+                                type="date"
+                                value={formReserva.dtInicio}
+                                onChange={e => setFormReserva({...formReserva, dtInicio: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Check-out</label>
+                            <input 
+                                required
+                                type="date"
+                                value={formReserva.dtFim}
+                                onChange={e => setFormReserva({...formReserva, dtFim: e.target.value})}
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Observações (Opcional)</label>
+                        <textarea 
+                            value={formReserva.observacoes}
+                            onChange={e => setFormReserva({...formReserva, observacoes: e.target.value})}
+                            className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold placeholder:text-slate-300 min-h-[100px] resize-none" 
+                            placeholder="Algum pedido especial?"
+                        />
+                    </div>
+
+                    <button 
+                        disabled={reservando}
+                        type="submit" 
+                        className="w-full bg-gradient-to-r from-[#006972] to-[#004f56] text-white py-6 rounded-[2rem] font-black text-base shadow-xl shadow-[#006972]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                    >
+                        {reservando ? "Confirmando na nuvem..." : "Confirmar Minha Reserva"}
+                    </button>
+                    <p className="text-center text-[10px] text-slate-400 font-bold uppercase tracking-tight">
+                        Ao confirmar, você concorda com nossos termos de estadia.
+                    </p>
+                </form>
+            </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <footer className="w-full py-20 px-8 bg-[#131b30] text-white mt-auto">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+            <div className="col-span-1 md:col-span-2">
+                <div className="text-3xl font-black mb-6 text-[#8edce6]">GrandHotel</div>
+                <p className="text-slate-400 font-medium max-w-sm leading-relaxed mb-8">
+                    Elevando o conceito de hospitalidade com experiências imersivas e conforto inigualável ao redor do mundo.
+                </p>
+                <div className="flex gap-4">
+                  <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-[#006972] transition-colors cursor-pointer group">
+                     <span className="material-symbols-outlined text-slate-400 group-hover:text-white">social_leaderboard</span>
+                  </div>
+                  <div className="size-12 rounded-2xl bg-white/5 flex items-center justify-center hover:bg-[#006972] transition-colors cursor-pointer group">
+                     <span className="material-symbols-outlined text-slate-400 group-hover:text-white">language</span>
+                  </div>
+                </div>
+            </div>
+            <div>
+                 <h4 className="font-black text-lg mb-6">Explore</h4>
+                 <ul className="space-y-4 text-slate-400 font-bold text-sm">
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Início</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Nossos Quartos</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Serviços</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Sobre Nós</a></li>
+                 </ul>
+            </div>
+            <div>
+                 <h4 className="font-black text-lg mb-6">Suporte</h4>
+                 <ul className="space-y-4 text-slate-400 font-bold text-sm">
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Termos de Uso</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Privacidade</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Central de Ajuda</a></li>
+                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Contato</a></li>
+                 </ul>
+            </div>
+        </div>
+        <div className="max-w-7xl mx-auto border-t border-white/5 mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-slate-500 font-bold">© 2026 Grand Hotel. Desenvolvido com foco na excelência.</p>
+            <div className="flex gap-8 text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                <span>Brasil</span>
+                <span>Internacional</span>
+            </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

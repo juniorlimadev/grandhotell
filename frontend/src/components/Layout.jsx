@@ -189,15 +189,29 @@ export default function Layout() {
               end={to === "/"}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
+                `group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
                   isActive
-                    ? "bg-primary text-slate-900 font-bold shadow-md shadow-primary/20 scale-[1.02]"
-                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    ? "bg-primary text-slate-900 font-black shadow-lg shadow-primary/20 scale-[1.02]"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:pl-5"
                 }`
               }
             >
-              <span className="material-symbols-outlined">{icon}</span>
-              {!sidebarCollapsed && <span className="text-sm">{label}</span>}
+              <div className="flex items-center gap-3 z-10">
+                <span className="material-symbols-outlined transition-transform group-hover:scale-110">{icon}</span>
+                {!sidebarCollapsed && <span className="text-sm tracking-tight">{label}</span>}
+              </div>
+              
+              {/* Indicador de Seta Suave */}
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none overflow-hidden">
+                <div className={`
+                   transition-all duration-500 ease-out transform
+                   ${sidebarCollapsed ? 'translate-x-full opacity-0' : ''}
+                   group-[.active]:translate-x-0 group-[.active]:opacity-100
+                   group-[:not(.active)]:translate-x-4 group-[:not(.active)]:opacity-0
+                `}>
+                  <span className="material-symbols-outlined text-[20px] fill-1 text-slate-900/40">chevron_right</span>
+                </div>
+              </div>
             </NavLink>
           ))}
         </nav>

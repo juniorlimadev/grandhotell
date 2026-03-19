@@ -45,6 +45,9 @@ public class Reserva {
     @Column(name = "hospede_nome")
     private String hospedeNome;
 
+    @Column(name = "hospede_email")
+    private String hospedeEmail;
+
     @Column(name = "observacoes")
     private String observacoes;
 }

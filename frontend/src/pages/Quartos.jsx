@@ -9,7 +9,17 @@ export default function Quartos() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
-  const [form, setForm] = useState({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
+  const [form, setForm] = useState({ 
+    nome: "", 
+    alaHotel: "MEDIA", 
+    valorDiaria: "",
+    descricao: "",
+    fotoUrl: "",
+    avaliacao: 5.0,
+    tipo: "Suíte",
+    tags: "Wi-Fi, Piscina, Ar"
+  });
+
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState("");
   const [sortField, setSortField] = useState("nome");
@@ -28,11 +38,11 @@ export default function Quartos() {
     } finally {
       setLoading(false);
     }
-  }, [sortField, sortDir, isEdicao, id]);
+  }, [sortField, sortDir]);
 
   const quartosFiltrados = (lista.content || []).filter(q => 
     q.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-    q.alaHotel?.toLowerCase().includes(busca.toLowerCase())
+    q.tipo?.toLowerCase().includes(busca.toLowerCase())
   );
 
   useEffect(() => {
@@ -47,6 +57,11 @@ export default function Quartos() {
             nome: q.nome || "",
             alaHotel: q.alaHotel || "MEDIA",
             valorDiaria: q.valorDiaria || "",
+            descricao: q.descricao || "",
+            fotoUrl: q.fotoUrl || "",
+            avaliacao: q.avaliacao || 5.0,
+            tipo: q.tipo || "Suíte",
+            tags: q.tags || ""
           });
         })
         .catch(() => toast.error("Quarto não encontrado."));
@@ -54,7 +69,16 @@ export default function Quartos() {
   }, [carregar, id, isEdicao]);
 
   const abrirNovo = () => {
-    setForm({ nome: "", alaHotel: "MEDIA", valorDiaria: "" });
+    setForm({ 
+      nome: "", 
+      alaHotel: "MEDIA", 
+      valorDiaria: "",
+      descricao: "",
+      fotoUrl: "",
+      avaliacao: 5.0,
+      tipo: "Suíte",
+      tags: "Wi-Fi, Piscina, Ar"
+    });
     setModalAberto(true);
     navigate("/quartos/novo", { replace: true });
   };
@@ -117,7 +141,7 @@ export default function Quartos() {
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
           <input 
             type="text"
-            placeholder="Pesquisar por nome ou ala..."
+            placeholder="Pesquisar por nome ou tipo..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary transition-all"
@@ -151,7 +175,7 @@ export default function Quartos() {
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Quarto</th>
-              <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ala</th>
+              <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Tipo</th>
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Valor Diária</th>
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Ações</th>
             </tr>
@@ -159,32 +183,43 @@ export default function Quartos() {
           <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
             {loading ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">Carregando...</td>
+                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">Carregando...</td>
               </tr>
             ) : quartosFiltrados.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-6 py-8 text-center text-slate-500">Nenhum quarto encontrado.</td>
+                <td colSpan={4} className="px-6 py-8 text-center text-slate-500">Nenhum quarto encontrado.</td>
               </tr>
             ) : (
               quartosFiltrados.map((q) => (
 
                 <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
-                  <td className="px-6 py-4 font-bold">{q.nome}</td>
-                  <td className="px-6 py-4 text-sm">{q.alaHotel || "—"}</td>
+                  <td className="px-6 py-4 flex items-center gap-3">
+                    <div className="size-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+                      {q.fotoUrl ? (
+                         <img src={q.fotoUrl} alt={q.nome} className="size-full object-cover" />
+                      ) : (
+                         <div className="size-full flex items-center justify-center text-slate-300">
+                           <span className="material-symbols-outlined">bed</span>
+                         </div>
+                      )}
+                    </div>
+                    <span className="font-bold">{q.nome}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm">{q.tipo || "—"}</td>
                   <td className="px-6 py-4 text-sm font-medium text-green-600 dark:text-green-400">
                     {q.valorDiaria ? q.valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "—"}
                   </td>
                   <td className="px-6 py-4 flex gap-2">
                     <Link
                       to={`/quartos/${q.idQuarto}`}
-                      className="text-primary hover:underline text-sm"
+                      className="text-primary hover:underline text-sm font-bold"
                     >
                       Editar
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleDelete(q.idQuarto)}
-                      className="text-red-500 hover:underline text-sm"
+                      className="text-red-500 hover:underline text-sm font-bold"
                     >
                       Excluir
                     </button>
@@ -221,51 +256,109 @@ export default function Quartos() {
       </div>
 
       {modalAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4">{isEdicao ? "Editar quarto" : "Novo quarto"}</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
-                <input
-                  type="text"
-                  value={form.nome}
-                  onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary"
-                  required
-                  maxLength={25}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 w-full max-w-2xl shadow-2xl my-auto">
+            <h3 className="text-2xl font-black mb-6">{isEdicao ? "Editar Quarto" : "Cadastrar Novo Quarto"}</h3>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Nome do Quarto</label>
+                    <input
+                      type="text"
+                      value={form.nome}
+                      onChange={(e) => setForm((f) => ({ ...f, nome: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                      required
+                      maxLength={25}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Tipo / Categoria</label>
+                    <input
+                      type="text"
+                      value={form.tipo}
+                      onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                      placeholder="Ex: Suíte Master, Executivo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Ala do Hotel</label>
+                    <select
+                      value={form.alaHotel}
+                      onChange={(e) => setForm((f) => ({ ...f, alaHotel: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all cursor-pointer"
+                    >
+                      {ALAS.map((a) => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Valor da Diária (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={form.valorDiaria}
+                      onChange={(e) => setForm((f) => ({ ...f, valorDiaria: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                      required
+                      placeholder="0.00"
+                    />
+                  </div>
+              </div>
+
+              <div className="space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">URL da Imagem</label>
+                    <input
+                      type="text"
+                      value={form.fotoUrl}
+                      onChange={(e) => setForm((f) => ({ ...f, fotoUrl: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
+                      placeholder="https://exemplo.com/foto.jpg"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Avaliação (1-5 estrelas)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="5"
+                      step="0.1"
+                      value={form.avaliacao}
+                      onChange={(e) => setForm((f) => ({ ...f, avaliacao: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Facilidades (Tags)</label>
+                    <input
+                      type="text"
+                      value={form.tags}
+                      onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
+                      placeholder="Ex: Wi-Fi, Piscina, Ar"
+                    />
+                  </div>
+              </div>
+
+              <div className="col-span-full">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Descrição Detalhada</label>
+                <textarea
+                  value={form.descricao}
+                  onChange={(e) => setForm((f) => ({ ...f, descricao: e.target.value }))}
+                  className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all min-h-[100px] resize-none text-sm"
+                  placeholder="Escreva sobre o conforto, vista e detalhes do quarto..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Ala</label>
-                <select
-                  value={form.alaHotel}
-                  onChange={(e) => setForm((f) => ({ ...f, alaHotel: e.target.value }))}
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary"
-                >
-                  {ALAS.map((a) => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Valor da Diária (R$)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.valorDiaria}
-                  onChange={(e) => setForm((f) => ({ ...f, valorDiaria: e.target.value }))}
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary"
-                  required
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button type="button" onClick={fecharModal} className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+
+              <div className="col-span-full flex gap-3 justify-end mt-4">
+                <button type="button" onClick={fecharModal} className="px-6 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 font-bold transition-all">
                   Cancelar
                 </button>
-                <button type="submit" disabled={salvando} className="px-4 py-2 bg-primary text-slate-900 font-bold rounded-lg hover:brightness-95 disabled:opacity-70">
-                  {salvando ? "Salvando..." : "Salvar"}
+                <button type="submit" disabled={salvando} className="px-8 py-3 bg-primary text-slate-900 font-black rounded-2xl hover:brightness-95 disabled:opacity-70 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                  {salvando ? "Processando..." : (isEdicao ? "Salvar Alterações" : "Cadastrar Quarto")}
                 </button>
               </div>
             </form>

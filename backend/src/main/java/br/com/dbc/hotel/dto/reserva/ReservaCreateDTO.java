@@ -14,7 +14,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservaCreateDTO {
-    @NotNull(message = "O idUsuario não pode ser nulo")
     @Min(value = 1, message = "O idUsuario não pode ser negativo ou zero")
     private Integer idUsuario;
 
@@ -33,6 +32,8 @@ public class ReservaCreateDTO {
     private LocalDate dtFim;
 
     private String hospedeNome;
+
+    private String hospedeEmail;
 
     private String observacoes;
 }

@@ -29,4 +29,10 @@ public class QuartoCreateDTO {
     @Schema(example = "250.0")
     @NotNull(message = "O valor da diária não pode ser nulo")
     private Double valorDiaria;
+
+    private String descricao;
+    private String fotoUrl;
+    private Double avaliacao;
+    private String tipo;
+    private String tags;
 }

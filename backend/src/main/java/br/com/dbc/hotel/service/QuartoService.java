@@ -72,6 +72,11 @@ public class QuartoService {
         quarto.setNome(quartoCreateDTO.getNome());
         quarto.setAlaHotel(AlaHotel.fromString(quartoCreateDTO.getAlaHotel()));
         quarto.setValorDiaria(quartoCreateDTO.getValorDiaria());
+        quarto.setDescricao(quartoCreateDTO.getDescricao());
+        quarto.setFotoUrl(quartoCreateDTO.getFotoUrl());
+        quarto.setAvaliacao(quartoCreateDTO.getAvaliacao());
+        quarto.setTipo(quartoCreateDTO.getTipo());
+        quarto.setTags(quartoCreateDTO.getTags());
 
         quarto = quartoRepository.save(quarto);
         return objectMapper.convertValue(quarto, QuartoDTO.class);
