@@ -78,7 +78,6 @@ public class UsuarioService {
         usuario.setNome(usuarioCreateDTO.getNome());
         usuario.setEmail(usuarioCreateDTO.getEmail().trim().toLowerCase());
         usuario.setDataNascimento(usuarioCreateDTO.getDataNascimento());
-        usuario.setFotoUrl(usuarioCreateDTO.getFotoUrl());
 
         if (usuarioCreateDTO.getSenha() != null && !usuarioCreateDTO.getSenha().isEmpty()) {
             usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
@@ -135,8 +134,7 @@ public class UsuarioService {
     private UsuarioDTO entidadeParaDTO(Usuario usuario) {
         UsuarioDTO dto = objectMapper.convertValue(usuario, UsuarioDTO.class);
         
-        // Copia a foto manualmente pois ela é @JsonIgnore na entidade (para evitar carga no login)
-        dto.setFotoUrl(usuario.getFotoUrl());
+        // Removida cópia de foto manual por performance
 
         if (usuario.getCargos() != null) {
             dto.setCargos(usuario.getCargos().stream()

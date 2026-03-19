@@ -22,7 +22,6 @@ export function AuthProvider({ children }) {
         id: payload.id,
         email: payload.sub || payload.email || "Usuário",
         nome: payload.nome || payload.sub || "Usuário",
-        fotoUrl: payload.fotoUrl,
         cargos: payload.cargos || [],
         dataNascimento: payload.dataNascimento,
       });

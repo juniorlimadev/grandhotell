@@ -41,7 +41,6 @@ public class UsuarioCreateDTO {
     private LocalDate dataNascimento;
 
 
-    private String fotoUrl;
 
     @Schema(example = "['USER', 'ADMIN']")
     private java.util.Set<String> cargos;

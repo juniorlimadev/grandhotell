@@ -42,13 +42,6 @@ public class Usuario implements UserDetails {
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
-    @JsonIgnore
-    @Lob
-    @javax.persistence.Basic(fetch = javax.persistence.FetchType.LAZY)
-    @Column(name = "foto_url")
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private String fotoUrl;
 
 
     @JsonIgnore

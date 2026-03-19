@@ -49,7 +49,7 @@ export default function Layout() {
   });
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
-  const [profileForm, setProfileForm] = useState({ nome: "", email: "", fotoUrl: "" });
+  const [profileForm, setProfileForm] = useState({ nome: "", email: "" });
   const [passwordForm, setPasswordForm] = useState({ senhaAntiga: "", novaSenha: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -67,55 +67,13 @@ export default function Layout() {
 
   useEffect(() => {
     if (showProfileModal && user) {
-      setProfileForm({ nome: user.nome || "", email: user.email || "", fotoUrl: user.fotoUrl || "" });
+      setProfileForm({ nome: user.nome || "", email: user.email || "" });
       setShowPasswordSection(false);
       setPasswordForm({ senhaAntiga: "", novaSenha: "" });
     }
   }, [showProfileModal, user]);
 
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type?.startsWith("image/")) {
-      toast.error("Arquivo selecionado não é uma imagem.");
-      return;
-    }
-
-    // Evita payload gigante (base64 do arquivo inteiro) deixando a foto muito pesada no banco.
-    // Redimensiona/comprime antes de salvar.
-    const MAX_BYTES = 10 * 1024 * 1024; // 10MB (limite para seleção, será comprimido depois)
-    if (file.size > MAX_BYTES) {
-      toast.error("Escolha uma foto menor (até 10MB).");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX_DIM = 256; // mantém boa qualidade para avatar, mas reduz bastante o tamanho
-        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          toast.error("Não foi possível processar a imagem.");
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.6);
-        setProfileForm({ ...profileForm, fotoUrl: resizedDataUrl });
-      };
-      img.onerror = () => toast.error("Não foi possível ler a imagem selecionada.");
-      img.src = String(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
@@ -135,7 +93,6 @@ export default function Layout() {
 
         await usuarioApi.update(payload.id, {
           nome: profileForm.nome,
-          fotoUrl: profileForm.fotoUrl,
           email: user.email,
           dataNascimento: user.dataNascimento,
           cargos: normalizedCargos,
@@ -237,11 +194,7 @@ export default function Layout() {
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3 p-2">
             <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden">
-              {user?.fotoUrl ? (
-                <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
-              ) : (
-                getInitials(user?.nome)
-              )}
+              {getInitials(user?.nome)}
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 overflow-hidden">
@@ -288,11 +241,7 @@ export default function Layout() {
             <div className="flex items-center gap-1 sm:gap-4">
               <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="size-8 rounded-full bg-primary flex items-center justify-center text-slate-900 font-bold text-[10px] overflow-hidden">
-                  {user?.fotoUrl ? (
-                    <img src={user.fotoUrl} alt={user.nome} className="size-full object-cover" />
-                  ) : (
-                    getInitials(user?.nome)
-                  )}
+                  {getInitials(user?.nome)}
                 </div>
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">
@@ -424,19 +373,9 @@ export default function Layout() {
             
             <div className="px-6 pb-8 text-center -mt-16 relative z-10">
               <div className="relative inline-block group">
-                <div className="size-32 rounded-3xl border-8 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 mx-auto flex items-center justify-center shadow-2xl overflow-hidden mb-6 transition-transform group-hover:scale-[1.02]">
-                  {profileForm.fotoUrl ? (
-                    <img src={profileForm.fotoUrl} alt={user.nome} className="size-full object-cover" />
-                  ) : (
-                    <div className="size-full bg-primary flex items-center justify-center text-slate-900 text-4xl font-black">
-                      {getInitials(user?.nome)}
-                    </div>
-                  )}
+                <div className="size-32 rounded-3xl border-8 border-white dark:border-slate-900 bg-primary text-slate-900 mx-auto flex items-center justify-center shadow-2xl overflow-hidden mb-6 transition-transform group-hover:scale-[1.02] text-4xl font-black">
+                   {getInitials(user?.nome)}
                 </div>
-                <label className="absolute bottom-6 right-0 size-10 bg-slate-900 text-white rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:bg-slate-800 transition-all active:scale-90 border-4 border-white dark:border-slate-900">
-                  <span className="material-symbols-outlined text-sm">photo_camera</span>
-                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                </label>
               </div>
               
               <div className="space-y-5 text-left">

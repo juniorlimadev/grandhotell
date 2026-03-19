@@ -1,7 +1,5 @@
 -- Script de Configuração Manual do Banco de Dados (PostgreSQL)
 
--- 1. Certificar que as colunas suportam dados grandes (BASE64 das fotos)
-ALTER TABLE USUARIO ALTER COLUMN foto_url TYPE TEXT;
 
 -- 2. Inserir ou atualizar os Cargos (Permissões)
 -- O sistema agora cria automaticamente, mas estes são os oficiais:
