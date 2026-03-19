@@ -159,6 +159,16 @@ export default function Layout() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         ${sidebarCollapsed ? "lg:w-24" : "lg:w-64"}
       `}>
+        {/* Toggle Button integrado à borda lateral */}
+        <button
+          onClick={() => setSidebarCollapsed((prev) => !prev)}
+          className="absolute -right-3 top-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full size-6 hidden lg:flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-md z-[60] text-slate-400 hover:text-primary active:scale-95"
+          title={sidebarCollapsed ? "Expandir" : "Recolher"}
+        >
+          <span className="material-symbols-outlined text-[18px]">
+            {sidebarCollapsed ? "chevron_right" : "chevron_left"}
+          </span>
+        </button>
         <div className="p-6 flex items-center justify-between gap-3">
           <div className="size-10 bg-primary rounded-lg flex items-center justify-center">
             <span className="material-symbols-outlined text-slate-900">apartment</span>
@@ -216,16 +226,6 @@ export default function Layout() {
                 className="p-2 -ml-2 lg:hidden text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
               >
                 <span className="material-symbols-outlined">menu</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarCollapsed((prev) => !prev)}
-                className="hidden lg:inline-flex p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                title={sidebarCollapsed ? "Expandir menu" : "Recolher menu"}
-              >
-                <span className="material-symbols-outlined">
-                  {sidebarCollapsed ? "chevron_right" : "chevron_left"}
-                </span>
               </button>
               <div className="relative hidden sm:block">
                 <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
