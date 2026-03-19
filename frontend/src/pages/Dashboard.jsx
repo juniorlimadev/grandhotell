@@ -87,20 +87,20 @@ export default function Dashboard() {
           <h2 className="text-3xl font-black tracking-tight">Visão Geral do Painel</h2>
           <p className="text-slate-500 dark:text-slate-400">Status operacional em tempo real da propriedade</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <Link
-            to="/reservas"
-            className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            to="/admin/reservas"
+            className="flex items-center gap-3 px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm font-black hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm active:scale-95"
           >
             <span className="material-symbols-outlined text-lg">event_note</span>
             Gerenciar Reservas
           </Link>
           <Link
-            to="/quartos/novo"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-slate-900 rounded-lg text-sm font-bold hover:brightness-95 transition-all"
+            to="/admin/quartos/novo"
+            className="flex items-center gap-3 px-6 py-3 bg-primary text-slate-900 rounded-xl text-sm font-black hover:brightness-95 transition-all shadow-lg shadow-primary/20 active:scale-95"
           >
-            <span className="material-symbols-outlined text-lg">add</span>
-            Adicionar Novo Quarto
+            <span className="material-symbols-outlined text-lg font-black">add</span>
+            Novo Quarto
           </Link>
         </div>
       </div>
@@ -151,7 +151,7 @@ export default function Dashboard() {
         <div className="xl:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold">Inventário de Quartos</h3>
-            <Link to="/quartos" className="text-sm text-primary font-bold hover:underline">
+            <Link to="/admin/quartos" className="text-sm text-primary font-bold hover:underline">
               Ver todos
             </Link>
           </div>
@@ -182,7 +182,7 @@ export default function Dashboard() {
                         {q.valorDiaria ? q.valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : "R$ 0,00"}
                       </td>
                       <td className="px-6 py-4">
-                        <Link to={`/quartos/${q.idQuarto}`} className="text-primary hover:underline text-sm">
+                        <Link to={`/admin/quartos/${q.idQuarto}`} className="text-primary hover:underline text-sm font-bold">
                           Editar
                         </Link>
                       </td>
@@ -196,7 +196,7 @@ export default function Dashboard() {
             <span className="text-sm text-slate-500">
                 Mostrando {(quartos.content || []).length} de {quartos.totalElements ?? 0} quartos
               </span>
-              <Link to="/quartos" className="px-3 py-1 border border-slate-200 dark:border-slate-800 rounded-md text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+              <Link to="/admin/quartos" className="px-3 py-1 border border-slate-200 dark:border-slate-800 rounded-md text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
                 Ver todos
               </Link>
             </div>
@@ -205,7 +205,7 @@ export default function Dashboard() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold">Reservas Ativas</h3>
-            <Link to="/reservas" className="text-sm text-primary font-bold hover:underline">
+            <Link to="/admin/reservas" className="text-sm text-primary font-bold hover:underline">
               Ver Tudo
             </Link>
           </div>

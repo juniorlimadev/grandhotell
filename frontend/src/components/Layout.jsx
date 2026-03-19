@@ -6,11 +6,11 @@ import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 
 const navItems = [
-  { to: "/", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
-  { to: "/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
-  { to: "/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/usuarios", icon: "group", label: "Gestão de Usuários", permission: ["ADMIN"] },
-  { to: "/notificacoes", icon: "notifications", label: "Notificações", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
+  { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
+  { to: "/admin/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/usuarios", icon: "group", label: "Gestão de Usuários", permission: ["ADMIN"] },
+  { to: "/admin/notificacoes", icon: "notifications", label: "Notificacoes", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
 ];
 
 export default function Layout() {
@@ -186,7 +186,7 @@ export default function Layout() {
             <NavLink
               key={to}
               to={to}
-              end={to === "/"}
+              end={to === "/admin"}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
@@ -230,7 +230,7 @@ export default function Layout() {
         </div>
       </aside>
 
-      <main className={`flex-1 min-h-screen w-full overflow-x-hidden lg:ml-64 ${sidebarCollapsed ? "lg:ml-24" : ""}`}>
+      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? "lg:pl-24" : "lg:pl-64"}`}>
         <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -241,15 +241,24 @@ export default function Layout() {
               >
                 <span className="material-symbols-outlined">menu</span>
               </button>
-              <div className="relative hidden sm:block">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
-                  search
-                </span>
-                <input
-                  type="text"
-                  className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm w-48 xl:w-80 focus:ring-2 focus:ring-primary transition-all"
-                  placeholder="Pesquisar..."
-                />
+              <div className="flex items-center gap-4">
+                <Link 
+                  to="/" 
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black transition-all"
+                >
+                  <span className="material-symbols-outlined text-sm">open_in_new</span>
+                  Ver Site Público
+                </Link>
+                <div className="relative hidden sm:block">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                    search
+                  </span>
+                  <input
+                    type="text"
+                    className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm w-48 xl:w-80 focus:ring-2 focus:ring-primary transition-all"
+                    placeholder="Pesquisar..."
+                  />
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-4">
@@ -364,8 +373,10 @@ export default function Layout() {
             </div>
           </div>
         </header>
-        <div className="p-4 lg:p-8 max-w-7xl mx-auto">
-          <Outlet />
+        <div className="p-6 lg:p-12 w-full flex justify-center">
+          <div className="w-full max-w-[1700px]">
+            <Outlet />
+          </div>
         </div>
       </main>
 

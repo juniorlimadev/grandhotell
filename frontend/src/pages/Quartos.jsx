@@ -80,12 +80,12 @@ export default function Quartos() {
       tags: "Wi-Fi, Piscina, Ar"
     });
     setModalAberto(true);
-    navigate("/quartos/novo", { replace: true });
+    navigate("/admin/quartos/novo", { replace: true });
   };
 
   const fecharModal = () => {
     setModalAberto(false);
-    navigate("/quartos");
+    navigate("/admin/quartos");
   };
 
   const handleSubmit = async (e) => {
@@ -211,7 +211,7 @@ export default function Quartos() {
                   </td>
                   <td className="px-6 py-4 flex gap-2">
                     <Link
-                      to={`/quartos/${q.idQuarto}`}
+                      to={`/admin/quartos/${q.idQuarto}`}
                       className="text-primary hover:underline text-sm font-bold"
                     >
                       Editar

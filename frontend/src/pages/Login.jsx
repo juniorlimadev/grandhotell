@@ -10,7 +10,7 @@ export default function Login() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (isAuthenticated) return <Navigate to="/" replace />;
+  if (isAuthenticated) return <Navigate to="/admin" replace />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +18,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email, senha);
-      navigate("/", { replace: true });
+      navigate("/admin", { replace: true });
     } catch (err) {
       setErro(err.response?.data?.message || "E-mail ou senha inválidos. Tente novamente.");
     } finally {
