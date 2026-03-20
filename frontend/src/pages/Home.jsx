@@ -19,6 +19,7 @@ export default function Home() {
   });
   const [datasOcupadas, setDatasOcupadas] = useState([]);
   const [reservando, setReservando] = useState(false);
+  const [filtro, setFiltro] = useState("Todos");
 
   useEffect(() => {
     const carregar = async () => {
@@ -122,18 +123,31 @@ export default function Home() {
         </div>
         <div className="hidden md:flex items-center gap-8">
           <a href="#" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
+          {isAuthenticated && (
+            <Link to="/meus-agendamentos" className="text-slate-500 hover:text-[#006972] transition-colors text-sm font-bold tracking-tight">Meus Agendamentos</Link>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {!isAuthenticated ? (
-            <button 
-                onClick={handleGoogleLogin}
-                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
-            >
-                <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
-                Acessar com Google
-            </button>
+            <>
+              <Link 
+                  to="/cadastro"
+                  className="px-5 py-2.5 text-slate-600 hover:text-[#006972] text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                  Criar Conta
+              </Link>
+              <button 
+                  onClick={handleGoogleLogin}
+                  className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
+              >
+                  <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
+                  Acessar com Google
+              </button>
+            </>
           ) : (
-            <span className="text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, Cliente Autenticado</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, {user?.nome?.split(' ')[0]}</span>
+            </div>
           )}
           <Link 
             to="/login"
@@ -214,9 +228,15 @@ export default function Home() {
               <p className="text-slate-500 font-medium text-lg">Encontre o refúgio perfeito para sua próxima estadia inesquecível.</p>
             </div>
             <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-              <button className="px-6 py-2.5 rounded-xl bg-white text-[#006972] text-xs font-black shadow-sm">Todos</button>
-              <button className="px-6 py-2.5 rounded-xl text-slate-500 text-xs font-black hover:bg-white/50 transition-all">Suítes</button>
-              <button className="px-6 py-2.5 rounded-xl text-slate-500 text-xs font-black hover:bg-white/50 transition-all">Premium</button>
+              {["Todos", "Suítes", "Premium"].map(c => (
+                <button 
+                  key={c}
+                  onClick={() => setFiltro(c)}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filtro === c ? "bg-white text-[#006972] shadow-sm" : "text-slate-500 hover:bg-white/50"}`}
+                >
+                  {c}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -225,7 +245,12 @@ export default function Home() {
               Array(3).fill(0).map((_, i) => (
                 <div key={i} className="bg-white rounded-3xl h-[450px] animate-pulse border border-slate-100"></div>
               ))
-            ) : quartos.map((q) => (
+            ) : (quartos.filter(q => {
+                   if (filtro === "Todos") return true;
+                   if (filtro === "Suítes") return q.tipo?.toLowerCase().includes("suíte");
+                   if (filtro === "Premium") return q.tipo?.toLowerCase().includes("premium") || q.tipo?.toLowerCase().includes("luxo");
+                   return true;
+                 })).map((q) => (
               <div key={q.idQuarto} className="bg-white rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,105,114,0.1)] border border-slate-100">
                 <div className="relative h-72 overflow-hidden">
                   <img 

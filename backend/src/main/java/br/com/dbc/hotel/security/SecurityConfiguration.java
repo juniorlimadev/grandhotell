@@ -35,11 +35,12 @@ public class SecurityConfiguration {
         .csrf().disable()
         .authorizeHttpRequests((authz) -> authz
                 .antMatchers("/auth", "/").permitAll()
+                .antMatchers(HttpMethod.GET, "/quarto/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/reserva/quartos-ocupados").permitAll()
                 .antMatchers(HttpMethod.POST, "/usuario").permitAll()
                 .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/usuario").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/quarto/**").hasAnyRole("USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS")
                 .antMatchers("/quarto/**").hasAnyRole("ADMIN", "GESTAO_QUARTOS")
                 .antMatchers(HttpMethod.GET, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
                 .antMatchers(HttpMethod.POST, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")

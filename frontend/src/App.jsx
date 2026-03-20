@@ -12,6 +12,9 @@ import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "./components/LoadingScreen";
 
 import Home from "./pages/Home";
+import LoginCliente from "./pages/LoginCliente";
+import CadastroCliente from "./pages/CadastroCliente";
+import MeusAgendamentos from "./pages/MeusAgendamentos";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -28,6 +31,9 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/login-cliente" element={<LoginCliente />} />
+      <Route path="/cadastro" element={<CadastroCliente />} />
+      <Route path="/meus-agendamentos" element={<MeusAgendamentos />} />
       <Route
         path="/admin"
         element={
