@@ -19,13 +19,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para lidar com erros globais (Ex: redirecionamento de login se o token expirar)
 api.interceptors.response.use(
   (r) => r,
   (err) => {
+    // Só redireciona para login se o erro for 401 e NÃO estivermos na página pública (Home)
+    // Isso evita que o visitante seja jogado para o login ao tentar ver a lista de quartos
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      if (window.location.pathname !== "/") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(err);
   }

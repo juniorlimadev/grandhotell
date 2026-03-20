@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { quartoApi } from "../services/api";
+import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
+  const { isAuthenticated, user } = useAuth();
   const [quartos, setQuartos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalBooking, setModalBooking] = useState(false);
   const [quartoSelecionado, setQuartoSelecionado] = useState(null);
   const [formReserva, setFormReserva] = useState({
     hospedeNome: "",
-    email: "",
+    hospedeEmail: "",
     dtInicio: "",
     dtFim: "",
     observacoes: ""
   });
+  const [datasOcupadas, setDatasOcupadas] = useState([]);
   const [reservando, setReservando] = useState(false);
 
   useEffect(() => {
@@ -31,38 +34,84 @@ export default function Home() {
     carregar();
   }, []);
 
-  const abrirReserva = (quarto) => {
+  const abrirReserva = async (quarto) => {
+    if (!isAuthenticated) {
+        toast.warning("Para realizar uma reserva, você precisa estar logado. Por favor, entre com sua conta Google.");
+        handleGoogleLogin();
+        return;
+    }
     setQuartoSelecionado(quarto);
-    setFormReserva({ ...formReserva, dtInicio: "", dtFim: "" });
+    setFormReserva({ 
+        hospedeNome: user?.nome || "", 
+        hospedeEmail: user?.email || "", 
+        dtInicio: "", 
+        dtFim: "", 
+        observacoes: "" 
+    });
     setModalBooking(true);
+    setDatasOcupadas([]);
+
+    try {
+        const start = new Date().toISOString().split('T')[0];
+        const end = new Date(Date.now() + 90 * 24 * 3600 * 1000).toISOString().split('T')[0];
+        const res = await reservaApi.quartosOcupados(start, end);
+        const filtradas = res.data.filter(r => r.idQuarto === quarto.idQuarto);
+        setDatasOcupadas(filtradas);
+    } catch (e) {
+        console.error("Erro ao carregar datas ocupadas", e);
+    }
   };
 
   const handleReserva = async (e) => {
     e.preventDefault();
+    if (!formReserva.dtInicio || !formReserva.dtFim) {
+        toast.warning("Selecione as datas de entrada e saída.");
+        return;
+    }
+    if (new Date(formReserva.dtFim) <= new Date(formReserva.dtInicio)) {
+        toast.error("A data de saída deve ser posterior à data de entrada.");
+        return;
+    }
+
     setReservando(true);
     try {
+      // Formatar de yyyy-MM-dd para dd-MM-yyyy conforme o backend espera
+      const formatDateForBackend = (d) => {
+          if (!d) return "";
+          const [y, m, d_] = d.split('-');
+          return `${d_}-${m}-${y}`;
+      };
+
       const payload = {
-        ...formReserva,
+        hospedeNome: formReserva.hospedeNome,
+        hospedeEmail: formReserva.hospedeEmail,
+        observacoes: formReserva.observacoes,
+        dtInicio: formatDateForBackend(formReserva.dtInicio),
+        dtFim: formatDateForBackend(formReserva.dtFim),
         idQuarto: quartoSelecionado.idQuarto,
-        idUsuario: null // Hóspede sem login
+        idUsuario: user?.id || user?.idUsuario || null 
       };
       await reservaApi.create(payload);
-      toast.success(`Parabéns ${formReserva.hospedeNome}! Sua reserva para o ${quartoSelecionado.nome} foi confirmada.`);
+      toast.success(`Reserva confirmada! Um e-mail foi enviado para ${formReserva.hospedeEmail}.`);
       setModalBooking(false);
     } catch (e) {
-      toast.error(e.response?.data?.message || "Erro ao realizar reserva. Verifique as datas.");
+      toast.error(e.response?.data?.message || "Erro ao realizar reserva. Verifique a disponibilidade para estas datas.");
     } finally {
       setReservando(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    toast.info("Integração com Google Login sendo processada pelo servidor seguro...");
-    // Mocking a redirect/login
+    toast.info("Iniciando autenticação Google segura...");
+    // Mocking an auth update that would make isAuthenticated true
+    // In a real app, this would redirect to Google OAuth
     setTimeout(() => {
         window.location.href = "/login";
     }, 1500);
   };
+
+  // Get current date for min-date attribute
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="bg-[#faf8ff] text-[#131b30] min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
@@ -72,89 +121,87 @@ export default function Home() {
            GrandHotel
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Início</a>
-          <a href="#quartos" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
-          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Pacotes</a>
-          <a href="#" className="text-slate-500 hover:text-[#006972] transition-all text-sm font-bold tracking-tight">Sobre Nós</a>
+          <a href="#" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handleGoogleLogin}
-            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
-          >
-            <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
-            Entrar com Google
-          </button>
+          {!isAuthenticated ? (
+            <button 
+                onClick={handleGoogleLogin}
+                className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
+            >
+                <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
+                Acessar com Google
+            </button>
+          ) : (
+            <span className="text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, Cliente Autenticado</span>
+          )}
           <Link 
             to="/login"
-            className="px-6 py-2.5 bg-[#006972] hover:bg-[#004f56] text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg shadow-[#006972]/20"
+            className="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg"
           >
-            Acesso Admin
+            Área Staff
           </Link>
         </div>
       </nav>
 
       <main className="pt-20">
         {/* Hero Banner */}
-        <section className="relative h-[600px] flex items-center px-8 md:px-20 overflow-hidden">
+        <section className="relative h-[700px] flex items-center px-8 md:px-20 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
               className="w-full h-full object-cover" 
-              src="https://images.unsplash.com/photo-1571896349842-337edd2eb820?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
-              alt="Luxury hotel room with view"
+              src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
+              alt="Luxury hotel lobby"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#131b30]/80 via-[#131b30]/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#131b30]/90 via-[#131b30]/40 to-transparent"></div>
           </div>
-          <div className="relative z-10 max-w-3xl text-white">
+          <div className="relative z-10 max-w-3xl text-white pb-20">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#8edce6]/20 backdrop-blur-md rounded-full mb-8 border border-white/10">
                <span className="material-symbols-outlined text-[#8edce6] text-lg">verified</span>
                <span className="text-[10px] uppercase font-black tracking-[0.2em]">Oásis Urbano • Luxo • Conforto</span>
             </div>
-            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1]">
+            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[1]">
               Sua jornada de <br/>
               <span className="text-[#8edce6]">serenidade</span> <br/>
               começa aqui.
             </h1>
-            <p className="text-lg md:text-xl opacity-90 font-medium max-w-xl mb-12 leading-relaxed">
+            <p className="text-xl opacity-95 font-medium max-w-xl mb-12 leading-relaxed">
               Descubra um refúgio de sofisticação onde cada detalhe foi planejado para proporcionar sua melhor estadia.
             </p>
             <div className="flex flex-wrap gap-4">
-                 <a href="#quartos" className="bg-[#006972] text-white px-12 py-6 rounded-2xl font-black text-sm shadow-2xl shadow-[#006972]/40 hover:scale-105 hover:-translate-y-1 transition-all">
+                 <a href="#quartos" className="bg-[#006972] text-white px-12 py-6 rounded-2xl font-black text-sm shadow-2xl shadow-[#006972]/40 hover:scale-105 transition-all">
                     Visualizar Acomodações
                  </a>
-                 <button className="bg-white/10 backdrop-blur-md border border-white/20 text-white px-12 py-6 rounded-2xl font-black text-sm hover:bg-white/20 transition-all">
-                    Tour Virtual
-                 </button>
             </div>
           </div>
         </section>
 
         {/* Search Bar (Pill Style) */}
-        <section className="px-8 -mt-16 relative z-20">
-          <div className="max-w-6xl mx-auto bg-white rounded-[2.5rem] shadow-2xl shadow-[#131b30]/15 p-5 flex flex-col md:flex-row items-center gap-3 border border-slate-100">
-            <div className="flex-1 flex items-center gap-5 px-10 py-5 border-r border-slate-100 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">calendar_today</span>
+        <section className="px-8 -mt-24 relative z-20">
+          <div className="max-w-6xl mx-auto bg-white rounded-[3rem] shadow-2xl shadow-[#131b30]/20 p-6 flex flex-col md:flex-row items-center gap-4 border border-slate-100">
+            <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_today</span>
                <div className="flex flex-col">
                   <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800" type="date" />
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
                </div>
             </div>
-            <div className="flex-1 flex items-center gap-5 px-10 py-5 border-r border-slate-100 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">calendar_month</span>
+            <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_month</span>
                <div className="flex flex-col">
                   <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800" type="date" />
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
                </div>
             </div>
-            <div className="flex-1 flex items-center gap-5 px-10 py-5 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-3xl group-hover:rotate-12 transition-transform">person_add</span>
+            <div className="flex-1 flex items-center gap-6 px-10 py-6 w-full group">
+               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">person_add</span>
                <div className="flex flex-col">
                   <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-base font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
+                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
                </div>
             </div>
-            <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-14 py-6 rounded-3xl font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
-              Verificando Datas
+            <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-16 py-7 rounded-[2rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
+              Verificar
             </button>
           </div>
         </section>
@@ -274,6 +321,7 @@ export default function Home() {
                             <input 
                                 required
                                 type="date"
+                                min={today}
                                 value={formReserva.dtInicio}
                                 onChange={e => setFormReserva({...formReserva, dtInicio: e.target.value})}
                                 className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
@@ -284,18 +332,33 @@ export default function Home() {
                             <input 
                                 required
                                 type="date"
+                                min={formReserva.dtInicio || today}
                                 value={formReserva.dtFim}
                                 onChange={e => setFormReserva({...formReserva, dtFim: e.target.value})}
                                 className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
                             />
                         </div>
                     </div>
+
+                    {datasOcupadas.length > 0 && (
+                        <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
+                            <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-2">Datas Indisponíveis (Próximos 90 dias):</p>
+                            <div className="flex flex-wrap gap-2">
+                                {datasOcupadas.map((d, i) => (
+                                    <span key={i} className="text-[10px] font-bold text-red-600 bg-red-200/50 px-2 py-1 rounded-md">
+                                        {new Date(d.dtInicio).toLocaleDateString('pt-BR')} - {new Date(d.dtFim).toLocaleDateString('pt-BR')}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div>
                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Observações (Opcional)</label>
                         <textarea 
                             value={formReserva.observacoes}
                             onChange={e => setFormReserva({...formReserva, observacoes: e.target.value})}
-                            className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold placeholder:text-slate-300 min-h-[100px] resize-none" 
+                            className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold placeholder:text-slate-300 min-h-[80px] resize-none" 
                             placeholder="Algum pedido especial?"
                         />
                     </div>
@@ -336,17 +399,12 @@ export default function Home() {
                  <h4 className="font-black text-lg mb-6">Explore</h4>
                  <ul className="space-y-4 text-slate-400 font-bold text-sm">
                     <li><a href="#" className="hover:text-[#8edce6] transition-colors">Início</a></li>
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Nossos Quartos</a></li>
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Serviços</a></li>
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Sobre Nós</a></li>
+                    <li><a href="#quartos" className="hover:text-[#8edce6] transition-colors">Nossos Quartos</a></li>
                  </ul>
             </div>
             <div>
                  <h4 className="font-black text-lg mb-6">Suporte</h4>
                  <ul className="space-y-4 text-slate-400 font-bold text-sm">
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Termos de Uso</a></li>
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Privacidade</a></li>
-                    <li><a href="#" className="hover:text-[#8edce6] transition-colors">Central de Ajuda</a></li>
                     <li><a href="#" className="hover:text-[#8edce6] transition-colors">Contato</a></li>
                  </ul>
             </div>
