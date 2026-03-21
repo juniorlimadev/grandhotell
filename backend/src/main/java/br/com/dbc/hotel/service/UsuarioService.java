@@ -10,6 +10,7 @@ import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final CargoService cargoService;
