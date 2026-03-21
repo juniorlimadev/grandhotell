@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
+import { GoogleLogin } from "@react-oauth/google";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function CadastroCliente() {
   const navigate = useNavigate();
+  const { loginGoogle } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     nome: "",
@@ -24,6 +27,19 @@ export default function CadastroCliente() {
       toast.error(err.response?.data?.message || "Erro ao criar conta. Verifique os dados.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onSuccessGoogle = async (credentialResponse) => {
+    setLoading(true);
+    try {
+        await loginGoogle(credentialResponse.credential);
+        toast.success("Cadastro e Login efetuados com sucesso via Google!");
+        navigate("/");
+    } catch (e) {
+        toast.error("Falha ao cadastrar com Google. Tente novamente.");
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -89,6 +105,24 @@ export default function CadastroCliente() {
           >
             {loading ? "Criando..." : "Confirmar Cadastro"}
           </button>
+
+          <div className="relative py-4">
+             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+             <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-400">
+                <span className="bg-white px-4">Ou registre-se com</span>
+             </div>
+          </div>
+
+          <div className="flex justify-center">
+             <GoogleLogin 
+                onSuccess={onSuccessGoogle}
+                onError={() => toast.error("Erro no Registro Google")}
+                theme="outline"
+                shape="pill"
+                text="signup_with"
+                width="100%"
+             />
+          </div>
         </form>
 
         <div className="mt-10 text-center">
