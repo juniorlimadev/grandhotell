@@ -15,6 +15,7 @@ import Home from "./pages/Home";
 import LoginCliente from "./pages/LoginCliente";
 import CadastroCliente from "./pages/CadastroCliente";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
+import Clientes from "./pages/Clientes";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -48,6 +49,7 @@ export default function App() {
         <Route path="quartos/:id" element={<Quartos />} />
         <Route path="reservas" element={<Reservas />} />
         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="clientes" element={<Clientes />} />
         <Route path="notificacoes" element={<Notificacoes />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

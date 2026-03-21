@@ -39,6 +39,7 @@ api.interceptors.response.use(
  */
 export const authApi = {
   login: (login, senha) => api.post("/auth", { login, senha }),
+  loginGoogle: (token) => api.post("/auth/google", { token }),
 };
 
 /**

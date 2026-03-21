@@ -9,7 +9,8 @@ const navItems = [
   { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
   { to: "/admin/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
   { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/usuarios", icon: "group", label: "Gestão de Usuários", permission: ["ADMIN"] },
+  { to: "/admin/usuarios", icon: "badge", label: "Gestão Staff", permission: ["ADMIN"] },
+  { to: "/admin/clientes", icon: "group", label: "Base de Clientes", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/notificacoes", icon: "notifications", label: "Notificacoes", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
 ];
 
@@ -155,9 +156,9 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-transform duration-300 lg:translate-x-0
+        w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        ${sidebarCollapsed ? "lg:w-24" : "lg:w-64"}
+        ${sidebarCollapsed ? "lg:w-20" : "lg:w-64"}
       `}>
         {/* Toggle Button integrado à borda lateral */}
         <button
@@ -216,8 +217,8 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className="flex items-center gap-3 p-2">
-            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden">
+          <div className={`flex items-center gap-3 p-2 rounded-2xl transition-all duration-300 ${sidebarCollapsed ? 'justify-center' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
               {getInitials(user?.nome)}
             </div>
             {!sidebarCollapsed && (
@@ -226,11 +227,37 @@ export default function Layout() {
                 <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
               </div>
             )}
+            {!sidebarCollapsed ? (
+              <button 
+                onClick={handleLogout}
+                className="size-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
+                title="Sair"
+              >
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
+            ) : (
+              <button 
+                onClick={handleLogout}
+                className="absolute opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Sair"
+              >
+                {/* Oculto no colapsado por padrão, mas pode ser acessado via hover ou settings */}
+              </button>
+            )}
           </div>
+          {sidebarCollapsed && (
+             <button 
+               onClick={handleLogout}
+               className="mt-2 w-full flex items-center justify-center py-2 text-slate-400 hover:text-red-500 transition-colors"
+               title="Sair"
+             >
+               <span className="material-symbols-outlined text-lg">logout</span>
+             </button>
+          )}
         </div>
       </aside>
 
-      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-300 ${sidebarCollapsed ? "lg:pl-24" : "lg:pl-64"}`}>
+      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
         <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">

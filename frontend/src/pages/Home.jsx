@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [quartos, setQuartos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalBooking, setModalBooking] = useState(false);
@@ -136,17 +136,26 @@ export default function Home() {
               >
                   Criar Conta
               </Link>
-              <button 
-                  onClick={handleGoogleLogin}
+              <Link 
+                  to="/login-cliente"
                   className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
               >
                   <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
                   Acessar com Google
-              </button>
+              </Link>
             </>
           ) : (
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, {user?.nome?.split(' ')[0]}</span>
+              <button 
+                onClick={() => {
+                    logout();
+                    window.location.reload();
+                }}
+                className="px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              >
+                Sair
+              </button>
             </div>
           )}
           <Link 
@@ -227,80 +236,105 @@ export default function Home() {
               <h2 className="text-4xl font-black tracking-tighter text-[#131b30] mb-4">Acomodações de Luxo</h2>
               <p className="text-slate-500 font-medium text-lg">Encontre o refúgio perfeito para sua próxima estadia inesquecível.</p>
             </div>
-            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-              {["Todos", "Suítes", "Premium"].map(c => (
-                <button 
-                  key={c}
-                  onClick={() => setFiltro(c)}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filtro === c ? "bg-white text-[#006972] shadow-sm" : "text-slate-500 hover:bg-white/50"}`}
-                >
-                  {c}
-                </button>
+            {isAuthenticated && (
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+                {["Todos", "Suítes", "Premium"].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setFiltro(c)}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filtro === c ? "bg-white text-[#006972] shadow-sm" : "text-slate-500 hover:bg-white/50"}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {!isAuthenticated ? (
+            <div className="bg-white rounded-[3rem] p-20 text-center border border-slate-100 shadow-xl overflow-hidden relative">
+               <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+                  <img src="https://images.unsplash.com/photo-1571896349842-337edd2eb820?auto=format&fit=crop&w=1000&q=80" alt="bg" className="w-full h-full object-cover" />
+               </div>
+               <div className="relative z-10">
+                  <div className="size-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                      <span className="material-symbols-outlined text-[#006972] text-4xl">lock</span>
+                  </div>
+                  <h3 className="text-3xl font-black text-[#131b30] mb-4">Área Exclusiva</h3>
+                  <p className="text-slate-500 font-medium mb-12 max-w-md mx-auto">Para visualizar nossas acomodações de luxo e realizar reservas, você precisa estar autenticado em nossa plataforma.</p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link to="/login-cliente" className="bg-[#006972] text-white px-10 py-5 rounded-[2rem] font-black text-sm shadow-xl shadow-[#006972]/30 hover:scale-105 active:scale-95 transition-all inline-block">
+                        Fazer Login Agora
+                    </Link>
+                    <Link to="/cadastro" className="bg-white text-[#006972] border-2 border-[#006972] px-10 py-5 rounded-[2rem] font-black text-sm hover:bg-[#006972]/5 transition-all inline-block">
+                        Criar minha conta
+                    </Link>
+                  </div>
+               </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {loading ? (
+                Array(3).fill(0).map((_, i) => (
+                  <div key={i} className="bg-white rounded-3xl h-[450px] animate-pulse border border-slate-100"></div>
+                ))
+              ) : (quartos.filter(q => {
+                     if (filtro === "Todos") return true;
+                     if (filtro === "Suítes") return q.tipo?.toLowerCase().includes("suíte");
+                     if (filtro === "Premium") return q.tipo?.toLowerCase().includes("premium") || q.tipo?.toLowerCase().includes("luxo");
+                     return true;
+                   })).map((q) => (
+                <div key={q.idQuarto} className="bg-white rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,105,114,0.1)] border border-slate-100">
+                  <div className="relative h-72 overflow-hidden">
+                    <img 
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      src={q.fotoUrl || "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80"} 
+                      alt={q.nome} 
+                    />
+                    <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg">
+                      <span className="text-[10px] font-black text-[#006972] uppercase tracking-widest">{q.tipo || "Premium"}</span>
+                    </div>
+                  </div>
+                  <div className="p-8 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-2xl font-black text-[#131b30] group-hover:text-[#006972] transition-colors">{q.nome}</h3>
+                      <div className="flex items-center gap-1.5 text-[#006972] bg-[#8edce6]/30 px-3 py-1 rounded-xl">
+                        <span className="material-symbols-outlined text-base fill-1">star</span>
+                        <span className="text-sm font-black">{q.avaliacao || "5.0"}</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-slate-500 line-clamp-2 mb-6 font-medium leading-relaxed">
+                      {q.descricao || "Experiência de luxo com vista panorâmica e acabamento de alto padrão para seu total descanso."}
+                    </p>
+
+                    <div className="flex gap-4 mb-8">
+                      { (q.tags || "Wi-Fi, Piscina, Ar").split(",").map(tag => (
+                         <div key={tag} className="flex items-center gap-1.5 text-slate-400 group-hover:text-[#006972] transition-colors">
+                            <span className="text-[10px] font-black uppercase tracking-tighter">{tag.trim()}</span>
+                         </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-auto flex justify-between items-center border-t border-slate-50 pt-6">
+                      <div>
+                        <span className="text-3xl font-black text-[#006972]">
+                           {q.valorDiaria?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                        <span className="text-xs text-slate-400 font-bold tracking-tight block mt-1 uppercase">por noite</span>
+                      </div>
+                      <button 
+                         onClick={() => abrirReserva(q)}
+                         className="bg-[#006972] text-white px-8 py-4 rounded-2xl font-black text-sm hover:brightness-110 transition-all shadow-lg shadow-[#006972]/20 active:scale-95"
+                      >
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {loading ? (
-              Array(3).fill(0).map((_, i) => (
-                <div key={i} className="bg-white rounded-3xl h-[450px] animate-pulse border border-slate-100"></div>
-              ))
-            ) : (quartos.filter(q => {
-                   if (filtro === "Todos") return true;
-                   if (filtro === "Suítes") return q.tipo?.toLowerCase().includes("suíte");
-                   if (filtro === "Premium") return q.tipo?.toLowerCase().includes("premium") || q.tipo?.toLowerCase().includes("luxo");
-                   return true;
-                 })).map((q) => (
-              <div key={q.idQuarto} className="bg-white rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,105,114,0.1)] border border-slate-100">
-                <div className="relative h-72 overflow-hidden">
-                  <img 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                    src={q.fotoUrl || "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1000&q=80"} 
-                    alt={q.nome} 
-                  />
-                  <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-lg">
-                    <span className="text-[10px] font-black text-[#006972] uppercase tracking-widest">{q.tipo || "Premium"}</span>
-                  </div>
-                </div>
-                <div className="p-8 flex flex-col flex-1">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-2xl font-black text-[#131b30] group-hover:text-[#006972] transition-colors">{q.nome}</h3>
-                    <div className="flex items-center gap-1.5 text-[#006972] bg-[#8edce6]/30 px-3 py-1 rounded-xl">
-                      <span className="material-symbols-outlined text-base fill-1">star</span>
-                      <span className="text-sm font-black">{q.avaliacao || "5.0"}</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-sm text-slate-500 line-clamp-2 mb-6 font-medium leading-relaxed">
-                    {q.descricao || "Experiência de luxo com vista panorâmica e acabamento de alto padrão para seu total descanso."}
-                  </p>
-
-                  <div className="flex gap-4 mb-8">
-                    { (q.tags || "Wi-Fi, Piscina, Ar").split(",").map(tag => (
-                       <div key={tag} className="flex items-center gap-1.5 text-slate-400 group-hover:text-[#006972] transition-colors">
-                          <span className="text-[10px] font-black uppercase tracking-tighter">{tag.trim()}</span>
-                       </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-auto flex justify-between items-center border-t border-slate-50 pt-6">
-                    <div>
-                      <span className="text-3xl font-black text-[#006972]">
-                         {q.valorDiaria?.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                      <span className="text-xs text-slate-400 font-bold tracking-tight block mt-1 uppercase">por noite</span>
-                    </div>
-                    <button 
-                       onClick={() => abrirReserva(q)}
-                       className="bg-[#006972] text-white px-8 py-4 rounded-2xl font-black text-sm hover:brightness-110 transition-all shadow-lg shadow-[#006972]/20 active:scale-95"
-                    >
-                      Reservar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </section>
       </main>
 

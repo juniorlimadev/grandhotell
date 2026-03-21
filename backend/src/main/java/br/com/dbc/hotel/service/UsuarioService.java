@@ -69,6 +69,29 @@ public class UsuarioService {
     }
 
     /**
+     * Cadastra ou atualiza um usuário vindo do Google Auth.
+     */
+    public Usuario saveGoogleUser(String email, String nome) throws RegraDeNegocioException {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(email.trim().toLowerCase());
+        
+        if (usuarioOptional.isPresent()) {
+            return usuarioOptional.get();
+        }
+
+        Usuario novoUsuario = new Usuario();
+        novoUsuario.setNome(nome);
+        novoUsuario.setEmail(email.trim().toLowerCase());
+        // Senha aleatória para usuários Google (eles não a usarão)
+        novoUsuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
+        novoUsuario.setDataNascimento(new Date()); // Data padrão
+        
+        Cargo userCargo = cargoService.findByName("USER");
+        novoUsuario.setCargos(new HashSet<>(Collections.singletonList(userCargo)));
+
+        return usuarioRepository.save(novoUsuario);
+    }
+
+    /**
      * Atualiza os dados de um usuário existente.
      */
     public UsuarioDTO update(Integer id, UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
