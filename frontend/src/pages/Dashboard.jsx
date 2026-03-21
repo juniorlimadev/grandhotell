@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
-import { formatDate, toBackendDate } from "../utils/date-utils";
 
 export default function Dashboard() {
   const [quartos, setQuartos] = useState({ content: [], totalElements: 0 });
@@ -44,11 +43,21 @@ export default function Dashboard() {
     return mapa;
   }, [quartos]);
 
+  // Mapa de quartos por ID para buscar ala
+  const quartoPorId = useMemo(() => {
+    const mapa = new Map();
+    (quartos.content || []).forEach((q) => {
+      mapa.set(q.idQuarto, q);
+    });
+    return mapa;
+  }, [quartos]);
+
   // Métricas Calculadas
   const metricas = useMemo(() => {
     let totalFaturamento = 0;
     const contagemQuartos = {};
     const faturamentoPorQuarto = {};
+    const reservasPorAla = {};
 
     reservas.forEach((r) => {
       const diaria = diariaPorQuarto.get(r.idQuarto) ?? 0;
@@ -71,6 +80,11 @@ export default function Dashboard() {
       totalFaturamento += subtotal;
       contagemQuartos[r.idQuarto] = (contagemQuartos[r.idQuarto] || 0) + 1;
       faturamentoPorQuarto[r.idQuarto] = (faturamentoPorQuarto[r.idQuarto] || 0) + subtotal;
+
+      // Agrupamento por Ala do Hotel
+      const quarto = quartoPorId.get(r.idQuarto);
+      const ala = quarto?.alaHotel || quarto?.ala || "Não Identificado";
+      reservasPorAla[ala] = (reservasPorAla[ala] || 0) + 1;
     });
 
     // Top Quartos
@@ -83,14 +97,30 @@ export default function Dashboard() {
       .sort((a, b) => b.receita - a.receita)
       .slice(0, 5);
 
+    // Distribuição por Ala — dados reais
+    const totalReservas = reservas.length;
+    const CORES_ALA = [
+      "bg-blue-500", "bg-emerald-500", "bg-purple-500",
+      "bg-orange-500", "bg-rose-500", "bg-cyan-500"
+    ];
+    const distribuicaoAla = Object.entries(reservasPorAla)
+      .sort(([, a], [, b]) => b - a)
+      .map(([nome, qtd], i) => ({
+        name: nome,
+        qtd,
+        percent: totalReservas > 0 ? Math.round((qtd / totalReservas) * 100) : 0,
+        color: CORES_ALA[i % CORES_ALA.length]
+      }));
+
     return {
       faturamento: totalFaturamento,
       reservasTotal: reservas.length,
       topQuartos,
       ticketMedio: reservas.length > 0 ? totalFaturamento / reservas.length : 0,
-      taxaOcupacao: quartos.totalElements > 0 ? (reservas.length / (quartos.totalElements * 30)) * 100 : 0 // Aproximação mensal
+      taxaOcupacao: quartos.totalElements > 0 ? (reservas.length / (quartos.totalElements * 30)) * 100 : 0,
+      distribuicaoAla
     };
-  }, [reservas, diariaPorQuarto, quartos]);
+  }, [reservas, diariaPorQuarto, quartos, quartoPorId]);
 
   return (
     <div className="space-y-10 pb-10">
@@ -171,7 +201,13 @@ export default function Dashboard() {
                    </thead>
                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
                       {loading ? (
-                         Array(3).fill(0).map((_, i) => <tr key={i} className="h-20 animate-pulse bg-slate-50/50"></tr>)
+                         Array(3).fill(0).map((_, i) => <tr key={i} className="h-20 animate-pulse bg-slate-50/50"><td colSpan={4}></td></tr>)
+                      ) : metricas.topQuartos.length === 0 ? (
+                         <tr>
+                           <td colSpan={4} className="px-8 py-12 text-center text-slate-400 font-medium text-sm">
+                             Nenhuma reserva no período selecionado.
+                           </td>
+                         </tr>
                       ) : metricas.topQuartos.map((q, i) => (
                          <tr key={q.idQuarto} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                             <td className="px-8 py-6">
@@ -182,7 +218,7 @@ export default function Dashboard() {
                                   <span className="font-bold text-slate-900 dark:text-white">{q.nome}</span>
                                </div>
                             </td>
-                            <td className="px-8 py-6 text-sm text-slate-500 font-medium">{q.alaHotel || "Premium"}</td>
+                            <td className="px-8 py-6 text-sm text-slate-500 font-medium">{q.alaHotel || q.ala || "—"}</td>
                             <td className="px-8 py-6 text-center font-black text-slate-700 dark:text-slate-300">{q.reservas}</td>
                             <td className="px-8 py-6 text-right">
                                <span className="inline-block px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-sm">
@@ -197,52 +233,57 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Vision importante: Conversão e Status */}
+        {/* Distribuição Geográfica — dados reais por ala */}
         <div className="space-y-6">
            <h3 className="text-2xl font-black tracking-tight px-2 flex items-center gap-3">
               <span className="material-symbols-outlined text-blue-500">monitoring</span>
-              Insights Rápidos
+              Distribuição por Ala
            </h3>
            
-           <div className="space-y-4">
-              <div className="bg-slate-900 dark:bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl shadow-slate-200 dark:shadow-none relative overflow-hidden group">
-                 <div className="absolute -right-10 -bottom-10 size-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000"></div>
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-6">Eficiência de Reservas</h4>
-                 <div className="flex items-end gap-3 mb-4">
-                    <span className="text-5xl font-black">{Math.round(metricas.taxaOcupacao * 1.5)}%</span>
-                    <span className="text-xs font-bold text-white/70 mb-2 uppercase tracking-tight">Crescimento Mensal</span>
-                 </div>
-                 <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-white transition-all duration-1000" style={{ width: `${Math.min(100, metricas.taxaOcupacao * 1.5)}%` }}></div>
-                 </div>
-                 <p className="mt-6 text-xs text-white/50 leading-relaxed">Seu hotel está operando em alta performance este mês. Considere reajustar diárias dos quartos mais procurados.</p>
-              </div>
+           <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
+                Reservas por ala — período selecionado
+              </p>
+              {loading ? (
+                <div className="space-y-4">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="h-8 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+                  ))}
+                </div>
+              ) : metricas.distribuicaoAla.length === 0 ? (
+                <div className="py-10 text-center opacity-40">
+                  <span className="material-symbols-outlined text-4xl mb-2 block">location_off</span>
+                  <p className="text-xs font-black uppercase">Sem dados no período</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {metricas.distribuicaoAla.map(r => (
+                    <div key={r.name} className="space-y-2">
+                       <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tighter">
+                          <span className="text-slate-700 dark:text-slate-200">{r.name}</span>
+                          <span className="text-slate-400">{r.qtd} reserva{r.qtd !== 1 ? 's' : ''} · {r.percent}%</span>
+                       </div>
+                       <div className="h-2 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${r.color} transition-all duration-700`}
+                            style={{ width: `${r.percent}%` }}
+                          ></div>
+                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-                 <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">Distribuição Geográfica</h4>
-                 <div className="space-y-5">
-                    {[
-                      { name: "Sul", percent: 45, color: "bg-blue-500" },
-                      { name: "Sudeste", percent: 30, color: "bg-emerald-500" },
-                      { name: "Inter.", percent: 15, color: "bg-purple-500" },
-                      { name: "Outros", percent: 10, color: "bg-slate-400" }
-                    ].map(r => (
-                      <div key={r.name} className="space-y-2">
-                         <div className="flex justify-between text-xs font-bold uppercase tracking-tighter">
-                            <span>{r.name}</span>
-                            <span className="text-slate-400">{r.percent}%</span>
-                         </div>
-                         <div className="h-1.5 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
-                            <div className={`h-full ${r.color}`} style={{ width: `${r.percent}%` }}></div>
-                         </div>
-                      </div>
-                    ))}
-                 </div>
-              </div>
+              {/* Totalizador */}
+              {!loading && metricas.reservasTotal > 0 && (
+                <div className="mt-8 pt-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total no período</span>
+                  <span className="text-lg font-black text-slate-900 dark:text-white">{metricas.reservasTotal} reservas</span>
+                </div>
+              )}
            </div>
         </div>
       </div>
     </div>
   );
 }
-

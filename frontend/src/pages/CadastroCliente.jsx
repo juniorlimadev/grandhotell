@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { usuarioApi } from "../services/api";
+import { clienteApi } from "../services/api";
 import { toast } from "react-toastify";
 
 export default function CadastroCliente() {
@@ -17,7 +17,7 @@ export default function CadastroCliente() {
     e.preventDefault();
     setLoading(true);
     try {
-      await usuarioApi.create(form);
+      await clienteApi.create(form);
       toast.success("Conta criada com sucesso! Agora você já pode fazer login.");
       navigate("/login-cliente");
     } catch (err) {
@@ -26,6 +26,7 @@ export default function CadastroCliente() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center p-6 font-['Plus_Jakarta_Sans']">

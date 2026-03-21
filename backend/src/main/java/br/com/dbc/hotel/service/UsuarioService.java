@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +37,7 @@ public class UsuarioService {
     private final CargoService cargoService;
     private final ObjectMapper objectMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JavaMailSender mailSender;
 
     /**
      * Retorna uma lista paginada de todos os usuários.
@@ -53,7 +56,8 @@ public class UsuarioService {
     }
 
     /**
-     * Cadastra um novo usuário no sistema com criptografia de senha.
+     * Cadastra um novo usuário do staff no sistema com criptografia de senha.
+     * Atribui o cargo básico "USER" por padrão.
      */
     public UsuarioDTO save(UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
         validarEmailUnico(usuarioCreateDTO.getEmail(), null);
@@ -63,9 +67,29 @@ public class UsuarioService {
         usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
         usuario.setAtivo(true);
         
-        // Atribui cargo básico "USER" por padrão
+        // Atribui cargo básico "USER" por padrão para usuários do staff
         Cargo userCargo = cargoService.findByName("USER");
         usuario.setCargos(new HashSet<>(Collections.singletonList(userCargo)));
+
+        Usuario save = usuarioRepository.save(usuario);
+        return entidadeParaDTO(save);
+    }
+
+    /**
+     * Cadastra um novo CLIENTE no sistema.
+     * Atribui o cargo "CLIENTE" que distingue de usuários do staff (USER/ADMIN).
+     */
+    public UsuarioDTO saveCliente(UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
+        validarEmailUnico(usuarioCreateDTO.getEmail(), null);
+
+        Usuario usuario = objectMapper.convertValue(usuarioCreateDTO, Usuario.class);
+        usuario.setEmail(usuarioCreateDTO.getEmail().trim().toLowerCase());
+        usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
+        usuario.setAtivo(true);
+
+        // Clientes recebem o cargo "CLIENTE", separando-os do staff
+        Cargo clienteCargo = cargoService.findByName("CLIENTE");
+        usuario.setCargos(new HashSet<>(Collections.singletonList(clienteCargo)));
 
         Usuario save = usuarioRepository.save(usuario);
         return entidadeParaDTO(save);
@@ -98,12 +122,39 @@ public class UsuarioService {
         return entidadeParaDTO(save);
     }
 
+    /**
+     * Solicita recuperação de senha e envia email real ao usuário com senha temporária.
+     */
     public void solicitarRecuperacaoSenha(String email) throws RegraDeNegocioException {
         Usuario usuario = usuarioRepository.findByEmail(email.trim().toLowerCase())
                 .orElseThrow(() -> new RegraDeNegocioException("E-mail não encontrado.", HttpStatus.NOT_FOUND));
         
-        // Placeholder para envio de e-mail real
-        log.info("E-mail de recuperação enviado para: {}", email);
+        log.info("Solicitando recuperação de senha para: {}", email);
+        
+        try {
+            // Gera uma nova senha temporária aleatória
+            String novaSenhaTemp = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+            usuario.setSenha(passwordEncoder.encode(novaSenhaTemp));
+            usuarioRepository.save(usuario);
+
+            SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setTo(email);
+            mensagem.setSubject("Grand Hotel — Recuperação de Senha");
+            mensagem.setText(
+                "Olá, " + usuario.getNome() + "!\n\n" +
+                "Recebemos uma solicitação para redefinir sua senha no Grand Hotel.\n\n" +
+                "Sua nova senha temporária é: " + novaSenhaTemp + "\n\n" +
+                "Acesse o sistema e altere sua senha imediatamente após o login.\n\n" +
+                "Se você não solicitou a recuperação, entre em contato conosco.\n\n" +
+                "Atenciosamente,\n" +
+                "Equipe Grand Hotel"
+            );
+            mailSender.send(mensagem);
+            log.info("E-mail de recuperação enviado com sucesso para: {}", email);
+        } catch (Exception e) {
+            log.error("Erro ao enviar e-mail de recuperação para {}: {}", email, e.getMessage());
+            throw new RegraDeNegocioException("Erro ao enviar e-mail de recuperação. Verifique o endereço ou tente novamente.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public void toggleStatus(Integer id) throws NotFoundException {
@@ -171,5 +222,3 @@ public class UsuarioService {
         return new CustomPageDTO<>(page.map(this::entidadeParaDTO));
     }
 }
-
-

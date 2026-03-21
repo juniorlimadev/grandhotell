@@ -217,17 +217,30 @@ export default function Layout() {
           ))}
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-          <div className={`flex items-center gap-3 p-2 rounded-2xl transition-all duration-300 ${sidebarCollapsed ? 'justify-center' : 'hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
-            <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
-              {getInitials(user?.nome)}
+          {sidebarCollapsed ? (
+            /* Sidebar colapsado: apenas avatar e botão de logout */
+            <div className="flex flex-col items-center gap-3">
+              <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
+                {getInitials(user?.nome)}
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center py-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
+                title="Sair do sistema"
+              >
+                <span className="material-symbols-outlined text-lg">logout</span>
+              </button>
             </div>
-            {!sidebarCollapsed && (
+          ) : (
+            /* Sidebar expandido: nome, email e logout */
+            <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+              <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
+                {getInitials(user?.nome)}
+              </div>
               <div className="flex-1 overflow-hidden">
                 <p className="text-xs font-bold truncate">{user?.nome || "Usuário"}</p>
                 <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
               </div>
-            )}
-            {!sidebarCollapsed ? (
               <button 
                 onClick={handleLogout}
                 className="size-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
@@ -235,24 +248,7 @@ export default function Layout() {
               >
                 <span className="material-symbols-outlined text-lg">logout</span>
               </button>
-            ) : (
-              <button 
-                onClick={handleLogout}
-                className="absolute opacity-0 group-hover:opacity-100 transition-opacity"
-                title="Sair"
-              >
-                {/* Oculto no colapsado por padrão, mas pode ser acessado via hover ou settings */}
-              </button>
-            )}
-          </div>
-          {sidebarCollapsed && (
-             <button 
-               onClick={handleLogout}
-               className="mt-2 w-full flex items-center justify-center py-2 text-slate-400 hover:text-red-500 transition-colors"
-               title="Sair"
-             >
-               <span className="material-symbols-outlined text-lg">logout</span>
-             </button>
+            </div>
           )}
         </div>
       </aside>

@@ -55,15 +55,26 @@ public class UsuarioController {
     }
 
     /**
-     * Cadastra um novo usuário no sistema.
+     * Cadastra um novo usuário do staff no sistema (cargo USER).
      */
     @PostMapping()
     public ResponseEntity<Map<String, Object>> salvar(@RequestBody @Valid UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
-        // Usa o e-mail como identificador no log para evitar dependência de campos inexistentes
-        log.info("Criando novo usuário: {}", usuarioCreateDTO.getEmail());
+        log.info("Criando novo usuário do staff: {}", usuarioCreateDTO.getEmail());
         UsuarioDTO entity = usuarioService.save(usuarioCreateDTO);
         log.info("Usuário criado com sucesso");
         return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Usuário criado com sucesso.", entity, "Usuario"));
+    }
+
+    /**
+     * Cadastra um novo CLIENTE no sistema (cargo CLIENTE).
+     * Endpoint público utilizado pela tela de cadastro de hóspedes.
+     */
+    @PostMapping("/cliente")
+    public ResponseEntity<Map<String, Object>> salvarCliente(@RequestBody @Valid UsuarioCreateDTO usuarioCreateDTO) throws RegraDeNegocioException {
+        log.info("Cadastrando novo cliente: {}", usuarioCreateDTO.getEmail());
+        UsuarioDTO entity = usuarioService.saveCliente(usuarioCreateDTO);
+        log.info("Cliente cadastrado com sucesso");
+        return ResponseEntity.status(HttpStatus.CREATED).body(createResponseMessage("Cliente cadastrado com sucesso.", entity, "Usuario"));
     }
 
     /**

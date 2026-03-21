@@ -17,12 +17,18 @@ export default function Clientes() {
     setLoading(true);
     try {
       const res = await usuarioApi.list(page, 100);
-      const clientesApenas = (res.data.content || []).filter(u => 
-        u.cargos && (
-            (Array.isArray(u.cargos) && (u.cargos.includes("USER") || u.cargos.includes("CLIENTE"))) ||
-            (!Array.isArray(u.cargos) && (u.cargos === "USER" || u.cargos?.titulo === "USER"))
-        )
-      );
+      // Filtra apenas usuários com cargo CLIENTE ou USER (compatibilidade com registros antigos)
+      // Staff como ADMIN, GESTAO_QUARTOS, GESTAO_RESERVAS são excluídos
+      const clientesApenas = (res.data.content || []).filter(u => {
+        if (!u.cargos) return false;
+        const cargos = Array.isArray(u.cargos) ? u.cargos : [u.cargos];
+        const cargosTitulos = cargos.map(c => typeof c === 'string' ? c : c?.titulo || '');
+        // É cliente: tem CLIENTE ou tem apenas USER (sem ADMIN/GESTAO_*)
+        const temCliente = cargosTitulos.includes("CLIENTE");
+        const temApenasUser = cargosTitulos.includes("USER") && 
+          !cargosTitulos.some(c => ["ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"].includes(c));
+        return temCliente || temApenasUser;
+      });
       setLista({
         ...res.data,
         content: clientesApenas,
@@ -57,11 +63,18 @@ export default function Clientes() {
      try {
         await usuarioApi.toggleStatus(id);
         toast.success("Status do usuário atualizado!");
-        carregar();
+        // Atualiza o item na lista localmente para refletir imediatamente sem precisar de outra requisição
+        setLista(prev => ({
+          ...prev,
+          content: prev.content.map(u => 
+            u.idUsuario === id ? { ...u, ativo: !u.ativo } : u
+          )
+        }));
      } catch (e) {
         toast.error("Erro ao alterar status do usuário.");
      }
   };
+
 
   const redefinirSenha = async () => {
      if (!novaSenha) return toast.warning("Digite uma nova senha.");

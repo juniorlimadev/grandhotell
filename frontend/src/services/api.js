@@ -22,13 +22,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (r) => r,
   (err) => {
-    // Só redireciona para login se o erro for 401 e NÃO estivermos na página pública (Home)
-    // Isso evita que o visitante seja jogado para o login ao tentar ver a lista de quartos
-    if (err.response?.status === 401) {
+    // Rotas públicas que nunca devem redirecionar para login
+    const rotasPublicas = ["/", "/cadastro", "/login-cliente", "/login", "/esqueci-senha"];
+    const estaEmRotaPublica = rotasPublicas.some(r => window.location.pathname === r);
+    
+    if (err.response?.status === 401 && !estaEmRotaPublica) {
       localStorage.removeItem("token");
-      if (window.location.pathname !== "/") {
-        window.location.href = "/login";
-      }
+      window.location.href = "/login";
     }
     return Promise.reject(err);
   }
@@ -130,4 +130,16 @@ export const usuarioApi = {
   adminResetPassword: (id, novaSenha) => api.put(`/usuario/admin/mudar-senha-cliente/${id}`, { novaSenha }),
 };
 
-
+/**
+ * Endpoints de Clientes (hóspedes)
+ * Utiliza endpoint separado para cadastro público de hóspedes com cargo CLIENTE.
+ */
+export const clienteApi = {
+  create: (data) => {
+    const d = { ...data };
+    if (d.dataNascimento) {
+      d.dataNascimento = toBackendDate(d.dataNascimento);
+    }
+    return api.post("/usuario/cliente", d);
+  },
+};

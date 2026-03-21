@@ -34,10 +34,14 @@ public class SecurityConfiguration {
         .cors().and()
         .csrf().disable()
         .authorizeHttpRequests((authz) -> authz
+                // Endpoints públicos — sem autenticação
                 .antMatchers("/auth", "/").permitAll()
                 .antMatchers(HttpMethod.GET, "/quarto/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/reserva/quartos-ocupados").permitAll()
-                .antMatchers(HttpMethod.POST, "/usuario").permitAll()
+                .antMatchers(HttpMethod.GET, "/reserva/quartos-livres").permitAll()
+                .antMatchers(HttpMethod.POST, "/usuario/cliente").permitAll()
+                // Endpoints de staff — requerem autenticação
+                .antMatchers(HttpMethod.GET, "/reserva/quartos-ocupados").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
+                .antMatchers(HttpMethod.POST, "/usuario").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/usuario").hasRole("ADMIN")
@@ -46,10 +50,6 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.POST, "/reserva/**").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
                 .antMatchers(HttpMethod.PUT, "/reserva/**").hasAnyRole("ADMIN", "GESTAO_RESERVAS")
                 .antMatchers(HttpMethod.DELETE, "/reserva/**").hasAnyRole("ADMIN", "GESTAO_RESERVAS")
-
-
-
-
                 .anyRequest().authenticated()
         );
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService, objectMapper), UsernamePasswordAuthenticationFilter.class);

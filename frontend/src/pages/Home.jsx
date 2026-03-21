@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
+  const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [quartos, setQuartos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,8 +38,8 @@ export default function Home() {
 
   const abrirReserva = async (quarto) => {
     if (!isAuthenticated) {
-        toast.warning("Para realizar uma reserva, você precisa estar logado. Por favor, entre com sua conta Google.");
-        handleGoogleLogin();
+        toast.warning("Para realizar uma reserva, você precisa estar logado.");
+        navigate("/login-cliente");
         return;
     }
     setQuartoSelecionado(quarto);
@@ -102,14 +103,6 @@ export default function Home() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast.info("Iniciando autenticação Google segura...");
-    // Mocking an auth update that would make isAuthenticated true
-    // In a real app, this would redirect to Google OAuth
-    setTimeout(() => {
-        window.location.href = "/login";
-    }, 1500);
-  };
 
   // Get current date for min-date attribute
   const today = new Date().toISOString().split('T')[0];
@@ -138,10 +131,9 @@ export default function Home() {
               </Link>
               <Link 
                   to="/login-cliente"
-                  className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-full text-xs font-black transition-all active:scale-95 shadow-sm"
+                  className="flex items-center gap-2 px-8 py-3 bg-[#006972] hover:bg-[#004f56] text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg"
               >
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="size-4" />
-                  Acessar com Google
+                  Entrar no Portal
               </Link>
             </>
           ) : (
