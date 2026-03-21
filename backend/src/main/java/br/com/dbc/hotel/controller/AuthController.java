@@ -38,7 +38,7 @@ import java.util.Collections;
 @Tag(name = "Autenticação", description = "Endpoints para gerenciamento de autenticações")
 public class AuthController{
 
-    public final AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final UsuarioService usuarioService;
 

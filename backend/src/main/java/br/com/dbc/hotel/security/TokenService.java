@@ -34,7 +34,7 @@ public class TokenService {
 
         List<String> cargos = usuario.getCargos().stream()
                 .map(br.com.dbc.hotel.entity.Cargo::getAuthority)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         String dataNascimentoStr = usuario.getDataNascimento() != null 
                 ? usuario.getDataNascimento().toString() 
@@ -84,7 +84,7 @@ public class TokenService {
 
             List<SimpleGrantedAuthority> authorities = cargos.stream()
                     .map(c -> new SimpleGrantedAuthority("ROLE_" + c))
-                    .toList();
+                    .collect(java.util.stream.Collectors.toList());
 
             return new UsernamePasswordAuthenticationToken(user, null, authorities);
 
