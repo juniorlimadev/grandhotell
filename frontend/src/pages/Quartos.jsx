@@ -3,7 +3,10 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { quartoApi } from "../services/api";
 import { toast } from "react-toastify";
 
-const ALAS = ["ALTA", "MEDIA", "BAIXA"];
+const ANDARES = [
+  "1º Andar", "2º Andar", "3º Andar", "4º Andar",
+  "5º Andar", "6º Andar", "7º Andar", "8º Andar", "Cobertura"
+];
 
 export default function Quartos() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
@@ -11,7 +14,7 @@ export default function Quartos() {
   const [modalAberto, setModalAberto] = useState(false);
   const [form, setForm] = useState({ 
     nome: "", 
-    alaHotel: "MEDIA", 
+    alaHotel: "1º Andar", 
     valorDiaria: "",
     descricao: "",
     fotoUrl: "",
@@ -283,13 +286,13 @@ export default function Quartos() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Ala do Hotel</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Andar</label>
                     <select
                       value={form.alaHotel}
                       onChange={(e) => setForm((f) => ({ ...f, alaHotel: e.target.value }))}
                       className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all cursor-pointer"
                     >
-                      {ALAS.map((a) => (
+                      {ANDARES.map((a) => (
                         <option key={a} value={a}>{a}</option>
                       ))}
                     </select>

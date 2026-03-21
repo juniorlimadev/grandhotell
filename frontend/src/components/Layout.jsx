@@ -236,21 +236,16 @@ export default function Layout() {
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           {sidebarCollapsed ? (
-            /* Sidebar colapsado: apenas avatar e botão de logout */
-            <div className="flex flex-col items-center gap-3">
-              <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
-                {getInitials(user?.nome)}
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center py-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
-                title="Sair do sistema"
-              >
-                <span className="material-symbols-outlined text-lg">logout</span>
-              </button>
-            </div>
+            /* Sidebar colapsado: APENAS botão de logout */
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center py-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+              title="Sair do sistema"
+            >
+              <span className="material-symbols-outlined text-xl">logout</span>
+            </button>
           ) : (
-            /* Sidebar expandido: nome, email e logout */
+            /* Sidebar expandido: avatar, nome, email e logout */
             <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
               <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
                 {getInitials(user?.nome)}

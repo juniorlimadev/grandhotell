@@ -243,22 +243,24 @@ export default function Home() {
         </section>
 
         {/* Rooms Grid */}
-        <section id="quartos" className="py-32 px-8 max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
-            <div>
-              <h2 className="text-4xl font-black tracking-tighter text-[#131b30] mb-4">Acomodações de Luxo</h2>
-              <p className="text-slate-500 font-medium text-lg">Encontre o refúgio perfeito para sua próxima estadia inesquecível.</p>
-            </div>
-            <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-              {["Todos", "Suítes", "Premium"].map(c => (
-                <button 
-                  key={c}
-                  onClick={() => setFiltro(c)}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filtro === c ? "bg-white text-[#006972] shadow-sm" : "text-slate-500 hover:bg-white/50"}`}
-                >
-                  {c}
-                </button>
-              ))}
+        <section id="quartos" className="py-24 px-4 md:px-8 max-w-7xl mx-auto">
+          {/* Cabeçalho centralizado */}
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-[#131b30] mb-4">Acomodações de Luxo</h2>
+            <p className="text-slate-500 font-medium text-lg max-w-xl mx-auto">Encontre o refúgio perfeito para sua próxima estadia inesquecível.</p>
+            {/* Filtros centralizados */}
+            <div className="flex justify-center mt-8">
+              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+                {["Todos", "Suítes", "Premium"].map(c => (
+                  <button 
+                    key={c}
+                    onClick={() => setFiltro(c)}
+                    className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${filtro === c ? "bg-white text-[#006972] shadow-sm" : "text-slate-500 hover:bg-white/50"}`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -62,14 +62,9 @@ export default function Clientes() {
   const toggleBloqueio = async (id) => {
      try {
         await usuarioApi.toggleStatus(id);
+        // Re-busca a lista completa do backend para garantir dado real
+        await carregar(0);
         toast.success("Status do usuário atualizado!");
-        // Atualiza o item na lista localmente para refletir imediatamente sem precisar de outra requisição
-        setLista(prev => ({
-          ...prev,
-          content: prev.content.map(u => 
-            u.idUsuario === id ? { ...u, ativo: !u.ativo } : u
-          )
-        }));
      } catch (e) {
         toast.error("Erro ao alterar status do usuário.");
      }

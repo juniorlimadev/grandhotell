@@ -3,285 +3,263 @@ import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
 
-export default function Dashboard() {
-  const [quartos, setQuartos] = useState({ content: [], totalElements: 0 });
-  const [reservas, setReservas] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Filtros de Data
-  const [filtros, setFiltros] = useState({
-    inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
-    fim: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0]
-  });
+const STATUS_CONFIG = {
+  "CONFIRMADA": { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
+  "PENDENTE":   { label: "Pendente",   dot: "bg-yellow-500",  bg: "bg-yellow-50 dark:bg-yellow-500/10", text: "text-yellow-600 dark:text-yellow-400" },
+  "CANCELADA":  { label: "Cancelado",  dot: "bg-red-500",     bg: "bg-red-50 dark:bg-red-500/10",     text: "text-red-600 dark:text-red-400" },
+  "CONCLUIDA":  { label: "Concluída",  dot: "bg-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",    text: "text-slate-500" },
+};
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [qRes, rRes] = await Promise.all([
-        quartoApi.list(0, 100),
-        reservaApi.quartosOcupados(new Date(filtros.inicio), new Date(filtros.fim)),
-      ]);
-      setQuartos(qRes.data);
-      setReservas(Array.isArray(rRes.data) ? rRes.data : []);
-    } catch {
-      toast.error("Erro ao carregar dados financeiros.");
-    } finally {
-      setLoading(false);
-    }
-  };
+function getInitials(name) {
+  if (!name) return "?";
+  return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
+export default function Dashboard() {
+  const [quartos, setQuartos] = useState([]);
+  const [totalQuartos, setTotalQuartos] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(0);
+  const [reservas, setReservas] = useState([]);
+  const [filtroStatus, setFiltroStatus] = useState("Todos");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadData();
-  }, [filtros]);
+    const load = async () => {
+      setLoading(true);
+      try {
+        const hoje = new Date();
+        const fim30 = new Date(hoje.getTime() + 30 * 24 * 3600 * 1000);
 
-  // Mapa de diárias para cálculos rápidos
-  const diariaPorQuarto = useMemo(() => {
-    const mapa = new Map();
-    (quartos.content || []).forEach((q) => {
-      mapa.set(q.idQuarto, q.valorDiaria || 0);
-    });
-    return mapa;
-  }, [quartos]);
+        const [qRes, rRes] = await Promise.all([
+          quartoApi.list(page, 5, "idQuarto", "DESC"),
+          reservaApi.quartosOcupados(hoje, fim30),
+        ]);
 
-  // Mapa de quartos por ID para buscar ala
-  const quartoPorId = useMemo(() => {
-    const mapa = new Map();
-    (quartos.content || []).forEach((q) => {
-      mapa.set(q.idQuarto, q);
-    });
-    return mapa;
-  }, [quartos]);
-
-  // Métricas Calculadas
-  const metricas = useMemo(() => {
-    let totalFaturamento = 0;
-    const contagemQuartos = {};
-    const faturamentoPorQuarto = {};
-    const reservasPorAla = {};
-
-    reservas.forEach((r) => {
-      const diaria = diariaPorQuarto.get(r.idQuarto) ?? 0;
-      
-      const parseDate = (d) => {
-        if (!d) return new Date();
-        if (d.includes("-")) {
-           const parts = d.split("-");
-           return parts[0].length === 4 ? new Date(d) : new Date(parts.reverse().join("-"));
-        }
-        return new Date(d);
-      };
-
-      const d1 = parseDate(r.dtInicio);
-      const d2 = parseDate(r.dtFim);
-      const diffTime = Math.abs(d2 - d1);
-      const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-      const subtotal = diaria * diffDays;
-
-      totalFaturamento += subtotal;
-      contagemQuartos[r.idQuarto] = (contagemQuartos[r.idQuarto] || 0) + 1;
-      faturamentoPorQuarto[r.idQuarto] = (faturamentoPorQuarto[r.idQuarto] || 0) + subtotal;
-
-      // Agrupamento por Ala do Hotel
-      const quarto = quartoPorId.get(r.idQuarto);
-      const ala = quarto?.alaHotel || quarto?.ala || "Não Identificado";
-      reservasPorAla[ala] = (reservasPorAla[ala] || 0) + 1;
-    });
-
-    // Top Quartos
-    const topQuartos = (quartos.content || [])
-      .map(q => ({
-        ...q,
-        reservas: contagemQuartos[q.idQuarto] || 0,
-        receita: faturamentoPorQuarto[q.idQuarto] || 0
-      }))
-      .sort((a, b) => b.receita - a.receita)
-      .slice(0, 5);
-
-    // Distribuição por Ala — dados reais
-    const totalReservas = reservas.length;
-    const CORES_ALA = [
-      "bg-blue-500", "bg-emerald-500", "bg-purple-500",
-      "bg-orange-500", "bg-rose-500", "bg-cyan-500"
-    ];
-    const distribuicaoAla = Object.entries(reservasPorAla)
-      .sort(([, a], [, b]) => b - a)
-      .map(([nome, qtd], i) => ({
-        name: nome,
-        qtd,
-        percent: totalReservas > 0 ? Math.round((qtd / totalReservas) * 100) : 0,
-        color: CORES_ALA[i % CORES_ALA.length]
-      }));
-
-    return {
-      faturamento: totalFaturamento,
-      reservasTotal: reservas.length,
-      topQuartos,
-      ticketMedio: reservas.length > 0 ? totalFaturamento / reservas.length : 0,
-      taxaOcupacao: quartos.totalElements > 0 ? (reservas.length / (quartos.totalElements * 30)) * 100 : 0,
-      distribuicaoAla
+        setQuartos(qRes.data.content || []);
+        setTotalQuartos(qRes.data.totalElements || 0);
+        setTotalPages(qRes.data.totalPages || 1);
+        setReservas(Array.isArray(rRes.data) ? rRes.data : []);
+      } catch {
+        toast.error("Erro ao carregar dados do dashboard.");
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [reservas, diariaPorQuarto, quartos, quartoPorId]);
+    load();
+  }, [page]);
+
+  // Calcula faturamento estimado do dia (reservas ativas * diária)
+  const receitaHoje = useMemo(() => {
+    return reservas.reduce((acc, r) => acc + (r.valorDiaria || 0), 0);
+  }, [reservas]);
+
+  const taxaOcupacao = totalQuartos > 0
+    ? Math.min(100, Math.round((reservas.length / totalQuartos) * 100))
+    : 0;
+
+  // Filtra reservas por status no painel lateral
+  const reservasFiltradas = filtroStatus === "Todos"
+    ? reservas
+    : reservas.filter(r => r.status === filtroStatus);
+
+  // Determina status visual de um quarto pelo cruzamento com reservas ativas
+  const statusDoQuarto = (idQuarto) => {
+    const tem = reservas.find(r => r.idQuarto === idQuarto);
+    if (!tem) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
+    const cfg = STATUS_CONFIG[tem.status] || STATUS_CONFIG["CONFIRMADA"];
+    return cfg;
+  };
+
+  const cards = [
+    { label: "Total de Quartos", val: totalQuartos, icon: "bed", color: "text-[#006972]", bg: "bg-[#006972]/10", badge: "+2.5%", badgeColor: "text-emerald-500" },
+    { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: "Hoje", badgeColor: "text-slate-400" },
+    { label: "Reservas Ativas", val: reservas.length, icon: "event_note", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: reservas.length > 0 ? `+${reservas.length}` : "0", badgeColor: reservas.length > 0 ? "text-orange-500" : "text-slate-400" },
+    { label: "Receita Estimada", val: receitaHoje.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "+8%", badgeColor: "text-emerald-500" },
+  ];
 
   return (
-    <div className="space-y-10 pb-10">
-      {/* Header com Filtros */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">Business Intelligence</h2>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Análise de desempenho e faturamento da propriedade</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm">
-           <div className="flex items-center gap-2 px-4">
-              <span className="material-symbols-outlined text-slate-400 text-sm">calendar_month</span>
-              <input 
-                type="date" 
-                value={filtros.inicio}
-                onChange={e => setFiltros({...filtros, inicio: e.target.value})}
-                className="bg-transparent border-none text-xs font-black uppercase tracking-widest outline-none focus:ring-0 text-slate-700 dark:text-slate-200"
-              />
-           </div>
-           <div className="hidden sm:block h-6 w-px bg-slate-100 dark:bg-slate-800"></div>
-           <div className="flex items-center gap-2 px-4">
-              <input 
-                type="date" 
-                value={filtros.fim}
-                onChange={e => setFiltros({...filtros, fim: e.target.value})}
-                className="bg-transparent border-none text-xs font-black uppercase tracking-widest outline-none focus:ring-0 text-slate-700 dark:text-slate-200"
-              />
-           </div>
-           <button 
-             onClick={loadData}
-             className="bg-primary text-slate-900 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-           >
-              Filtrar
-           </button>
-        </div>
-      </div>
-
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {[
-          { label: "Faturamento Total", val: metricas.faturamento.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
-          { label: "Volume de Reservas", val: metricas.reservasTotal, icon: "event_available", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
-          { label: "Ticket Médio", val: metricas.ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "analytics", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-500/10" },
-          { label: "Status de Ocupação", val: `${Math.min(100, Math.round(metricas.taxaOcupacao))}%`, icon: "bed", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" }
-        ].map((s, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all group">
-            <div className={`size-14 ${s.bg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-              <span className={`material-symbols-outlined ${s.color} text-2xl`}>{s.icon}</span>
+    <div className="space-y-8">
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {cards.map((c, i) => (
+          <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex items-start justify-between mb-4">
+              <div className={`size-11 ${c.bg} rounded-xl flex items-center justify-center`}>
+                <span className={`material-symbols-outlined ${c.color}`}>{c.icon}</span>
+              </div>
+              <span className={`text-xs font-bold ${c.badgeColor}`}>{c.badge}</span>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-1">{s.label}</p>
-            <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{loading ? "..." : s.val}</p>
+            <p className="text-xs text-slate-400 font-medium mb-1">{c.label}</p>
+            <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              {loading ? "—" : c.val}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Top Quartos Section */}
-        <div className="xl:col-span-2 space-y-6">
-          <div className="flex items-center justify-between px-2">
-             <h3 className="text-2xl font-black tracking-tight flex items-center gap-3">
-               <span className="material-symbols-outlined text-primary">military_tech</span>
-               Ranking de Acomodações
-             </h3>
-             <Link to="/admin/quartos" className="text-xs font-black uppercase tracking-widest text-[#006972] hover:underline">Inventário Completo</Link>
+      {/* Inventário + Reservas */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        {/* Inventário de Quartos */}
+        <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Inventário de Quartos</h3>
+            <div className="flex gap-1">
+              {["Todos", "Disponível", "Ocupado"].map(f => (
+                <button
+                  key={f}
+                  onClick={() => setFiltroStatus(f === "Disponível" ? "Todos" : f === "Ocupado" ? "CONFIRMADA" : "Todos")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    (f === "Todos" && filtroStatus === "Todos") ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" :
+                    ((f === "Ocupado" && filtroStatus === "CONFIRMADA")) ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" :
+                    "text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
-          
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
-             <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                   <thead>
-                      <tr className="border-b border-slate-50 dark:border-slate-800 text-[10px] uppercase font-black tracking-widest text-slate-400">
-                         <th className="px-8 py-6">Acomodação</th>
-                         <th className="px-8 py-6">Ala</th>
-                         <th className="px-8 py-6 text-center">Reservas</th>
-                         <th className="px-8 py-6 text-right">Faturamento</th>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[500px]">
+              <thead>
+                <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 dark:border-slate-800">
+                  <th className="px-6 py-3">Quarto</th>
+                  <th className="px-6 py-3">Tipo</th>
+                  <th className="px-6 py-3">Andar</th>
+                  <th className="px-6 py-3">Status</th>
+                  <th className="px-6 py-3">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                {loading ? (
+                  Array(5).fill(0).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={5} className="px-6 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full" /></td>
+                    </tr>
+                  ))
+                ) : quartos.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-10 text-center text-slate-400 text-sm">
+                      Nenhum quarto cadastrado.{" "}
+                      <Link to="/admin/quartos/novo" className="text-[#006972] font-bold hover:underline">Cadastrar agora</Link>
+                    </td>
+                  </tr>
+                ) : (
+                  quartos.map(q => {
+                    const st = statusDoQuarto(q.idQuarto);
+                    return (
+                      <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-4 font-black text-slate-900 dark:text-white">{q.nome}</td>
+                        <td className="px-6 py-4 text-sm text-slate-500">{q.tipo || "—"}</td>
+                        <td className="px-6 py-4 text-sm text-slate-500">{q.alaHotel || "—"}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${st.bg} ${st.text}`}>
+                            <span className={`size-1.5 rounded-full ${st.dot}`}></span>
+                            {st.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Link to={`/admin/quartos/${q.idQuarto}`} className="text-[#006972] hover:underline text-xs font-bold">Editar</Link>
+                        </td>
                       </tr>
-                   </thead>
-                   <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                      {loading ? (
-                         Array(3).fill(0).map((_, i) => <tr key={i} className="h-20 animate-pulse bg-slate-50/50"><td colSpan={4}></td></tr>)
-                      ) : metricas.topQuartos.length === 0 ? (
-                         <tr>
-                           <td colSpan={4} className="px-8 py-12 text-center text-slate-400 font-medium text-sm">
-                             Nenhuma reserva no período selecionado.
-                           </td>
-                         </tr>
-                      ) : metricas.topQuartos.map((q, i) => (
-                         <tr key={q.idQuarto} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td className="px-8 py-6">
-                               <div className="flex items-center gap-4">
-                                  <div className="size-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500">
-                                     #{i+1}
-                                  </div>
-                                  <span className="font-bold text-slate-900 dark:text-white">{q.nome}</span>
-                               </div>
-                            </td>
-                            <td className="px-8 py-6 text-sm text-slate-500 font-medium">{q.alaHotel || q.ala || "—"}</td>
-                            <td className="px-8 py-6 text-center font-black text-slate-700 dark:text-slate-300">{q.reservas}</td>
-                            <td className="px-8 py-6 text-right">
-                               <span className="inline-block px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl font-bold text-sm">
-                                  {q.receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                               </span>
-                            </td>
-                         </tr>
-                      ))}
-                   </tbody>
-                </table>
-             </div>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Paginação */}
+          <div className="px-6 py-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-xs text-slate-400 font-medium">
+              Mostrando {quartos.length} de {totalQuartos} quartos
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={page === 0}
+                onClick={() => setPage(p => p - 1)}
+                className="px-4 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition-all"
+              >
+                Anterior
+              </button>
+              <button
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage(p => p + 1)}
+                className="px-4 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition-all"
+              >
+                Próximo
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Distribuição Geográfica — dados reais por ala */}
-        <div className="space-y-6">
-           <h3 className="text-2xl font-black tracking-tight px-2 flex items-center gap-3">
-              <span className="material-symbols-outlined text-blue-500">monitoring</span>
-              Distribuição por Ala
-           </h3>
-           
-           <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-6">
-                Reservas por ala — período selecionado
-              </p>
-              {loading ? (
-                <div className="space-y-4">
-                  {[1,2,3].map(i => (
-                    <div key={i} className="h-8 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
-                  ))}
-                </div>
-              ) : metricas.distribuicaoAla.length === 0 ? (
-                <div className="py-10 text-center opacity-40">
-                  <span className="material-symbols-outlined text-4xl mb-2 block">location_off</span>
-                  <p className="text-xs font-black uppercase">Sem dados no período</p>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {metricas.distribuicaoAla.map(r => (
-                    <div key={r.name} className="space-y-2">
-                       <div className="flex justify-between items-center text-xs font-bold uppercase tracking-tighter">
-                          <span className="text-slate-700 dark:text-slate-200">{r.name}</span>
-                          <span className="text-slate-400">{r.qtd} reserva{r.qtd !== 1 ? 's' : ''} · {r.percent}%</span>
-                       </div>
-                       <div className="h-2 w-full bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${r.color} transition-all duration-700`}
-                            style={{ width: `${r.percent}%` }}
-                          ></div>
-                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* Reservas Ativas */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+            <h3 className="text-base font-black text-slate-900 dark:text-white">Reservas Ativas</h3>
+            <Link to="/admin/reservas" className="text-xs font-black text-[#006972] hover:underline">Ver Tudo</Link>
+          </div>
 
-              {/* Totalizador */}
-              {!loading && metricas.reservasTotal > 0 && (
-                <div className="mt-8 pt-6 border-t border-slate-50 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total no período</span>
-                  <span className="text-lg font-black text-slate-900 dark:text-white">{metricas.reservasTotal} reservas</span>
+          <div className="divide-y divide-slate-50 dark:divide-slate-800 max-h-[440px] overflow-y-auto">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="px-6 py-4 flex gap-3 animate-pulse">
+                  <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-3/4" />
+                    <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
+                  </div>
                 </div>
-              )}
-           </div>
+              ))
+            ) : reservas.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <span className="material-symbols-outlined text-slate-200 dark:text-slate-700 text-4xl mb-2 block">event_busy</span>
+                <p className="text-slate-400 text-sm font-medium">Sem reservas ativas</p>
+              </div>
+            ) : (
+              reservas.slice(0, 8).map((r, i) => {
+                const formatDate = (d) => {
+                  if (!d) return "";
+                  try {
+                    const parts = typeof d === "string" && d.includes("-")
+                      ? (d.split("T")[0].split("-").length === 3 && d.split("T")[0].split("-")[0].length === 4
+                          ? d.split("T")[0]
+                          : d.split("-").reverse().join("-"))
+                      : d;
+                    return new Date(parts).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+                  } catch { return ""; }
+                };
+
+                const st = STATUS_CONFIG[r.status] || STATUS_CONFIG["CONFIRMADA"];
+                const nomeHospede = r.hospedeNome || r.nomeHospede || "Hóspede";
+                const isCheckout = r.status === "PENDENTE";
+                const isNovo = i === 0;
+
+                return (
+                  <div key={r.idReserva || i} className="px-6 py-4 flex items-start gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black text-slate-600 dark:text-slate-300 flex-shrink-0">
+                      {getInitials(nomeHospede)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{nomeHospede}</p>
+                        {isNovo && <span className="text-[10px] font-black text-[#006972] bg-[#006972]/10 px-2 py-0.5 rounded-full flex-shrink-0">NOVO</span>}
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">
+                        Quarto {r.idQuarto} {r.dtInicio && r.dtFim ? `• ${formatDate(r.dtInicio)} – ${formatDate(r.dtFim)}` : ""}
+                      </p>
+                      {isCheckout && (
+                        <p className="text-[11px] font-black text-orange-500 mt-0.5">Ação Necessária</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
       </div>
     </div>

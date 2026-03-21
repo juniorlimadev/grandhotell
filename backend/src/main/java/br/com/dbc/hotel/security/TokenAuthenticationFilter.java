@@ -32,12 +32,23 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/auth")){
+        // Rotas completamente públicas — passar sem exigir token
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
+        if (uri.startsWith("/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (request.getRequestURI().matches("/usuario") && request.getMethod().equals("POST")) {
+        // Cadastro de cliente (público)
+        if (uri.equals("/usuario/cliente") && method.equals("POST")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Listagem pública de quartos
+        if (uri.startsWith("/quarto") && method.equals("GET")) {
             filterChain.doFilter(request, response);
             return;
         }
