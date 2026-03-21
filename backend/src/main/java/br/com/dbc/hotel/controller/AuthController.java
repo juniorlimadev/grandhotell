@@ -1,4 +1,6 @@
 package br.com.dbc.hotel.controller;
+ 
+import java.util.Map;
 
 import br.com.dbc.hotel.dto.auth.LoginDTO;
 import br.com.dbc.hotel.dto.auth.TokenDTO;
