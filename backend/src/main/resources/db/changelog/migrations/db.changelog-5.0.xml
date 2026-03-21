@@ -4,7 +4,7 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
     <changeSet id="5" author="antigravity">
-        <modifyDataType tableName="USUARIO" columnName="foto_url" newDataType="TEXT"/>
-        <modifyDataType tableName="RESERVA" columnName="observacoes" newDataType="TEXT"/>
+        <modifyDataType tableName="usuario" columnName="foto_url" newDataType="TEXT"/>
+        <modifyDataType tableName="reserva" columnName="observacoes" newDataType="TEXT"/>
     </changeSet>
 </databaseChangeLog>
