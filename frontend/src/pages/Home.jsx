@@ -110,114 +110,135 @@ export default function Home() {
   return (
     <div className="bg-[#faf8ff] text-[#131b30] min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
       {/* TopNavBar */}
-      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-sm flex justify-between items-center px-4 md:px-8 h-20">
+      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm flex justify-between items-center px-4 md:px-8 h-16 md:h-20">
         <div className="text-xl font-extrabold tracking-tighter text-[#006972]">
            GrandHotel
         </div>
+        {/* Links centrais — só desktop */}
         <div className="hidden md:flex items-center gap-8">
           <a href="#" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
           {isAuthenticated && (
             <Link to="/meus-agendamentos" className="text-slate-500 hover:text-[#006972] transition-colors text-sm font-bold tracking-tight">Meus Agendamentos</Link>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        {/* Ações — adaptadas para mobile */}
+        <div className="flex items-center gap-2">
           {!isAuthenticated ? (
             <>
-              <Link 
-                  to="/cadastro"
-                  className="px-5 py-2.5 text-slate-600 hover:text-[#006972] text-[10px] font-black uppercase tracking-widest transition-all"
-              >
-                  Criar Conta
+              {/* Desktop: mostra Criar Conta + Entrar */}
+              <Link to="/cadastro" className="hidden md:block px-5 py-2.5 text-slate-600 hover:text-[#006972] text-[10px] font-black uppercase tracking-widest transition-all">
+                Criar Conta
               </Link>
-              <Link 
-                  to="/login-cliente"
-                  className="flex items-center gap-2 px-8 py-3 bg-[#006972] hover:bg-[#004f56] text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg"
-              >
-                  Entrar no Portal
+              <Link to="/login-cliente" className="flex items-center gap-2 px-5 md:px-8 py-2.5 md:py-3 bg-[#006972] hover:bg-[#004f56] text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg">
+                <span className="material-symbols-outlined text-sm md:hidden">login</span>
+                <span className="hidden md:inline">Entrar no Portal</span>
+                <span className="md:hidden">Entrar</span>
               </Link>
             </>
           ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, {user?.nome?.split(' ')[0]}</span>
+            <div className="flex items-center gap-2">
+              <span className="hidden md:block text-xs font-bold text-[#006972] uppercase tracking-widest bg-[#006972]/5 px-4 py-2 rounded-full">Olá, {user?.nome?.split(' ')[0]}</span>
               <button 
-                onClick={() => {
-                    logout();
-                    window.location.reload();
-                }}
-                className="px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                onClick={() => { logout(); window.location.reload(); }}
+                className="p-2 md:px-4 md:py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
-                Sair
+                <span className="material-symbols-outlined text-sm md:hidden">logout</span>
+                <span className="hidden md:inline">Sair</span>
               </button>
             </div>
           )}
           <Link 
             to="/login"
-            className="px-6 py-3 bg-slate-900 hover:bg-black text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg"
+            className="px-4 md:px-6 py-2.5 md:py-3 bg-slate-900 hover:bg-black text-white rounded-full text-xs font-black transition-all active:scale-95 shadow-lg"
           >
-            Área Staff
+            <span className="md:hidden">Staff</span>
+            <span className="hidden md:inline">Área Staff</span>
           </Link>
         </div>
       </nav>
 
-      <main className="pt-20">
+      <main className="pt-16 md:pt-20">
         {/* Hero Banner */}
-        <section className="relative h-[700px] flex items-center px-8 md:px-20 overflow-hidden">
+        <section className="relative h-[600px] md:h-[700px] flex items-center px-6 md:px-20 overflow-hidden">
           <div className="absolute inset-0 z-0">
             <img 
               className="w-full h-full object-cover" 
               src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
               alt="Luxury hotel lobby"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#131b30]/90 via-[#131b30]/40 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#131b30]/90 via-[#131b30]/60 to-transparent"></div>
           </div>
-          <div className="relative z-10 max-w-3xl text-white pb-20">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#8edce6]/20 backdrop-blur-md rounded-full mb-8 border border-white/10">
+          <div className="relative z-10 max-w-3xl text-white pb-16 md:pb-20">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#8edce6]/20 backdrop-blur-md rounded-full mb-6 md:mb-8 border border-white/10">
                <span className="material-symbols-outlined text-[#8edce6] text-lg">verified</span>
                <span className="text-[10px] uppercase font-black tracking-[0.2em]">Oásis Urbano • Luxo • Conforto</span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-[1]">
+            <h1 className="text-5xl md:text-8xl font-black tracking-tighter mb-6 md:mb-8 leading-[1]">
               Sua jornada de <br/>
               <span className="text-[#8edce6]">serenidade</span> <br/>
               começa aqui.
             </h1>
-            <p className="text-xl opacity-95 font-medium max-w-xl mb-12 leading-relaxed">
+            <p className="text-base md:text-xl opacity-95 font-medium max-w-xl mb-10 md:mb-12 leading-relaxed">
               Descubra um refúgio de sofisticação onde cada detalhe foi planejado para proporcionar sua melhor estadia.
             </p>
             <div className="flex flex-wrap gap-4">
-                 <a href="#quartos" className="bg-[#006972] text-white px-12 py-6 rounded-2xl font-black text-sm shadow-2xl shadow-[#006972]/40 hover:scale-105 transition-all">
+                 <a href="#quartos" className="bg-[#006972] text-white px-8 md:px-12 py-4 md:py-6 rounded-2xl font-black text-sm shadow-2xl shadow-[#006972]/40 hover:scale-105 transition-all">
                     Visualizar Acomodações
                  </a>
             </div>
           </div>
         </section>
 
-        {/* Search Bar (Pill Style) */}
-        <section className="px-8 -mt-24 relative z-20">
-          <div className="max-w-6xl mx-auto bg-white rounded-[3rem] shadow-2xl shadow-[#131b30]/20 p-6 flex flex-col md:flex-row items-center gap-4 border border-slate-100">
-            <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_today</span>
-               <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
-               </div>
+        {/* Search Bar */}
+        <section className="px-4 md:px-8 -mt-16 md:-mt-24 relative z-20">
+          <div className="max-w-6xl mx-auto bg-white rounded-[2rem] md:rounded-[3rem] shadow-2xl shadow-[#131b30]/20 p-4 md:p-6 border border-slate-100">
+            {/* Desktop layout: em linha */}
+            <div className="hidden md:flex items-center gap-4">
+              <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 group">
+                 <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_today</span>
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
+                    <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
+                 </div>
+              </div>
+              <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 group">
+                 <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_month</span>
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
+                    <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
+                 </div>
+              </div>
+              <div className="flex-1 flex items-center gap-6 px-10 py-6 group">
+                 <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">person_add</span>
+                 <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
+                    <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
+                 </div>
+              </div>
+              <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-16 py-7 rounded-[2rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
+                Verificar
+              </button>
             </div>
-            <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_month</span>
-               <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
-               </div>
+            {/* Mobile layout: em grade 2x2 */}
+            <div className="md:hidden grid grid-cols-2 gap-3">
+              <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
+                <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
+                <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="date" min={today} />
+              </div>
+              <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
+                <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
+                <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="date" min={today} />
+              </div>
+              <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
+                <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
+                <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="number" min="1" defaultValue={2} />
+              </div>
+              <div className="col-span-1">
+                <button className="w-full h-full bg-gradient-to-br from-[#006972] to-[#004f56] text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl shadow-[#006972]/30 py-3">
+                  Verificar
+                </button>
+              </div>
             </div>
-            <div className="flex-1 flex items-center gap-6 px-10 py-6 w-full group">
-               <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">person_add</span>
-               <div className="flex flex-col">
-                  <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
-                  <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
-               </div>
-            </div>
-            <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-16 py-7 rounded-[2rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
-              Verificar
-            </button>
           </div>
         </section>
 

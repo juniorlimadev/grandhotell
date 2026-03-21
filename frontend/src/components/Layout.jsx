@@ -12,6 +12,7 @@ const navItems = [
   { to: "/admin/usuarios", icon: "badge", label: "Gestão Staff", permission: ["ADMIN"] },
   { to: "/admin/clientes", icon: "group", label: "Base de Clientes", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/notificacoes", icon: "notifications", label: "Notificacoes", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
+  { to: "/admin/logs", icon: "terminal", label: "Logs do Sistema", permission: ["ADMIN"] },
 ];
 
 export default function Layout() {
@@ -41,9 +42,10 @@ export default function Layout() {
         // se der erro, volta para o estado padrão
       }
     }
+    const agora = new Date();
     const initial = [
-      { id: 1, text: "Nova reserva realizada no quarto 102", time: "Há 5 min", type: "reserva" },
-      { id: 2, text: "Check-out pendente para amanhã", time: "Há 2 horas", type: "alerta" },
+      { id: 1, text: "Nova reserva realizada no quarto 102", timestamp: new Date(agora.getTime() - 5 * 60 * 1000), type: "reserva" },
+      { id: 2, text: "Check-out pendente para amanhã", timestamp: new Date(agora.getTime() - 2 * 60 * 60 * 1000), type: "alerta" },
     ];
     localStorage.setItem("grandhotel_notifications", JSON.stringify(initial));
     return initial;
@@ -134,10 +136,26 @@ export default function Layout() {
     }
   };
 
+  const getTimeAgo = (timestamp) => {
+    if (!timestamp) return "";
+    const now = new Date();
+    const ts = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    const diffMs = now - ts;
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffD = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffMin < 1) return "Agora mesmo";
+    if (diffMin < 60) return `Há ${diffMin} min`;
+    if (diffH < 24) return `Há ${diffH} hora${diffH > 1 ? "s" : ""}`;
+    if (diffD === 1) return "Ontem";
+    return `Há ${diffD} dias`;
+  };
+
   const getInitials = (name) => {
     if (!name) return "U";
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
+
 
   const handleLogout = () => {
     logout();
@@ -342,7 +360,7 @@ export default function Layout() {
                             </div>
                             <div className="flex-1">
                               <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight">{n.text}</p>
-                              <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-wider">{n.time === "Há 5 min" ? "Ontem" : n.time}</p>
+                              <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase tracking-wider">{getTimeAgo(n.timestamp)}</p>
                             </div>
                           </div>
                         ))

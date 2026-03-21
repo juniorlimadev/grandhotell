@@ -15,11 +15,12 @@ export default function Notificacoes() {
         // ignora erro e volta para padrão
       }
     }
+    const agora = new Date();
     const initial = [
-      { id: 1, text: "Nova reserva realizada no quarto 102", timestamp: new Date("2026-03-15T15:00:00"), type: "reserva", date: "15/03/2026" },
-      { id: 2, text: "Check-out pendente para amanhã", timestamp: new Date("2026-03-15T10:00:00"), type: "alerta", date: "15/03/2026" },
-      { id: 3, text: "Limpeza concluída no quarto 205", timestamp: new Date("2026-03-15T08:00:00"), type: "limpeza", date: "15/03/2026" },
-      { id: 4, text: "Novo usuário registrado: João Silva", timestamp: new Date("2026-03-14T09:00:00"), type: "sistema", date: "14/03/2026" },
+      { id: 1, text: "Nova reserva realizada no quarto 102", timestamp: new Date(agora.getTime() - 5 * 60 * 1000), type: "reserva", date: new Date(agora.getTime() - 5 * 60 * 1000).toLocaleDateString('pt-BR') },
+      { id: 2, text: "Check-out pendente para amanhã", timestamp: new Date(agora.getTime() - 2 * 60 * 60 * 1000), type: "alerta", date: new Date(agora.getTime() - 2 * 60 * 60 * 1000).toLocaleDateString('pt-BR') },
+      { id: 3, text: "Limpeza concluída no quarto 205", timestamp: new Date(agora.getTime() - 6 * 60 * 60 * 1000), type: "limpeza", date: new Date(agora.getTime() - 6 * 60 * 60 * 1000).toLocaleDateString('pt-BR') },
+      { id: 4, text: "Novo usuário registrado: João Silva", timestamp: new Date(agora.getTime() - 24 * 60 * 60 * 1000), type: "sistema", date: new Date(agora.getTime() - 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR') },
     ];
     localStorage.setItem("grandhotel_notifications", JSON.stringify(initial));
     return initial;
@@ -38,17 +39,20 @@ export default function Notificacoes() {
   }, [notifications]);
 
   const getTimeAgo = (timestamp) => {
-    const now = new Date("2026-03-16T19:11:29-03:00"); // Current time as per user context
-    const diffInMs = now - timestamp;
-    const diffInMins = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-    if (diffInMins < 60) return `Há ${diffInMins} min`;
-    if (diffInHours < 24) return `Há ${diffInHours} horas`;
-    if (diffInDays === 1) return "Ontem";
-    return `Há ${diffInDays} dias`;
+    if (!timestamp) return "";
+    const now = new Date();
+    const ts = timestamp instanceof Date ? timestamp : new Date(timestamp);
+    const diffMs = now - ts;
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffD = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffMin < 1) return "Agora mesmo";
+    if (diffMin < 60) return `Há ${diffMin} min`;
+    if (diffH < 24) return `Há ${diffH} hora${diffH > 1 ? "s" : ""}`;
+    if (diffD === 1) return "Ontem";
+    return `Há ${diffD} dias`;
   };
+
 
   const filteredNotifications = filter === "todos" 
     ? notifications 

@@ -7,6 +7,7 @@ import Quartos from "./pages/Quartos";
 import Reservas from "./pages/Reservas";
 import Usuarios from "./pages/Usuarios";
 import Notificacoes from "./pages/Notificacoes";
+import Logs from "./pages/Logs";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "./components/LoadingScreen";
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="notificacoes" element={<Notificacoes />} />
+        <Route path="logs" element={<Logs />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
