@@ -90,6 +90,29 @@ public class UsuarioController {
     }
 
     /**
+     * Alterna o status (ativo/inativo) de um usuário.
+     */
+    @PutMapping("/toggle-status/{idUsuario}")
+    @Operation(summary = "Bloquear/Desbloquear usuário", description = "Inverte o status ativo do usuário")
+    public ResponseEntity<Map<String, Object>> toggleStatus(@PathVariable Integer idUsuario) throws NotFoundException {
+        log.info("Alternando status do usuário ID: {}", idUsuario);
+        usuarioService.toggleStatus(idUsuario);
+        return ResponseEntity.ok(messageResponse("Status do usuário alterado com sucesso."));
+    }
+
+    /**
+     * Altera a senha de um cliente por um administrador (sem precisar da senha antiga).
+     */
+    @PutMapping("/admin/mudar-senha-cliente/{idUsuario}")
+    @Operation(summary = "Admin muda senha de cliente", description = "Permite que o staff mude a senha de um cliente")
+    public ResponseEntity<Map<String, Object>> adminMudarSenha(@PathVariable Integer idUsuario, @RequestBody Map<String, String> payload) throws NotFoundException {
+        String novaSenha = payload.get("novaSenha");
+        log.info("Staff alterando senha do usuário ID: {}", idUsuario);
+        usuarioService.adminMudarSenha(idUsuario, novaSenha);
+        return ResponseEntity.ok(messageResponse("Senha do cliente alterada com sucesso."));
+    }
+
+    /**
      * Remove um usuário do sistema.
      */
     @DeleteMapping("/{idUsuario}")

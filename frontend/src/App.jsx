@@ -16,6 +16,7 @@ import LoginCliente from "./pages/LoginCliente";
 import CadastroCliente from "./pages/CadastroCliente";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
 import Clientes from "./pages/Clientes";
+import ForgotPassword from "./pages/ForgotPassword";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -35,6 +36,7 @@ export default function App() {
       <Route path="/login-cliente" element={<LoginCliente />} />
       <Route path="/cadastro" element={<CadastroCliente />} />
       <Route path="/meus-agendamentos" element={<MeusAgendamentos />} />
+      <Route path="/esqueci-senha" element={<ForgotPassword />} />
       <Route
         path="/admin"
         element={

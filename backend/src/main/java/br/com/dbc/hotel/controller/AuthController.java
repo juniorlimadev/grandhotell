@@ -1,20 +1,14 @@
 package br.com.dbc.hotel.controller;
 
-import br.com.dbc.hotel.dto.auth.GoogleTokenDTO;
 import br.com.dbc.hotel.dto.auth.LoginDTO;
 import br.com.dbc.hotel.dto.auth.TokenDTO;
 import br.com.dbc.hotel.entity.Usuario;
 import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.security.TokenService;
 import br.com.dbc.hotel.service.UsuarioService;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.Collections;
 
 @RestController
 @Validated
@@ -42,37 +35,14 @@ public class AuthController{
     private final TokenService tokenService;
     private final UsuarioService usuarioService;
 
-    @Value("${google.client.id:75470123545-un0000000000000000000000000.apps.googleusercontent.com}")
-    private String googleClientId;
-
-    @PostMapping("/google")
-    public ResponseEntity<TokenDTO> authGoogle(@RequestBody @Valid GoogleTokenDTO googleTokenDTO) throws Exception {
-        try {
-            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
-                    .setAudience(Collections.singletonList(googleClientId))
-                    .build();
-
-            GoogleIdToken idToken = verifier.verify(googleTokenDTO.getToken());
-            if (idToken == null) {
-                throw new RegraDeNegocioException("Token Google inválido.", HttpStatus.BAD_REQUEST);
-            }
-
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            String email = payload.getEmail();
-            String name = (String) payload.get("name");
-
-            Usuario usuario = usuarioService.saveGoogleUser(email, name);
-
-            TokenDTO tokenDTO = new TokenDTO();
-            tokenDTO.setToken(tokenService.generateToken(usuario));
-
-            return new ResponseEntity<>(tokenDTO, HttpStatus.OK);
-
-        } catch (Exception e) {
-            log.error("Erro ao autenticar com Google: ", e);
-            throw new RegraDeNegocioException("Falha na autenticação Google. Tente novamente.", HttpStatus.UNAUTHORIZED);
-        }
+    @PostMapping("/esqueci-senha")
+    public ResponseEntity<Void> esqueciSenha(@RequestBody Map<String, String> payload) throws RegraDeNegocioException {
+        String email = payload.get("email");
+        log.info("Solicitação de recuperação de senha para: {}", email);
+        usuarioService.solicitarRecuperacaoSenha(email);
+        return ResponseEntity.ok().build();
     }
+
 
     @PostMapping
     public ResponseEntity<TokenDTO> auth(@RequestBody @Valid LoginDTO loginDTO) throws Exception {

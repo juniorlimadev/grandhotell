@@ -53,11 +53,13 @@ public class Usuario implements UserDetails {
     )
     private Set<Cargo> cargos = new HashSet<>();
 
+    @Column(name = "ativo")
+    private Boolean ativo = true;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return cargos;
     }
-
 
     @Override
     public String getPassword() {
@@ -86,6 +88,6 @@ public class Usuario implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return ativo != null && ativo;
     }
 }

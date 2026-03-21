@@ -89,15 +89,9 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const loginGoogle = async (googleToken) => {
-    const { data } = await authApi.loginGoogle(googleToken);
-    setToken(data.token);
-    return data;
-  };
-
   const logout = () => setToken(null);
 
-  const value = { token, user, login, loginGoogle, logout, refreshUser, loading, isAuthenticated: !!token };
+  const value = { token, user, login, logout, refreshUser, loading, isAuthenticated: !!token };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

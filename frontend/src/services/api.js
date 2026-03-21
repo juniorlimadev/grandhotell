@@ -39,7 +39,7 @@ api.interceptors.response.use(
  */
 export const authApi = {
   login: (login, senha) => api.post("/auth", { login, senha }),
-  loginGoogle: (token) => api.post("/auth/google", { token }),
+  forgotPassword: (email) => api.post("/auth/esqueci-senha", { email }),
 };
 
 /**
@@ -126,6 +126,8 @@ export const usuarioApi = {
   },
   delete: (id) => api.delete(`/usuario/${id}`),
   mudarSenha: (id, data) => api.put(`/usuario/mudar-senha/${id}`, data),
+  toggleStatus: (id) => api.put(`/usuario/toggle-status/${id}`),
+  adminResetPassword: (id, novaSenha) => api.put(`/usuario/admin/mudar-senha-cliente/${id}`, { novaSenha }),
 };
 
 

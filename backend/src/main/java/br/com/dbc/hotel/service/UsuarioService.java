@@ -59,6 +59,7 @@ public class UsuarioService {
         Usuario usuario = objectMapper.convertValue(usuarioCreateDTO, Usuario.class);
         usuario.setEmail(usuarioCreateDTO.getEmail().trim().toLowerCase());
         usuario.setSenha(passwordEncoder.encode(usuarioCreateDTO.getSenha()));
+        usuario.setAtivo(true);
         
         // Atribui cargo básico "USER" por padrão
         Cargo userCargo = cargoService.findByName("USER");
@@ -66,29 +67,6 @@ public class UsuarioService {
 
         Usuario save = usuarioRepository.save(usuario);
         return entidadeParaDTO(save);
-    }
-
-    /**
-     * Cadastra ou atualiza um usuário vindo do Google Auth.
-     */
-    public Usuario saveGoogleUser(String email, String nome) throws RegraDeNegocioException {
-        Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(email.trim().toLowerCase());
-        
-        if (usuarioOptional.isPresent()) {
-            return usuarioOptional.get();
-        }
-
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(nome);
-        novoUsuario.setEmail(email.trim().toLowerCase());
-        // Senha aleatória para usuários Google (eles não a usarão)
-        novoUsuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
-        novoUsuario.setDataNascimento(java.time.LocalDate.now()); // Data padrão
-        
-        Cargo userCargo = cargoService.findByName("USER");
-        novoUsuario.setCargos(new HashSet<>(Collections.singletonList(userCargo)));
-
-        return usuarioRepository.save(novoUsuario);
     }
 
     /**
@@ -116,6 +94,26 @@ public class UsuarioService {
 
         Usuario save = usuarioRepository.save(usuario);
         return entidadeParaDTO(save);
+    }
+
+    public void solicitarRecuperacaoSenha(String email) throws RegraDeNegocioException {
+        Usuario usuario = usuarioRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new RegraDeNegocioException("E-mail não encontrado.", HttpStatus.NOT_FOUND));
+        
+        // Placeholder para envio de e-mail real
+        log.info("E-mail de recuperação enviado para: {}", email);
+    }
+
+    public void toggleStatus(Integer id) throws NotFoundException {
+        Usuario usuario = findById(id);
+        usuario.setAtivo(usuario.getAtivo() == null || !usuario.getAtivo());
+        usuarioRepository.save(usuario);
+    }
+
+    public void adminMudarSenha(Integer idUsuario, String novaSenha) throws NotFoundException {
+        Usuario usuario = findById(idUsuario);
+        usuario.setSenha(passwordEncoder.encode(novaSenha));
+        usuarioRepository.save(usuario);
     }
 
     /**

@@ -2,11 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
-import { GoogleLogin } from "@react-oauth/google";
-
 export default function LoginCliente() {
   const navigate = useNavigate();
-  const { login, loginGoogle, isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     email: "",
@@ -26,19 +24,6 @@ export default function LoginCliente() {
       toast.error(err.response?.data?.message || "Erro no login. Verifique seu e-mail e senha.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const onSuccessGoogle = async (credentialResponse) => {
-    setLoading(true);
-    try {
-        await loginGoogle(credentialResponse.credential);
-        toast.success("Login efetuado com sucesso via Google!");
-        navigate("/");
-    } catch (e) {
-        toast.error("Falha ao autenticar com Google.");
-    } finally {
-        setLoading(false);
     }
   };
 
@@ -99,22 +84,10 @@ export default function LoginCliente() {
             {loading ? "Sincronizando..." : "Entrar em Minha Conta"}
           </button>
 
-          <div className="relative py-4">
-             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-             <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                <span className="bg-[#1a233a] lg:bg-transparent lg:backdrop-blur-none px-4">Ou continue com</span>
-             </div>
-          </div>
-
-          <div className="flex justify-center">
-             <GoogleLogin 
-                onSuccess={onSuccessGoogle}
-                onError={() => toast.error("Erro no Login Google")}
-                theme="filled_blue"
-                shape="pill"
-                text="signin_with"
-                width="100%"
-             />
+          <div className="flex justify-between items-center px-1">
+             <Link to="/esqueci-senha" title="Recuperar acesso" className="text-xs font-black uppercase text-[#8edce6]/60 hover:text-[#8edce6] transition-colors tracking-widest">
+                Esqueci minha senha
+             </Link>
           </div>
         </form>
 
