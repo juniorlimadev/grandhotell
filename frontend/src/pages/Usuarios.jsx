@@ -32,7 +32,7 @@ export default function Usuarios() {
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
-      const res = await usuarioApi.list(page, 10);
+      const res = await usuarioApi.list(page, 10, "nome", true);
       setLista(res.data);
     } catch (e) {
       toast.error(e.response?.data?.message || "Erro ao carregar usuários.");

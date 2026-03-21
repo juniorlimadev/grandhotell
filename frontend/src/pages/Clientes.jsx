@@ -16,24 +16,8 @@ export default function Clientes() {
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
-      const res = await usuarioApi.list(page, 100);
-      // Filtra apenas usuários com cargo CLIENTE ou USER (compatibilidade com registros antigos)
-      // Staff como ADMIN, GESTAO_QUARTOS, GESTAO_RESERVAS são excluídos
-      const clientesApenas = (res.data.content || []).filter(u => {
-        if (!u.cargos) return false;
-        const cargos = Array.isArray(u.cargos) ? u.cargos : [u.cargos];
-        const cargosTitulos = cargos.map(c => typeof c === 'string' ? c : c?.titulo || '');
-        // É cliente: tem CLIENTE ou tem apenas USER (sem ADMIN/GESTAO_*)
-        const temCliente = cargosTitulos.includes("CLIENTE");
-        const temApenasUser = cargosTitulos.includes("USER") && 
-          !cargosTitulos.some(c => ["ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"].includes(c));
-        return temCliente || temApenasUser;
-      });
-      setLista({
-        ...res.data,
-        content: clientesApenas,
-        totalElements: clientesApenas.length
-      });
+      const res = await usuarioApi.list(page, 100, "nome", false, "CLIENTE");
+      setLista(res.data);
     } catch (e) {
       toast.error("Erro ao carregar lista de clientes.");
     } finally {

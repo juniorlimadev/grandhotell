@@ -107,8 +107,8 @@ export const reservaApi = {
  * Gerencia acesso e permissões (Cargos).
  */
 export const usuarioApi = {
-  list: (page = 0, size = 10, sort = "nome") =>
-    api.get("/usuario", { params: { page, size, sort } }),
+  list: (page = 0, size = 10, sort = "nome", apenasStaff = false, cargo = "") =>
+    api.get("/usuario", { params: { page, size, sort, apenasStaff, cargo } }),
   getById: (id) => api.get(`/usuario/${id}`),
   create: (data) => {
     const d = { ...data };

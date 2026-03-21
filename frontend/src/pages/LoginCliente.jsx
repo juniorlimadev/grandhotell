@@ -17,7 +17,18 @@ export default function LoginCliente() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(form.email, form.senha);
+      const data = await login(form.email, form.senha);
+
+      // Se for um membro do staff, podemos sugerir ir ao painel ou redirecionar
+      const cargos = data.usuario?.cargos || [];
+      const eStaff = cargos.some(c => ["ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS", "USER"].includes(typeof c === 'string' ? c : c.titulo));
+      
+      if (eStaff) {
+         toast.info("Acesso Staff detectado — Redirecionando para Dashboard.");
+         navigate("/admin");
+         return;
+      }
+
       toast.success("Bem-vindo(a) ao GrandHotel!");
       navigate("/");
     } catch (err) {

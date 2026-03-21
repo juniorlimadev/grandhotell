@@ -37,9 +37,11 @@ public class UsuarioController {
     public ResponseEntity<CustomPageDTO<UsuarioDTO>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nome") String sort) {
-        log.info("Iniciando listagem de todos os usuários");
-        CustomPageDTO<UsuarioDTO> usuariosPage = usuarioService.findAll(page, size, sort);
+            @RequestParam(defaultValue = "nome") String sort,
+            @RequestParam(required = false) Boolean apenasStaff,
+            @RequestParam(required = false) String cargo) {
+        log.info("Iniciando listagem de usuários. Apenas staff: {}, Cargo: {}", apenasStaff, cargo);
+        CustomPageDTO<UsuarioDTO> usuariosPage = usuarioService.findAll(page, size, sort, apenasStaff, cargo);
         log.info("Usuários listados com sucesso");
         return ResponseEntity.ok(usuariosPage);
     }

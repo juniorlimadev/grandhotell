@@ -40,11 +40,18 @@ public class UsuarioService {
     private final JavaMailSender mailSender;
 
     /**
-     * Retorna uma lista paginada de todos os usuários.
+     * Retorna uma lista paginada de usuários, podendo filtrar apenas staff ou todos.
      */
-    public CustomPageDTO<UsuarioDTO> findAll(int page, int size, String sortField) {
+    public CustomPageDTO<UsuarioDTO> findAll(int page, int size, String sortField, Boolean apenasStaff, String cargo) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortField));
-        Page<Usuario> usuarios = usuarioRepository.findAll(pageable);
+        Page<Usuario> usuarios;
+        if (cargo != null && !cargo.isEmpty()) {
+            usuarios = usuarioRepository.findAllByCargo(cargo, pageable);
+        } else if (apenasStaff != null && apenasStaff) {
+            usuarios = usuarioRepository.findStaff(pageable);
+        } else {
+            usuarios = usuarioRepository.findAll(pageable);
+        }
         return retornarCustomPageDTO(usuarios);
     }
 

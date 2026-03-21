@@ -19,12 +19,25 @@ import MeusAgendamentos from "./pages/MeusAgendamentos";
 import Clientes from "./pages/Clientes";
 import ForgotPassword from "./pages/ForgotPassword";
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+function ProtectedRoute({ children, allowClient = false }) {
+  const { isAuthenticated, loading, user } = useAuth();
+
   if (loading) {
     return <LoadingScreen title="Carregando sua sessão..." subtitle="Aguarde um instante" />;
   }
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (!isAuthenticated) {
+    return <Navigate to={allowClient ? "/login-cliente" : "/login"} replace />;
+  }
+
+  // Se a rota NÃO permite clientes e o usuário logado É um cliente, redireciona para Home pública
+  const cargos = Array.isArray(user?.cargos) ? user.cargos : [];
+  const eCliente = cargos.includes("CLIENTE");
+
+  if (!allowClient && eCliente) {
+    return <Navigate to="/" replace />;
+  }
+
   return children;
 }
 
@@ -36,7 +49,14 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/login-cliente" element={<LoginCliente />} />
       <Route path="/cadastro" element={<CadastroCliente />} />
-      <Route path="/meus-agendamentos" element={<MeusAgendamentos />} />
+      <Route 
+        path="/meus-agendamentos" 
+        element={
+          <ProtectedRoute allowClient>
+            <MeusAgendamentos />
+          </ProtectedRoute>
+        } 
+      />
       <Route path="/esqueci-senha" element={<ForgotPassword />} />
       <Route
         path="/admin"

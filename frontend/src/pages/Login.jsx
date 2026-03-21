@@ -17,8 +17,25 @@ export default function Login() {
     setErro("");
     setLoading(true);
     try {
-      await login(email, senha);
-      navigate("/admin", { replace: true });
+      const data = await login(email, senha);
+      
+      // Verifica se o usuário logado é um CLIENTE tentando acessar o painel administrativo
+      const cargos = data.usuario?.cargos || []; 
+      const eCliente = cargos.some(c => (typeof c === 'string' ? c : c.titulo) === "CLIENTE");
+
+      if (eCliente) {
+        logout();
+        setErro("Acesso negado. Clientes devem utilizar a área de hóspedes.");
+      } else {
+        // Verifica se o usuário tem algum cargo de STAFF para acessar o painel administrativo
+        const eStaff = cargos.some(c => ["ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"].includes(typeof c === 'string' ? c : c.titulo));
+        if (eStaff) {
+          navigate("/admin", { replace: true });
+        } else {
+          logout(); // Se não é cliente e não é staff, não deveria estar aqui
+          setErro("Acesso negado. Seu perfil não tem permissão para acessar o painel administrativo.");
+        }
+      }
     } catch (err) {
       setErro(err.response?.data?.message || "E-mail ou senha inválidos. Tente novamente.");
     } finally {
