@@ -47,8 +47,8 @@ export default function Login() {
     <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="size-12 bg-primary rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-slate-900 text-2xl">apartment</span>
+          <div className="size-12 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden p-2">
+            <img src="/favicon.svg" alt="Grand Hotel" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">Grand Hotel</h1>

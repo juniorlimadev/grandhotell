@@ -189,8 +189,8 @@ export default function Layout() {
           </span>
         </button>
         <div className="p-6 flex items-center justify-between gap-3">
-          <div className="size-10 bg-primary rounded-lg flex items-center justify-center">
-            <span className="material-symbols-outlined text-slate-900">apartment</span>
+          <div className="size-10 bg-primary/10 rounded-lg flex items-center justify-center overflow-hidden p-1.5">
+            <img src="/favicon.svg" alt="Grand Hotel Logo" className="w-full h-full object-contain" />
           </div>
           {!sidebarCollapsed && (
             <div>
