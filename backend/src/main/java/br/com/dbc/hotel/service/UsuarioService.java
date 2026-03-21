@@ -83,7 +83,7 @@ public class UsuarioService {
         novoUsuario.setEmail(email.trim().toLowerCase());
         // Senha aleatória para usuários Google (eles não a usarão)
         novoUsuario.setSenha(passwordEncoder.encode(UUID.randomUUID().toString()));
-        novoUsuario.setDataNascimento(new Date()); // Data padrão
+        novoUsuario.setDataNascimento(java.time.LocalDate.now()); // Data padrão
         
         Cargo userCargo = cargoService.findByName("USER");
         novoUsuario.setCargos(new HashSet<>(Collections.singletonList(userCargo)));
