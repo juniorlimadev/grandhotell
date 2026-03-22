@@ -60,7 +60,12 @@ export default function Dashboard() {
       setTotalPages(qRes.data.totalPages || 1);
       setReservas(Array.isArray(rRes.data) ? rRes.data : []);
     } catch (err) {
-      toast.error("Erro ao carregar dados do dashboard.");
+      console.error("Dashboard Load Error Details:", {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      toast.error(err.response?.data?.message || "Erro ao carregar dados do dashboard.");
     } finally {
       setLoading(false);
     }
