@@ -1,6 +1,7 @@
 package br.com.dbc.hotel.entity;
 
 import br.com.dbc.hotel.enums.AlaHotel;
+import br.com.dbc.hotel.enums.StatusQuarto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -54,6 +55,7 @@ public class Quarto {
     @Column(name = "metragem")
     private Double metragem;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status_operacional")
-    private String statusOperacional = "DISPONIVEL";
+    private StatusQuarto statusOperacional = StatusQuarto.DISPONIVEL;
 }

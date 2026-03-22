@@ -7,6 +7,7 @@ import br.com.dbc.hotel.dto.reserva.ReservaDTO;
 import br.com.dbc.hotel.entity.Quarto;
 import br.com.dbc.hotel.entity.Reserva;
 import br.com.dbc.hotel.enums.AlaHotel;
+import br.com.dbc.hotel.enums.StatusQuarto;
 import br.com.dbc.hotel.exceptions.NotFoundException;
 import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.repository.QuartoRepository;
