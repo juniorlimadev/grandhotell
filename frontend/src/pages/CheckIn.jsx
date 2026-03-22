@@ -16,8 +16,8 @@ export default function CheckIn() {
       const res = await reservaApi.quartosOcupados(hoje, hoje);
       // Filtramos apenas as que NÃO estão concluídas/canceladas e que começam HOJE
       const pendentes = (res.data || []).filter(r => {
-        const dIniStr = new Date(r.dtInicio).toISOString().split('T')[0];
-        return dIniStr === hoje && r.status !== 'CANCELADA' && r.status !== 'OCUPADO' && r.status !== 'CONCLUIDA' && r.status !== 'CONFIRMADA';
+        const dIniStr = toInputDate(r.dtInicio);
+        return dIniStr === hoje && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA' && r.statusQuarto !== 'CONFIRMADA';
       });
       setReservas(pendentes);
     } catch (e) {
@@ -107,7 +107,7 @@ export default function CheckIn() {
                     <div className="size-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-primary">
                         <span className="material-symbols-outlined text-sm">calendar_month</span>
                     </div>
-                    Expira em {new Date(r.dtFim).toLocaleDateString()}
+                    Expira em {formatDate(r.dtFim)}
                   </div>
                 </div>
 

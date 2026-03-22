@@ -16,7 +16,7 @@ export default function CheckOut() {
       const res = await reservaApi.quartosOcupados(hoje, hoje);
       // Filtramos apenas as que estão ATIVAS (CONFIRMADA no sistema ou OCUPADO)
       const ativas = (res.data || []).filter(r => 
-        (r.status === 'CONFIRMADA' || r.status === 'OCUPADO') && r.status !== 'CANCELADA' && r.status !== 'CONCLUIDA'
+        (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO') && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'CONCLUIDA'
       );
       setReservas(ativas);
     } catch (e) {
@@ -115,7 +115,7 @@ export default function CheckOut() {
                     <div className="size-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-orange-500">
                         <span className="material-symbols-outlined text-sm">event_repeat</span>
                     </div>
-                    Check-in real: {new Date(r.checkinReal || r.dtInicio).toLocaleString()}
+                    Check-in real: {r.checkinReal ? new Date(r.checkinReal).toLocaleString() : formatDate(r.dtInicio)}
                   </div>
                 </div>
 
