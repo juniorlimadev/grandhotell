@@ -174,9 +174,9 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:translate-x-0
+        border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        ${sidebarCollapsed ? "lg:w-20" : "lg:w-64"}
+        ${sidebarCollapsed ? "lg:w-22" : "lg:w-64"}
       `}>
         {/* Toggle Button integrado à borda lateral */}
         <button
@@ -188,85 +188,100 @@ export default function Layout() {
             {sidebarCollapsed ? "chevron_right" : "chevron_left"}
           </span>
         </button>
-        <div className="p-6 flex items-center justify-between gap-3">
-          <div className="size-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 group-hover:scale-110 transition-transform">
+
+        {/* Logo / Brand Area */}
+        <div className={`p-6 flex items-center gap-3 transition-all duration-500 overflow-hidden ${sidebarCollapsed ? "justify-center px-0" : "justify-between"}`}>
+          <div className="size-11 bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 flex-shrink-0">
              <span className="material-symbols-outlined text-2xl">apartment</span>
           </div>
           {!sidebarCollapsed && (
-            <div>
-              <h1 className="text-sm font-bold leading-tight">Grand Hotel</h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Console Administrativo</p>
+            <div className="overflow-hidden animate-in fade-in slide-in-from-left-2 duration-500">
+              <h1 className="text-sm font-black leading-tight whitespace-nowrap">Grand Hotel</h1>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold whitespace-nowrap">Console Admin</p>
             </div>
           )}
         </div>
-        <nav className="flex-1 px-4 space-y-1">
-          {filteredNavItems.map(({ to, icon, label }) => (
 
+        {/* Nav Links */}
+        <nav className={`flex-1 space-y-3 transition-all duration-500 overflow-y-auto overflow-x-hidden pt-2 ${sidebarCollapsed ? "px-2" : "px-4"}`}>
+          {filteredNavItems.map(({ to, icon, label }) => (
             <NavLink
               key={to}
               to={to}
               end={to === "/admin"}
               onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
-                `group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${
+                `group relative flex items-center transition-all duration-300 rounded-2xl ${
+                  sidebarCollapsed 
+                    ? "justify-center size-14 mx-auto" 
+                    : "gap-3 px-4 py-3.5 mx-0"
+                } ${
                   isActive
-                    ? "bg-primary text-slate-900 font-black shadow-lg shadow-primary/20 scale-[1.02]"
-                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:pl-5"
+                    ? "bg-primary text-slate-900 font-black shadow-xl shadow-primary/30"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`
               }
             >
-              <div className="flex items-center gap-3 z-10">
-                <span className="material-symbols-outlined transition-transform group-hover:scale-110">{icon}</span>
-                {!sidebarCollapsed && <span className="text-sm tracking-tight">{label}</span>}
+              <div className={`flex items-center gap-3 z-10 ${sidebarCollapsed ? "justify-center" : ""}`}>
+                <span className={`material-symbols-outlined transition-transform duration-300 group-hover:scale-110 ${sidebarCollapsed ? "text-2xl" : "text-xl"}`}>
+                  {icon}
+                </span>
+                {!sidebarCollapsed && (
+                  <span className="text-sm font-bold tracking-tight whitespace-nowrap overflow-hidden animate-in fade-in slide-in-from-left-2 duration-300">
+                    {label}
+                  </span>
+                )}
               </div>
               
-              {/* Indicador de Seta Suave */}
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none overflow-hidden">
-                <div className={`
-                   transition-all duration-500 ease-out transform
-                   ${sidebarCollapsed ? 'translate-x-full opacity-0' : ''}
-                   group-[.active]:translate-x-0 group-[.active]:opacity-100
-                   group-[:not(.active)]:translate-x-4 group-[:not(.active)]:opacity-0
-                `}>
-                  <span className="material-symbols-outlined text-[20px] fill-1 text-slate-900/40">chevron_right</span>
+              {/* Active Indicator Arrow */}
+              {!sidebarCollapsed && (
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none overflow-hidden">
+                  <div className={`
+                    transition-all duration-500 ease-out transform
+                    group-[.active]:translate-x-0 group-[.active]:opacity-100
+                    group-[:not(.active)]:translate-x-8 group-[:not(.active)]:opacity-0
+                  `}>
+                    <span className="material-symbols-outlined text-sm font-black text-slate-900/40">arrow_forward</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </NavLink>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+
+        {/* Bottom / Sidebar Footer */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
           {sidebarCollapsed ? (
-            /* Sidebar colapsado: APENAS botão de logout */
             <button 
               onClick={handleLogout}
-              className="w-full flex items-center justify-center py-3 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+              className="size-14 mx-auto flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-2xl transition-all"
               title="Sair do sistema"
             >
-              <span className="material-symbols-outlined text-xl">logout</span>
+              <span className="material-symbols-outlined text-2xl">logout</span>
             </button>
           ) : (
-            /* Sidebar expandido: avatar, nome, email e logout */
-            <div className="flex items-center gap-3 p-2 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-              <div className="size-9 rounded-full bg-primary text-slate-900 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
+            <div className="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group/footer">
+              <div className="size-10 rounded-xl bg-primary text-slate-900 flex items-center justify-center font-black text-xs shadow-sm shadow-primary/20 overflow-hidden flex-shrink-0 transition-transform group-hover/footer:scale-105">
                 {getInitials(user?.nome)}
               </div>
               <div className="flex-1 overflow-hidden">
-                <p className="text-xs font-bold truncate">{user?.nome || "Usuário"}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user?.email || ""}</p>
+                <p className="text-xs font-black truncate text-slate-900 dark:text-white">{user?.nome || "Usuário"}</p>
+                <p className="text-[10px] text-slate-400 truncate font-bold uppercase tracking-tighter">{user?.cargos?.[0] || ""}</p>
               </div>
               <button 
                 onClick={handleLogout}
-                className="size-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all"
+                className="size-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
                 title="Sair"
               >
-                <span className="material-symbols-outlined text-lg">logout</span>
+                <span className="material-symbols-outlined text-xl">logout</span>
               </button>
             </div>
           )}
         </div>
       </aside>
 
-      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
+
+      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? "lg:pl-22" : "lg:pl-64"}`}>
         <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 import { formatDate, toInputDate } from "../utils/date-utils";
+import ConfirmModal from "../components/ConfirmModal";
 
 /**
  * Componente de Gestão de Usuários.
@@ -16,6 +17,7 @@ export default function Usuarios() {
   const [modalAberto, setModalAberto] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [salvando, setSalvando] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   
   // Formulário de Usuário com valores padrão
   const [form, setForm] = useState({
@@ -132,7 +134,6 @@ export default function Usuarios() {
 
 
   const handleDelete = async (idUsuario) => {
-    if (!window.confirm("Deseja realmente excluir este usuário?")) return;
     try {
       await usuarioApi.delete(idUsuario);
       toast.success("Usuário excluído com sucesso!");
@@ -212,7 +213,7 @@ export default function Usuarios() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDelete(u.idUsuario)}
+                      onClick={() => setConfirmDelete({ open: true, id: u.idUsuario })}
                       className="text-red-500 hover:underline text-sm"
                     >
                       Excluir
@@ -337,6 +338,16 @@ export default function Usuarios() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false, id: null })}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        title="Excluir Usuário?"
+        message="Atenção: Esta ação removerá o acesso do usuário ao sistema permanentemente. Deseja continuar?"
+        confirmText="Sim, Excluir"
+        cancelText="Não, Voltar"
+      />
     </div>
   );
 }

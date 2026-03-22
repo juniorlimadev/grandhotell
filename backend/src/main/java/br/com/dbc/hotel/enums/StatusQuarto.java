@@ -5,7 +5,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum StatusQuarto {
     DISPONIVEL,
-    OCUPADO;
+    OCUPADO,
+    LIMPEZA,
+    CONFIRMADA,
+    CANCELADA,
+    CONCLUIDA;
 
 
     @JsonCreator
@@ -15,6 +19,6 @@ public enum StatusQuarto {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Valor inválido para StatusQuarto: " + value + ". Valores aceitos: DISPONIVEL, OCUPADO");
+        throw new IllegalArgumentException("Valor inválido para StatusQuarto: " + value + ". Valores aceitos: DISPONIVEL, OCUPADO, LIMPEZA, CONFIRMADA, CANCELADA, CONCLUIDA");
     }
 }

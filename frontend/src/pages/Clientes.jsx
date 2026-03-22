@@ -13,10 +13,19 @@ export default function Clientes() {
   const [abrirSenha, setAbrirSenha] = useState(null);
   const [novaSenha, setNovaSenha] = useState("");
 
+  const [modalNovoAberto, setModalNovoAberto] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [formNovo, setFormNovo] = useState({
+    nome: "",
+    email: "",
+    senha: "",
+    dataNascimento: ""
+  });
+
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
-      const res = await usuarioApi.list(page, 100, "nome", false, "CLIENTE");
+      const res = await usuarioApi.list(page, 100, "idUsuario", "DESC", "CLIENTE");
       setLista(res.data);
     } catch (e) {
       toast.error("Erro ao carregar lista de clientes.");
@@ -67,6 +76,25 @@ export default function Clientes() {
      }
   };
 
+  const handlesubmitNovo = async (e) => {
+    e.preventDefault();
+    setSalvando(true);
+    try {
+      await usuarioApi.create({
+        ...formNovo,
+        cargos: ["CLIENTE"]
+      });
+      toast.success("Cliente cadastrado com sucesso!");
+      setModalNovoAberto(false);
+      setFormNovo({ nome: "", email: "", senha: "", dataNascimento: "" });
+      carregar(0);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erro ao cadastrar cliente.");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
   const clientesFiltrados = (lista.content || []).filter(c => 
     c.nome.toLowerCase().includes(filtro.toLowerCase()) || 
     c.email.toLowerCase().includes(filtro.toLowerCase())
@@ -79,15 +107,26 @@ export default function Clientes() {
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Base de Clientes</h2>
           <p className="text-slate-500 dark:text-slate-400 font-medium">Gerenciamento de hóspedes cadastrados no sistema.</p>
         </div>
-        <div className="relative">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-          <input 
-            type="text"
-            placeholder="Buscar por nome ou e-mail..."
-            value={filtro}
-            onChange={e => setFiltro(e.target.value)}
-            className="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm w-full md:w-80 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
-          />
+        
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={() => setModalNovoAberto(true)}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-slate-900 rounded-2xl text-sm font-black hover:scale-105 transition-all shadow-lg shadow-primary/20"
+          >
+            <span className="material-symbols-outlined">person_add</span>
+            Cadastrar Novo Cliente
+          </button>
+          
+          <div className="relative">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+            <input 
+              type="text"
+              placeholder="Buscar por nome ou e-mail..."
+              value={filtro}
+              onChange={e => setFiltro(e.target.value)}
+              className="pl-10 pr-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm w-full md:w-80 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+            />
+          </div>
         </div>
       </div>
 
@@ -223,6 +262,82 @@ export default function Clientes() {
                 </div>
              </div>
           </div>
+      )}
+
+      {/* Modal Novo Cliente */}
+      {modalNovoAberto && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setModalNovoAberto(false)}></div>
+          <div className="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] overflow-hidden animate-in zoom-in-95">
+            <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+              <h3 className="text-xl font-black">Cadastrar Hóspede</h3>
+              <button onClick={() => setModalNovoAberto(false)} className="size-8 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={handlesubmitNovo} className="p-8 space-y-5">
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nome Completo</label>
+                <input 
+                  type="text"
+                  required
+                  value={formNovo.nome}
+                  onChange={e => setFormNovo({...formNovo, nome: e.target.value})}
+                  className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Nome do cliente"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">E-mail</label>
+                <input 
+                  type="email"
+                  required
+                  value={formNovo.email}
+                  onChange={e => setFormNovo({...formNovo, email: e.target.value})}
+                  className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Senha Inicial</label>
+                  <input 
+                    type="password"
+                    required
+                    value={formNovo.senha}
+                    onChange={e => setFormNovo({...formNovo, senha: e.target.value})}
+                    className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="******"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Data Nasc.</label>
+                  <input 
+                    type="date"
+                    required
+                    value={formNovo.dataNascimento}
+                    onChange={e => setFormNovo({...formNovo, dataNascimento: e.target.value})}
+                    className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 space-y-3">
+                <button 
+                  type="submit"
+                  disabled={salvando}
+                  className="w-full py-4 bg-primary text-slate-900 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+                >
+                  {salvando ? "Cadastrando..." : "Cadastrar Cliente"}
+                </button>
+                <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-tight">O cliente poderá realizar reservas usando este e-mail.</p>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

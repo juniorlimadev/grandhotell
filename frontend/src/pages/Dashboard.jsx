@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
 import { toInputDate } from "../utils/date-utils";
+import { useAuth } from "../contexts/AuthContext";
 
 const STATUS_CONFIG = {
   "CONFIRMADA": { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
@@ -17,6 +18,7 @@ function getInitials(name) {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [quartos, setQuartos] = useState([]);
   const [totalQuartos, setTotalQuartos] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -24,58 +26,71 @@ export default function Dashboard() {
   const [reservas, setReservas] = useState([]);
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [loading, setLoading] = useState(true);
+  const [abaAtiva, setAbaAtiva] = useState("Inventário");
 
   // Filtros de Data Reais
   const [dtInicio, setDtInicio] = useState(toInputDate(new Date()));
   const [dtFim, setDtFim] = useState(toInputDate(new Date(Date.now() + 30 * 24 * 3600 * 1000)));
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      try {
-        const [qRes, rRes] = await Promise.all([
-          quartoApi.list(page, 10, "idQuarto", "DESC"),
-          reservaApi.quartosOcupados(dtInicio, dtFim),
-        ]);
+  // Detalhes / Comprovante / Consumo
+  const [reservaDetalhe, setReservaDetalhe] = useState(null);
+  const [itensConsumo, setItensConsumo] = useState([]);
+  const [novoItem, setNovoItem] = useState({ nome: "Água mineral", preco: 5 });
 
-        setQuartos(qRes.data.content || []);
-        setTotalQuartos(qRes.data.totalElements || 0);
-        setTotalPages(qRes.data.totalPages || 1);
-        setReservas(Array.isArray(rRes.data) ? rRes.data : []);
-      } catch (err) {
-        console.error("Erro no dashboard:", err);
-        toast.error("Erro ao carregar dados do dashboard.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      if (dtFim < dtInicio) { setDtFim(dtInicio); return; }
+      const [qRes, rRes] = await Promise.all([
+        quartoApi.list(page, 10, "idQuarto", "DESC"),
+        reservaApi.quartosOcupados(dtInicio, dtFim),
+      ]);
+      setQuartos(qRes.data.content || []);
+      setTotalQuartos(qRes.data.totalElements || 0);
+      setTotalPages(qRes.data.totalPages || 1);
+      setReservas(Array.isArray(rRes.data) ? rRes.data : []);
+    } catch (err) {
+      toast.error("Erro ao carregar dados do dashboard.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, [page, dtInicio, dtFim]);
 
-  // Helper: converte data DD-MM-YYYY ou YYYY-MM-DD para Date de forma segura
+  const handleStatusUpdate = async (reserva, novoStatus) => {
+      try {
+          await reservaApi.update(reserva.idReserva, {
+              ...reserva,
+              statusQuarto: novoStatus
+          });
+          toast.success(`Reserva ${novoStatus.toLowerCase()} com sucesso!`);
+          loadData();
+          setReservaDetalhe(null);
+      } catch (e) {
+          toast.error("Erro ao atualizar status da reserva.");
+      }
+  };
+
   const parseDate = (d) => {
     if (!d) return new Date(NaN);
     try {
       if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
         const [day, month, year] = d.split("-");
-        return new Date(`${year}-${month}-${day}T12:00:00`); // Meio-dia para evitar problemas de fuso
+        return new Date(`${year}-${month}-${day}T12:00:00`);
       }
-      const date = new Date(d);
-      if (isNaN(date.getTime())) return new Date(NaN);
-      return date;
-    } catch {
-      return new Date(NaN);
-    }
+      return new Date(d);
+    } catch { return new Date(NaN); }
   };
 
-  // Determina status visual de um quarto pelo cruzamento com reservas
   const statusDoQuarto = (idQuarto) => {
-    // Primeiro verifica ocupação HOJE
-    const hoje = new Date().toISOString().split('T')[0];
+    const hojeStr = new Date().toISOString().split('T')[0];
     const ocupadoHoje = reservas.find(r => {
       const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
       const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-      return r.idQuarto === idQuarto && inicio <= hoje && fim >= hoje;
+      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.status !== 'CANCELADA';
     });
 
     if (ocupadoHoje) {
@@ -83,59 +98,45 @@ export default function Dashboard() {
       return { ...cfg, statusReal: "Ocupado" };
     }
 
-    // Se não está ocupado hoje, verifica se há QUALQUER reserva no período selecionado
-    const temReservaNoPeriodo = reservas.some(r => r.idQuarto === idQuarto);
-    if (temReservaNoPeriodo) {
-      return { 
-        label: "Reservado", 
-        dot: "bg-blue-400", 
-        bg: "bg-blue-50 dark:bg-blue-500/5", 
-        text: "text-blue-500",
-        statusReal: "Ocupado" // Para o filtro
-      };
+    const teveCheckoutHoje = reservas.some(r => {
+        const fim = parseDate(r.dtFim).toISOString().split('T')[0];
+        return r.idQuarto === idQuarto && fim === hojeStr && r.status !== 'CANCELADA';
+    });
+
+    if (teveCheckoutHoje) {
+        return { label: "Limpeza", dot: "bg-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", statusReal: "Limpeza" };
     }
 
-    return { 
-      label: "Disponível", 
-      dot: "bg-emerald-500", 
-      bg: "bg-emerald-50 dark:bg-emerald-500/10", 
-      text: "text-emerald-600 dark:text-emerald-400",
-      statusReal: "Disponível" 
-    };
+    return { label: "Livre", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", statusReal: "Disponível" };
   };
 
-  // Filtra os quartos da tabela conforme o status
   const quartosExibidos = useMemo(() => {
-    if (filtroStatus === "Todos") return quartos;
-    return quartos.filter(q => statusDoQuarto(q.idQuarto).statusReal === filtroStatus);
-  }, [quartos, filtroStatus, reservas]);
+    let base = quartos;
+    if (abaAtiva === "Limpeza") base = quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza");
+    if (filtroStatus === "Todos") return base;
+    return base.filter(q => statusDoQuarto(q.idQuarto).statusReal === filtroStatus);
+  }, [quartos, filtroStatus, reservas, abaAtiva]);
 
-  // Calcula faturamento total do período
-  const receitaNoPeriodo = useMemo(() => {
+  const receitaRealizada = useMemo(() => {
+    const hoje = new Date(); hoje.setHours(23, 59, 59, 999);
     return reservas.reduce((acc, r) => {
-      const d1 = parseDate(r.dtInicio);
-      const d2 = parseDate(r.dtFim);
-      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return acc;
-      
-      const diffMs = d2.getTime() - d1.getTime();
-      const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-      const valor = Number(r.valorDiaria) || 0;
-      
-      return acc + (valor * diffDays);
+      const dFim = parseDate(r.dtFim);
+      const dInicio = parseDate(r.dtInicio);
+      if (dFim <= hoje && dFim.toISOString().split('T')[0] >= dtInicio && dFim.toISOString().split('T')[0] <= dtFim && r.status !== 'CANCELADA') {
+        const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
+        return acc + ((Number(r.valorDiaria) || 150) * diffDays);
+      }
+      return acc;
     }, 0);
-  }, [reservas]);
+  }, [reservas, dtInicio, dtFim]);
 
-  const taxaOcupacao = totalQuartos > 0
-    ? Math.min(100, Math.round((reservas.filter(r => {
-        const hoje = new Date().toISOString().split('T')[0];
-        const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
-        const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-        return inicio <= hoje && fim >= hoje;
-      }).length / totalQuartos) * 100))
-    : 0;
+  const taxaOcupacao = totalQuartos > 0 ? Math.min(100, Math.round((reservas.filter(r => {
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
+    const fim = parseDate(r.dtFim).toISOString().split('T')[0];
+    return inicio <= hojeStr && fim >= hojeStr && r.status !== 'CANCELADA';
+  }).length / totalQuartos) * 100)) : 0;
 
-
-  // Top Quartos (Calculado com base nas reservas do período)
   const topQuartos = useMemo(() => {
     const contagem = {};
     reservas.forEach(r => {
@@ -143,279 +144,234 @@ export default function Dashboard() {
       if (!contagem[nome]) contagem[nome] = { id: r.idQuarto, count: 0, nome };
       contagem[nome].count += 1;
     });
-    
-    return Object.values(contagem)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+    return Object.values(contagem).sort((a, b) => b.count - a.count).slice(0, 5);
   }, [reservas]);
 
-  const cards = [
-    { label: "Total de Quartos", val: totalQuartos, icon: "bed", color: "text-[#006972]", bg: "bg-[#006972]/10", badge: "Ativos", badgeColor: "text-[#006972]" },
-    { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: `Hoje`, badgeColor: "text-blue-500" },
-    { label: "Reservas no Período", val: reservas.length, icon: "event_note", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: "Filtrado", badgeColor: "text-orange-500" },
-    { label: "Receita no Período", val: receitaNoPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "Total", badgeColor: "text-emerald-500" },
-  ];
+  const checkinsHoje = useMemo(() => {
+    const hoje = new Date().toISOString().split('T')[0];
+    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.status !== 'CANCELADA');
+  }, [reservas]);
+
+  const checkoutsHoje = useMemo(() => {
+    const hoje = new Date().toISOString().split('T')[0];
+    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.status !== 'CANCELADA');
+  }, [reservas]);
+
+  const handleActionReserva = (reserva) => {
+    setReservaDetalhe(reserva);
+    setItensConsumo([]);
+  };
+
+  const handleAdicionarItem = () => {
+    setItensConsumo([...itensConsumo, { ...novoItem, id: Date.now() }]);
+    toast.success(`${novoItem.nome} adicionado!`);
+  };
+
+  const totalComprovante = useMemo(() => {
+    if (!reservaDetalhe) return 0;
+    const dInicio = parseDate(reservaDetalhe.dtInicio);
+    const dFim = parseDate(reservaDetalhe.dtFim);
+    const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
+    const diárias = diffDays * (Number(reservaDetalhe.valorDiaria) || 150);
+    const extras = itensConsumo.reduce((acc, it) => acc + it.preco, 0);
+    return diárias + extras;
+  }, [reservaDetalhe, itensConsumo]);
 
   return (
-    <div className="space-y-8">
-      {/* Header com Filtros de Data */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all text-slate-900 dark:text-white">
-        <div>
-           <h2 className="text-2xl font-black tracking-tight mb-1">Visão Geral</h2>
-           <p className="text-sm text-slate-500 font-medium">Dados reais baseados no período selecionado</p>
-        </div>
-        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
-           <span className="material-symbols-outlined text-slate-400 ml-2">calendar_today</span>
-           <input 
-              type="date" 
-              value={dtInicio}
-              onChange={(e) => setDtInicio(e.target.value)}
-              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1"
-           />
-           <span className="text-[10px] font-black text-slate-300">ATÉ</span>
-           <input 
-              type="date" 
-              value={dtFim}
-              onChange={(e) => setDtFim(e.target.value)}
-              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1"
-           />
-        </div>
-      </div>
-
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {cards.map((c, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:scale-[1.02] hover:shadow-md">
-            <div className="flex items-start justify-between mb-4">
-              <div className={`size-11 ${c.bg} rounded-xl flex items-center justify-center`}>
-                <span className={`material-symbols-outlined ${c.color}`}>{c.icon}</span>
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${c.badgeColor} bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md`}>
-                {c.badge}
-              </span>
+    <div className="space-y-8 print:p-0">
+      <div className="print:hidden space-y-8">
+        {/* Header e Abas */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden text-slate-900 dark:text-white transition-all">
+            <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h2 className="text-2xl font-black tracking-tight mb-1">Centro de Operações</h2>
+                    <p className="text-sm text-slate-500 font-medium italic">Gestão em tempo real do Grand Hotel</p>
+                </div>
+                <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-2xl border border-slate-100 dark:border-slate-700">
+                    <span className="material-symbols-outlined text-slate-400 ml-2">calendar_today</span>
+                    <input type="date" value={dtInicio} onChange={e => setDtInicio(e.target.value)} className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1" />
+                    <span className="text-[10px] font-black text-slate-300">ATÉ</span>
+                    <input type="date" value={dtFim} onChange={e => setDtFim(e.target.value)} className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1" />
+                </div>
             </div>
-            <p className="text-xs text-slate-400 font-black uppercase tracking-widest mb-1">{c.label}</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {loading ? "—" : c.val}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Grid Principal */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        {/* Inventário de Quartos */}
-        <div className="xl:col-span-2 space-y-6 text-slate-900 dark:text-white">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
-            <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-base font-black flex items-center gap-2">
-                 <span className="material-symbols-outlined text-primary">bed</span>
-                 Inventário de Quartos
-              </h3>
-              <div className="flex gap-1">
-                {["Todos", "Disponível", "Ocupado"].map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setFiltroStatus(f)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      filtroStatus === f ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600"
-                    }`}
-                  >
-                    {f}
-                  </button>
+            <div className="px-6 flex gap-8">
+                {[
+                    { id: "Inventário", icon: "bed", count: totalQuartos },
+                    { id: "Check-in", icon: "login", count: checkinsHoje.length },
+                    { id: "Check-out", icon: "logout", count: checkoutsHoje.length },
+                    { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length }
+                ].map(tab => (
+                    <button key={tab.id} onClick={() => setAbaAtiva(tab.id)} className={`flex items-center gap-2 py-5 text-sm font-black transition-all border-b-2 relative ${abaAtiva === tab.id ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-slate-600"}`}>
+                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                        {tab.id} {tab.count > 0 && <span className="bg-slate-100 dark:bg-slate-800 text-[9px] px-1.5 py-0.5 rounded-full ml-1">{tab.count}</span>}
+                    </button>
                 ))}
-              </div>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[500px]">
-                <thead>
-                  <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-50 dark:border-slate-800">
-                    <th className="px-6 py-3">Quarto</th>
-                    <th className="px-6 py-3">Tipo</th>
-                    <th className="px-6 py-3">Status Atual</th>
-                    <th className="px-6 py-3">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {loading ? (
-                    Array(5).fill(0).map((_, i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td colSpan={4} className="px-6 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full" /></td>
-                      </tr>
-                    ))
-                  ) : (
-                    quartosExibidos.map(q => {
-                      const st = statusDoQuarto(q.idQuarto);
-                      return (
-                        <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="px-6 py-4">
-                             <p className="font-black leading-tight">{q.nome}</p>
-                             <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">ID #{q.idQuarto}</p>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-500 font-medium">{q.tipo || "—"}</td>
-                          <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${st.bg} ${st.text}`}>
-                              <span className={`size-1.5 rounded-full ${st.dot}`}></span>
-                              {st.label}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Link to={`/admin/quartos/${q.idQuarto}`} className="text-[#006972] hover:underline text-xs font-bold uppercase tracking-widest">Editar</Link>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Paginação */}
-            <div className="px-6 py-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                Exibindo {quartosExibidos.length} de {totalQuartos} quartos
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={page === 0}
-                  onClick={() => setPage(p => p - 1)}
-                  className="size-8 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center hover:bg-slate-100 transition-all disabled:opacity-40"
-                >
-                  <span className="material-symbols-outlined text-sm">chevron_left</span>
-                </button>
-                <button
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage(p => p + 1)}
-                  className="size-8 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-center hover:bg-slate-100 transition-all disabled:opacity-40"
-                >
-                  <span className="material-symbols-outlined text-sm">chevron_right</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             {/* Top Quartos */}
-             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
-                   <span className="material-symbols-outlined text-primary text-xl">star_rate</span>
-                   Mais Procurados no Período
-                </h3>
-                <div className="space-y-4">
-                   {topQuartos.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">Dados insuficientes no período.</p>
-                   ) : (
-                      topQuartos.map((t, idx) => (
-                        <div key={idx} className="flex items-center justify-between">
-                           <div className="flex items-center gap-3">
-                              <span className={`text-xs font-black ${idx === 0 ? "text-primary" : "text-slate-400"}`}>#0{idx+1}</span>
-                              <div>
-                                 <p className="text-sm font-bold">{t.nome}</p>
-                                 <p className="text-[10px] text-slate-400 font-medium">Frequência de reservas</p>
-                              </div>
-                           </div>
-                           <div className="flex items-center gap-2">
-                              <span className="text-sm font-black text-slate-900 dark:text-white">{t.count}</span>
-                              <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                 <div 
-                                    className="h-full bg-primary" 
-                                    style={{ width: `${(t.count / Math.max(1, topQuartos[0].count)) * 100}%` }}
-                                 />
-                              </div>
-                           </div>
-                        </div>
-                      ))
-                   )}
-                </div>
-             </div>
-
-             {/* Outra funcionalidade real: Status Rápido */}
-             <div className="bg-[#131b30] rounded-2xl shadow-xl p-6 text-white overflow-hidden relative">
-                <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-white/5 text-[150px] rotate-12">monitoring</span>
-                <h3 className="text-sm font-black uppercase tracking-widest text-white/40 mb-2">Performance Atual</h3>
-                <p className="text-3xl font-black mb-6">Eficiência Alta</p>
-                <div className="space-y-4 relative z-10">
-                   <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-white/60">Taxa de Ocupação Hoje</span>
-                      <span>{taxaOcupacao}%</span>
-                   </div>
-                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-400 font-black transition-all" style={{ width: `${taxaOcupacao}%` }} />
-                   </div>
-                   <Link to="/admin/reservas" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary hover:brightness-110 transition-all mt-4">
-                      Gerenciar Calendário
-                      <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                   </Link>
-                </div>
-             </div>
-          </div>
         </div>
 
-        {/* Reservas no Período */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full h-[600px] xl:h-auto text-slate-900 dark:text-white">
-          <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-base font-black flex items-center gap-2">
-               <span className="material-symbols-outlined text-primary">history</span>
-               Período Selecionado
-            </h3>
-            <Link to="/admin/reservas" className="text-xs font-black text-primary hover:underline uppercase tracking-widest">Ver Tudo</Link>
-          </div>
-
-          <div className="divide-y divide-slate-50 dark:divide-slate-800 flex-1 overflow-y-auto">
-            {loading ? (
-              Array(4).fill(0).map((_, i) => (
-                <div key={i} className="px-6 py-4 flex gap-3 animate-pulse">
-                  <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex-shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-3/4" />
-                    <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
-                  </div>
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+                { label: "Total de Quartos", val: totalQuartos, icon: "bed", color: "text-[#006972]", bg: "bg-[#006972]/10", badge: "Ativos" },
+                { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: "Hoje" },
+                { label: "Check-ins Pendentes", val: checkinsHoje.length, icon: "login", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: "Hoje" },
+                { label: "Receita Realizada", val: receitaRealizada.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "Filtro" }
+            ].map((c, i) => (
+                <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:scale-[1.02]">
+                    <div className="flex justify-between mb-4">
+                        <div className={`size-11 ${c.bg} rounded-xl flex items-center justify-center`}><span className={`material-symbols-outlined ${c.color}`}>{c.icon}</span></div>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${c.color} bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-md`}>{c.badge}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-black uppercase tracking-widest mb-1">{c.label}</p>
+                    <p className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{loading ? "—" : c.val}</p>
                 </div>
-              ))
-            ) : reservas.length === 0 ? (
-              <div className="px-6 py-12 text-center h-full flex flex-col items-center justify-center">
-                <span className="material-symbols-outlined text-slate-200 dark:text-slate-700 text-6xl mb-4 font-thin">calendar_today</span>
-                <p className="text-slate-400 text-sm font-medium">Sem reservas registradas no período.</p>
-              </div>
-            ) : (
-              reservas.slice(0, 15).map((r, i) => {
-                const formatDateStr = (d) => {
-                  if (!d) return "";
-                  try {
-                    const parts = typeof d === "string" && d.includes("-")
-                      ? (d.split("T")[0].split("-").length === 3 && d.split("T")[0].split("-")[0].length === 4
-                          ? d.split("T")[0]
-                          : d.split("-").reverse().join("-"))
-                      : d;
-                    return new Date(parts).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-                  } catch { return ""; }
-                };
+            ))}
+        </div>
 
-                const nomeHospede = r.hospedeNome || r.nomeHospede || "Hóspede";
-
-                return (
-                  <div key={r.idReserva || i} className="px-6 py-4 flex items-start gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <div className="size-11 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xs font-black text-primary flex-shrink-0">
-                      {getInitials(nomeHospede)}
+        {/* Grid Principal */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center text-slate-900 dark:text-white">
+                    <h3 className="text-base font-black flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">{abaAtiva === "Inventário" ? "bed" : abaAtiva === "Check-in" ? "login" : abaAtiva === "Check-out" ? "logout" : "cleaning_services"}</span>
+                        {abaAtiva === "Inventário" ? "Gestão de Quartos" : `Operação de ${abaAtiva}`}
+                    </h3>
+                    {abaAtiva === "Inventário" && (
+                        <div className="flex gap-1">
+                            {["Todos", "Disponível", "Ocupado", "Limpeza"].map(f => (
+                                <button key={f} onClick={() => setFiltroStatus(f)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filtroStatus === f ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600"}`}>{f}</button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <div className="overflow-x-auto text-slate-900 dark:text-white">
+                    <table className="w-full text-left min-w-[600px]">
+                        <thead>
+                            <tr className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-50 dark:border-slate-800"><th className="px-6 py-4">Informação</th><th className="px-6 py-4">Status / Período</th><th className="px-6 py-4">Ação</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+                            {loading ? Array(5).fill(0).map((_, i) => <tr key={i}><td colSpan={3} className="px-6 py-6 animate-pulse"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full" /></td></tr>) : (
+                                (abaAtiva === "Inventário" || abaAtiva === "Limpeza") ? (
+                                    quartosExibidos.map(q => {
+                                        const st = statusDoQuarto(q.idQuarto);
+                                        return (
+                                            <tr key={q.idQuarto} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
+                                                <td className="px-6 py-4"><p className="font-black">{q.nome}</p><p className="text-[10px] text-slate-400 uppercase font-bold">#{q.idQuarto}</p></td>
+                                                <td className="px-6 py-4"><span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${st.bg} ${st.text}`}><span className={`size-1.5 rounded-full ${st.dot}`}></span>{st.label}</span></td>
+                                                <td className="px-6 py-4">{st.label === "Limpeza" ? <button onClick={() => toast.success("Quarto liberado!")} className="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-black uppercase rounded-xl">Pronto</button> : <Link to={`/admin/quartos/${q.idQuarto}`} className="text-primary font-black uppercase text-[10px]">Ficha</Link>}</td>
+                                            </tr>
+                                        );
+                                    })
+                                ) : (
+                                    (abaAtiva === "Check-in" ? checkinsHoje : checkoutsHoje).map(r => (
+                                        <tr key={r.idReserva} className="hover:bg-slate-50/50 transition-all">
+                                            <td className="px-6 py-4"><p className="font-black text-xs">{r.hospedeNome || r.usuario?.nome}</p><p className="text-[10px] text-slate-400">{r.quartoNome || `Quarto ${r.idQuarto}`}</p></td>
+                                            <td className="px-6 py-4 text-[10px] font-black text-slate-400">{parseDate(r.dtInicio).toLocaleDateString()} - {parseDate(r.dtFim).toLocaleDateString()}</td>
+                                            <td className="px-6 py-4">
+                                                <button 
+                                                    onClick={() => {
+                                                        if (abaAtiva === "Check-in") {
+                                                            handleStatusUpdate(r, "OCUPADO");
+                                                        } else {
+                                                            handleActionReserva(r);
+                                                        }
+                                                    }}
+                                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
+                                                        abaAtiva === "Check-in" 
+                                                            ? "bg-primary text-slate-900" 
+                                                            : "bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white"
+                                                 }`}>
+                                                     {abaAtiva === "Check-in" ? "Check-in" : "Saída"}
+                                                 </button>
+                                             </td>
+                                        </tr>
+                                    ))
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {/* Sidebar Dash */}
+            <div className="space-y-6">
+                <div className="bg-[#131b30] rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+                    <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-white/5 text-[150px] rotate-12">monitoring</span>
+                    <h3 className="text-xs font-black uppercase text-white/40 mb-2">Performance Hoje</h3>
+                    <p className="text-3xl font-black mb-6">Eficiência Alta</p>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center text-xs font-bold"><span>Ocupação</span><span>{taxaOcupacao}%</span></div>
+                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-400" style={{ width: `${taxaOcupacao}%` }} /></div>
+                        <Link to="/admin/reservas" className="inline-flex items-center gap-2 text-[10px] font-black uppercase text-primary hover:brightness-110 mt-4">Calendário <span className="material-symbols-outlined text-sm">arrow_forward</span></Link>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <p className="font-black text-sm truncate">{nomeHospede}</p>
-                        <span className="text-[10px] font-black text-slate-300">#{r.idReserva}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-tight truncate">
-                         {r.quartoNome || `Quarto ${r.idQuarto}`} • {formatDateStr(r.dtInicio)} – {formatDateStr(r.dtFim)}
-                      </p>
+                </div>
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 mb-6 flex items-center gap-2"><span className="material-symbols-outlined text-primary">star_rate</span>Mais Procurados</h3>
+                    <div className="space-y-4">
+                        {topQuartos.map((t, idx) => (
+                            <div key={idx} className="flex items-center justify-between">
+                                <div className="flex items-center gap-3"><span className={`text-[10px] font-black ${idx === 0 ? "text-primary" : "text-slate-400"}`}>#0{idx+1}</span><p className="text-xs font-bold truncate max-w-[100px]">{t.nome}</p></div>
+                                <div className="flex items-center gap-2"><span className="text-xs font-black">{t.count}</span><div className="w-16 h-1 bg-slate-50 dark:bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-primary" style={{ width: `${(t.count / (topQuartos[0]?.count || 1)) * 100}%` }} /></div></div>
+                            </div>
+                        ))}
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+            </div>
         </div>
       </div>
+
+      {/* Modal / Comprovante (Ocupa tela toda no print) */}
+      {reservaDetalhe && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:relative print:inset-auto print:bg-white print:p-0">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none">
+                <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 print:hidden">
+                    <h3 className="text-xl font-black">Finalização de Estadia</h3>
+                    <button onClick={() => setReservaDetalhe(null)} className="size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors"><span className="material-symbols-outlined">close</span></button>
+                </div>
+                <div className="p-10 space-y-8 text-slate-900">
+                    <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6">
+                        <div><h2 className="text-3xl font-black text-primary tracking-tighter">GrandHotel</h2><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comprovante de Estadia • #{reservaDetalhe.idReserva}</p></div>
+                        <div className="text-right"><p className="text-xs font-black text-slate-500">{new Date().toLocaleDateString('pt-BR')}</p><p className="text-[10px] font-bold text-slate-400 uppercase italic">Emitido por: {user?.nome}</p></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-8 divide-x divide-slate-50 font-['Plus_Jakarta_Sans']">
+                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hóspede</label><p className="text-sm font-black">{reservaDetalhe.hospedeNome || reservaDetalhe.usuario?.nome}</p><p className="text-xs text-slate-500">{reservaDetalhe.usuario?.email || "Reserva Direta"}</p></div>
+                        <div className="pl-8"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Acomodação</label><p className="text-sm font-black">{reservaDetalhe.quartoNome || `Quarto ${reservaDetalhe.idQuarto}`}</p><p className="text-xs text-slate-500">{parseDate(reservaDetalhe.dtInicio).toLocaleDateString()} — {parseDate(reservaDetalhe.dtFim).toLocaleDateString()}</p></div>
+                    </div>
+                    <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl space-y-4 print:hidden">
+                        <label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><span className="material-symbols-outlined text-sm">shopping_cart</span>Produtos e Extras</label>
+                        <div className="flex gap-4">
+                            <select className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 outline-none" onChange={e => {
+                                const opts = { "Água mineral": 5, "Refrigerante": 8, "Cerveja": 12, "Snacks": 10, "Lavanderia": 25, "Frigobar": 45 };
+                                setNovoItem({ nome: e.target.value, preco: opts[e.target.value] });
+                            }}>
+                                <option value="Água mineral">Água mineral - R$ 5,00</option><option value="Refrigerante">Refrigerante - R$ 8,00</option><option value="Cerveja">Cerveja - R$ 12,00</option><option value="Snacks">Snacks - R$ 10,00</option><option value="Lavanderia">Lavanderia - R$ 25,00</option><option value="Frigobar">Frigobar - R$ 45,00</option>
+                            </select>
+                            <button onClick={handleAdicionarItem} className="px-6 py-2 bg-primary text-slate-900 rounded-xl text-[10px] font-black uppercase hover:scale-105 active:scale-95 transition-all">Lançar</button>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 pb-2 border-b border-slate-50"><span>Descrição</span><span>Subtotal</span></div>
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-xs font-bold"><span>Diárias ({Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24)))}x)</span><span>{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
+                            {itensConsumo.map(it => <div key={it.id} className="flex justify-between text-xs text-slate-500 font-medium"><span>{it.nome}</span><span>{it.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>)}
+                        </div>
+                        <div className="pt-6 border-t-2 border-slate-900 flex justify-between items-center">
+                            <span className="text-primary font-black uppercase tracking-tighter text-lg">Total a Pagar</span>
+                            <span className="text-3xl font-black text-slate-900">{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 pt-4 print:hidden">
+                        <button onClick={() => window.print()} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl shadow-slate-900/20"><span className="material-symbols-outlined">print</span>IMPRIMIR</button>
+                         <button 
+                            onClick={() => handleStatusUpdate(reservaDetalhe, "CONCLUIDA")}
+                            className="flex-1 py-4 bg-primary text-slate-900 rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20"
+                         >
+                            FINALIZAR ESTADIA
+                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }

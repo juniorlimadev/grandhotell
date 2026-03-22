@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { reservaApi, quartoApi, usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 import { toInputDate, formatDate } from "../utils/date-utils";
+import ConfirmModal from "../components/ConfirmModal";
 
 
 export default function Reservas() {
@@ -12,6 +13,7 @@ export default function Reservas() {
   const [modalAberto, setModalAberto] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [reservaAtualId, setReservaAtualId] = useState(null);
+  const [confirmCancel, setConfirmCancel] = useState({ open: false, id: null });
   
   const [form, setForm] = useState({
     idUsuario: "",
@@ -76,7 +78,7 @@ export default function Reservas() {
       try {
         const [rRes, uRes, qRes] = await Promise.all([
           reservaApi.quartosOcupados(dtInicio, dtFim),
-          usuarioApi.list(0, 100),
+          usuarioApi.list(0, 500, "nome", false, "CLIENTE"), // Carrega apenas CLIENTES para associar
           quartoApi.list(0, 100)
         ]);
         if (!cancelled) {
@@ -111,7 +113,7 @@ export default function Reservas() {
     setModoEdicao(false);
     setReservaAtualId(null);
     setForm({
-      idUsuario: usuarios[0]?.idUsuario ?? "",
+      idUsuario: "",
       idQuarto: "",
       dtInicio: toInputDate(new Date()),
       dtFim: toInputDate(new Date(Date.now() + 24 * 3600 * 1000)),
@@ -165,7 +167,6 @@ export default function Reservas() {
   };
 
   const handleDelete = async (idReserva) => {
-    if (!window.confirm("Deseja realmente cancelar esta reserva?")) return;
     try {
       await reservaApi.delete(idReserva);
       toast.success("Reserva cancelada com sucesso!");
@@ -305,7 +306,7 @@ export default function Reservas() {
                         Editar
                       </button>
                       <button
-                        onClick={() => handleDelete(r.idReserva)}
+                        onClick={() => setConfirmCancel({ open: true, id: r.idReserva })}
                         className="text-xs font-bold text-red-400 hover:text-red-600 transition-colors"
                       >
                         Cancelar
@@ -338,28 +339,41 @@ export default function Reservas() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Responsável pela reserva</label>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Responsável (Base de Clientes)</label>
+                        <Link to="/admin/clientes" className="text-[9px] font-black text-primary hover:underline uppercase">Ver Base</Link>
+                      </div>
                       <select
                         value={form.idUsuario}
-                        onChange={(e) => setForm((f) => ({ ...f, idUsuario: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const userObj = usuarios.find(u => String(u.idUsuario) === val);
+                          setForm((f) => ({ 
+                            ...f, 
+                            idUsuario: val,
+                            // Se selecionou um usuário, preenche o nome do hóspede automaticamente
+                            hospedeNome: userObj ? userObj.nome : f.hospedeNome 
+                          }));
+                        }}
+                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-black focus:ring-2 focus:ring-primary appearance-none transition-all"
                         required
                       >
-                        <option value="">Selecione quem está fazendo a reserva</option>
+                        <option value="">Selecione um cliente cadastrado...</option>
                         {usuarios.map((u) => (
-                          <option key={u.idUsuario} value={u.idUsuario}>{u.nome}</option>
+                          <option key={u.idUsuario} value={u.idUsuario}>{u.nome} ({u.email})</option>
                         ))}
                       </select>
+                      <p className="text-[9px] text-slate-400 mt-1 font-medium italic">* A reserva ficará vinculada ao histórico deste cliente.</p>
                     </div>
                     
                     <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome do Hóspede</label>
+                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome para o Check-in</label>
                       <input 
                         type="text"
                         value={form.hospedeNome}
                         onChange={(e) => setForm({...form, hospedeNome: e.target.value})}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary"
-                        placeholder="Nome para o check-in"
+                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-black focus:ring-2 focus:ring-primary"
+                        placeholder="Nome que constará na ficha"
                       />
                     </div>
 
@@ -445,6 +459,16 @@ export default function Reservas() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmCancel.open}
+        onClose={() => setConfirmCancel({ open: false, id: null })}
+        onConfirm={() => handleDelete(confirmCancel.id)}
+        title="Cancelar Reserva?"
+        message="Esta ação é definitiva e removerá a reserva do sistema permanentemente. Deseja prosseguir?"
+        confirmText="Sim, Cancelar"
+        cancelText="Não, Manter"
+      />
     </div>
   );
 }

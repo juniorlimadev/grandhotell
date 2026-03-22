@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { quartoApi } from "../services/api";
 import { toast } from "react-toastify";
+import ConfirmModal from "../components/ConfirmModal";
 
 const ANDARES = [
   "1º Andar", "2º Andar", "3º Andar", "4º Andar",
@@ -12,6 +13,7 @@ export default function Quartos() {
   const [lista, setLista] = useState({ content: [], totalElements: 0, totalPages: 0, page: 1 });
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, id: null });
   const [form, setForm] = useState({ 
     nome: "", 
     alaHotel: "1º Andar", 
@@ -84,7 +86,7 @@ export default function Quartos() {
         })
         .catch(() => toast.error("Quarto não encontrado."));
     }
-  }, [id, isEdicao]);
+  }, [id, isEdicao, carregar]);
 
   const abrirNovo = () => {
     setForm({ 
@@ -147,7 +149,6 @@ export default function Quartos() {
   };
 
   const handleDelete = async (idQuarto) => {
-    if (!window.confirm("Deseja realmente excluir este quarto?")) return;
     try {
       await quartoApi.delete(idQuarto);
       toast.success("Quarto excluído com sucesso!");
@@ -206,7 +207,6 @@ export default function Quartos() {
         </div>
       </div>
 
-
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[600px] text-slate-900 dark:text-white">
@@ -229,7 +229,6 @@ export default function Quartos() {
               </tr>
             ) : (
               quartosFiltrados.map((q) => (
-
                 <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
                   <td className="px-6 py-4 flex items-center gap-3">
                     <div className="size-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
@@ -256,7 +255,7 @@ export default function Quartos() {
                     </Link>
                     <button
                       type="button"
-                      onClick={() => handleDelete(q.idQuarto)}
+                      onClick={() => setConfirmDelete({ open: true, id: q.idQuarto })}
                       className="text-red-500 hover:underline text-sm font-bold"
                     >
                       Excluir
@@ -348,7 +347,7 @@ export default function Quartos() {
 
               <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Foto do Quarto (Max 2MB)</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Foto do Quarto (Max 10MB)</label>
                     <input
                       type="file"
                       accept="image/*"
@@ -407,6 +406,16 @@ export default function Quartos() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmDelete.open}
+        onClose={() => setConfirmDelete({ open: false, id: null })}
+        onConfirm={() => handleDelete(confirmDelete.id)}
+        title="Excluir Quarto?"
+        message="Esta ação não pode ser desfeita. O quarto será removido permanentemente do inventário. Deseja continuar?"
+        confirmText="Sim, Excluir"
+        cancelText="Não, Voltar"
+      />
     </div>
   );
 }

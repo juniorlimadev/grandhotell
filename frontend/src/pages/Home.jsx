@@ -8,6 +8,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const [quartos, setQuartos] = useState([]);
+  const [reservasAtivas, setReservasAtivas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalBooking, setModalBooking] = useState(false);
   const [quartoSelecionado, setQuartoSelecionado] = useState(null);
@@ -21,20 +22,53 @@ export default function Home() {
   const [datasOcupadas, setDatasOcupadas] = useState([]);
   const [reservando, setReservando] = useState(false);
   const [filtro, setFiltro] = useState("Todos");
+  const [dtBuscaInicio, setDtBuscaInicio] = useState("");
+  const [dtBuscaFim, setDtBuscaFim] = useState("");
+
+  const handleBuscar = async () => {
+    if (!dtBuscaInicio || !dtBuscaFim) return toast.warning("Selecione entrada e saída");
+    setLoading(true);
+    try {
+        const rRes = await reservaApi.quartosOcupados(dtBuscaInicio, dtBuscaFim);
+        setReservasAtivas(rRes.data || []);
+        toast.info("Resultados atualizados para estas datas!");
+    } finally {
+        setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const carregar = async () => {
       try {
-        const res = await quartoApi.list(0, 9, "idQuarto", "DESC");
-        setQuartos(res.data.content || []);
+        const hoje = new Date().toISOString().split('T')[0];
+        const [qRes, rRes] = await Promise.all([
+            quartoApi.list(0, 100, "idQuarto", "DESC"),
+            reservaApi.quartosOcupados(hoje, hoje)
+        ]);
+        setQuartos(qRes.data.content || []);
+        setReservasAtivas(rRes.data || []);
       } catch (e) {
-        console.error("Erro ao carregar quartos para a Home", e);
+        console.error("Erro ao carregar dados para a Home", e);
       } finally {
         setLoading(false);
       }
     };
     carregar();
   }, []);
+
+  const quartosDisponiveis = useMemo(() => {
+    return quartos.filter(q => {
+        // Remove quartos que estão ocupados HOJE
+        const ocupadoHoje = reservasAtivas.some(r => r.idQuarto === q.idQuarto && r.status !== 'CANCELADA');
+        if (ocupadoHoje) return false;
+
+        // Filtro de categoria
+        if (filtro === "Todos") return true;
+        if (filtro === "Suítes") return q.tipo?.toLowerCase().includes("suíte");
+        if (filtro === "Premium") return q.tipo?.toLowerCase().includes("premium") || q.tipo?.toLowerCase().includes("luxo");
+        return true;
+    });
+  }, [quartos, reservasAtivas, filtro]);
 
   const abrirReserva = async (quarto) => {
     if (!isAuthenticated) {
@@ -204,14 +238,26 @@ export default function Home() {
                  <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_today</span>
                  <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
-                    <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
+                    <input 
+                      className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" 
+                      type="date" 
+                      min={today} 
+                      value={dtBuscaInicio}
+                      onChange={e => setDtBuscaInicio(e.target.value)}
+                    />
                  </div>
               </div>
               <div className="flex-1 flex items-center gap-6 px-10 py-6 border-r border-slate-100 group">
                  <span className="material-symbols-outlined text-[#006972] text-4xl group-hover:rotate-12 transition-transform">calendar_month</span>
                  <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
-                    <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" type="date" min={today} />
+                    <input 
+                      className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800" 
+                      type="date" 
+                      min={dtBuscaInicio || today} 
+                      value={dtBuscaFim}
+                      onChange={e => setDtBuscaFim(e.target.value)}
+                    />
                  </div>
               </div>
               <div className="flex-1 flex items-center gap-6 px-10 py-6 group">
@@ -221,7 +267,10 @@ export default function Home() {
                     <input className="bg-transparent border-none p-0 focus:ring-0 text-lg font-black text-slate-800 w-full" placeholder="Quantos?" type="number" min="1" defaultValue={2} />
                  </div>
               </div>
-              <button className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-16 py-7 rounded-[2rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30">
+              <button 
+                onClick={handleBuscar}
+                className="bg-gradient-to-br from-[#006972] to-[#004f56] text-white px-16 py-7 rounded-[2rem] font-black text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-[#006972]/30"
+              >
                 Verificar
               </button>
             </div>
@@ -229,18 +278,33 @@ export default function Home() {
             <div className="md:hidden grid grid-cols-2 gap-3">
               <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
                 <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Entrada</span>
-                <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="date" min={today} />
+                <input 
+                  className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" 
+                  type="date" 
+                  min={today}
+                  value={dtBuscaInicio}
+                  onChange={e => setDtBuscaInicio(e.target.value)}
+                />
               </div>
               <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
                 <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Saída</span>
-                <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="date" min={today} />
+                <input 
+                  className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" 
+                  type="date" 
+                  min={dtBuscaInicio || today}
+                  value={dtBuscaFim}
+                  onChange={e => setDtBuscaFim(e.target.value)}
+                />
               </div>
               <div className="col-span-1 flex flex-col bg-slate-50 rounded-2xl px-4 py-3">
                 <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Hóspedes</span>
                 <input className="bg-transparent border-none p-0 focus:ring-0 text-sm font-black text-slate-800 w-full" type="number" min="1" defaultValue={2} />
               </div>
               <div className="col-span-1">
-                <button className="w-full h-full bg-gradient-to-br from-[#006972] to-[#004f56] text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl shadow-[#006972]/30 py-3">
+                <button 
+                  onClick={handleBuscar}
+                  className="w-full h-full bg-gradient-to-br from-[#006972] to-[#004f56] text-white rounded-2xl font-black text-sm transition-all active:scale-95 shadow-xl shadow-[#006972]/30 py-3"
+                >
                   Verificar
                 </button>
               </div>
@@ -275,12 +339,7 @@ export default function Home() {
               Array(3).fill(0).map((_, i) => (
                 <div key={i} className="bg-white rounded-3xl h-[450px] animate-pulse border border-slate-100"></div>
               ))
-            ) : (quartos.filter(q => {
-                   if (filtro === "Todos") return true;
-                   if (filtro === "Suítes") return q.tipo?.toLowerCase().includes("suíte");
-                   if (filtro === "Premium") return q.tipo?.toLowerCase().includes("premium") || q.tipo?.toLowerCase().includes("luxo");
-                   return true;
-                 })).map((q) => (
+            ) : (quartosDisponiveis).map((q) => (
               <div key={q.idQuarto} className="bg-white rounded-[2rem] overflow-hidden flex flex-col group transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,105,114,0.1)] border border-slate-100">
                 <div className="relative h-72 overflow-hidden">
                   <img 
