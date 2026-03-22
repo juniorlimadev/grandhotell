@@ -15,6 +15,7 @@ export default function Reservas() {
   const [quartos, setQuartos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [modalDetalhes, setModalDetalhes] = useState({ open: false, data: null });
   const [modoEdicao, setModoEdicao] = useState(false);
   const [reservaAtualId, setReservaAtualId] = useState(null);
   const [confirmCancel, setConfirmCancel] = useState({ open: false, id: null });
@@ -325,6 +326,13 @@ export default function Reservas() {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <button
+                        onClick={() => setModalDetalhes({ open: true, data: r })}
+                        className="text-xs font-bold text-primary hover:brightness-90 transition-all flex items-center gap-1"
+                      >
+                        <span className="material-symbols-outlined text-sm">visibility</span>
+                        Detalhes
+                      </button>
+                      <button
                         onClick={() => abrirEdicao(r)}
                         className="text-xs font-bold text-slate-500 hover:text-primary transition-colors"
                       >
@@ -332,7 +340,7 @@ export default function Reservas() {
                       </button>
                       <button
                         onClick={() => setConfirmCancel({ open: true, id: r.idReserva })}
-                        className="text-xs font-bold text-red-400 hover:text-red-600 transition-colors"
+                        className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors"
                       >
                         Cancelar
                       </button>
@@ -524,6 +532,94 @@ export default function Reservas() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {modalDetalhes.open && modalDetalhes.data && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+           <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 w-full max-w-2xl shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8">
+                 <div className="flex justify-between items-start mb-8">
+                    <div className="flex items-center gap-4">
+                       <div className="size-16 bg-primary rounded-2xl flex items-center justify-center text-slate-900 shadow-lg shadow-primary/20">
+                          <span className="material-symbols-outlined text-4xl">receipt_long</span>
+                       </div>
+                       <div>
+                          <h3 className="text-2xl font-black">Detalhes da Estadia</h3>
+                          <p className="text-sm text-slate-500 font-bold uppercase tracking-widest tracking-tighter">Reserva #{modalDetalhes.data.idReserva}</p>
+                       </div>
+                    </div>
+                    <button onClick={() => setModalDetalhes({ open: false, data: null })} className="size-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
+                       <span className="material-symbols-outlined text-2xl">close</span>
+                    </button>
+                 </div>
+
+                 <div className="grid grid-cols-2 gap-8 mb-10">
+                    <div className="space-y-1">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hóspede Principal</p>
+                       <p className="text-lg font-black">{modalDetalhes.data.hospedeNome}</p>
+                       <p className="text-xs text-slate-500 font-medium italic">Responsável financeiro</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Acomodação</p>
+                       <p className="text-lg font-black">{modalDetalhes.data.quartoNome}</p>
+                       <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-[10px] font-black uppercase text-primary tracking-widest">Check-in Confirmado</span>
+                    </div>
+                 </div>
+
+                 <div className="space-y-6">
+                    <h4 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] flex items-center gap-2">
+                       <span className="size-1.5 bg-primary rounded-full" /> Fluxo da Estadia (Timeline)
+                    </h4>
+                    
+                    <div className="relative pl-8 space-y-8 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800">
+                       <div className="relative">
+                          <div className={`absolute -left-8 size-6 rounded-full border-4 border-white dark:border-slate-900 ${modalDetalhes.data.dtInicio ? 'bg-primary' : 'bg-slate-200'}`} />
+                          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                             <div className="flex justify-between items-start mb-1">
+                                <p className="text-xs font-black uppercase tracking-wider">Reserva Criada</p>
+                                <span className="text-[10px] font-bold text-slate-400 italic">Previsão: {formatDate(modalDetalhes.data.dtInicio)}</span>
+                             </div>
+                             <p className="text-[11px] text-slate-500 font-medium">Estadia programada. Todos os dados iniciais foram validados.</p>
+                          </div>
+                       </div>
+
+                       <div className="relative">
+                          <div className={`absolute -left-8 size-6 rounded-full border-4 border-white dark:border-slate-900 ${modalDetalhes.data.checkinReal ? 'bg-green-500' : 'bg-slate-200'}`} />
+                          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                             <div className="flex justify-between items-start mb-1">
+                                <p className="text-xs font-black uppercase tracking-wider">Entrada (Check-in)</p>
+                                <span className="text-[10px] font-bold text-slate-400 italic">{modalDetalhes.data.checkinReal ? new Date(modalDetalhes.data.checkinReal).toLocaleString() : 'Pendente'}</span>
+                             </div>
+                             <p className="text-[11px] text-slate-500 font-medium">Liberação do quarto e confirmação presencial da identidade do hóspede.</p>
+                          </div>
+                       </div>
+
+                       <div className="relative">
+                          <div className={`absolute -left-8 size-6 rounded-full border-4 border-white dark:border-slate-900 ${modalDetalhes.data.checkoutReal ? 'bg-amber-500' : 'bg-slate-200'}`} />
+                          <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                             <div className="flex justify-between items-start mb-1">
+                                <p className="text-xs font-black uppercase tracking-wider">Saída (Check-out)</p>
+                                <span className="text-[10px] font-bold text-slate-400 italic">{modalDetalhes.data.checkoutReal ? new Date(modalDetalhes.data.checkoutReal).toLocaleString() : 'Aguardando encerramento'}</span>
+                             </div>
+                             <p className="text-[11px] text-slate-500 font-medium">Encerramento da conta e devolução das chaves. O quarto passará para limpeza.</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="mt-10 p-6 bg-slate-900 text-white rounded-[2rem] flex items-center justify-between">
+                    <div>
+                       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Estimado</p>
+                       <p className="text-xl font-black italic">R$ {((Number(modalDetalhes.data.valorDiaria) || 0) + (Number(modalDetalhes.data.consumoExtra) || 0)).toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                       <p className="text-xs font-bold">{modalDetalhes.data.formaPagamento || 'CARTÃO'}</p>
+                       <p className="text-[10px] text-primary font-black uppercase">Pagamento Registrado</p>
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       )}
 

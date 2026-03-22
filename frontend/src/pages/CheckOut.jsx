@@ -17,7 +17,7 @@ export default function CheckOut() {
       const res = await reservaApi.quartosOcupados(hoje, hoje);
       // Filtramos apenas as que estão ATIVAS (CONFIRMADA no sistema ou OCUPADO)
       const ativas = (res.data || []).filter(r => 
-        (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO') && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'CONCLUIDA'
+        r.statusQuarto === 'OCUPADO' && !r.checkoutReal
       );
       setReservas(ativas);
     } catch (e) {

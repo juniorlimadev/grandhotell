@@ -20,7 +20,7 @@ export default function CheckIn() {
       const res = await reservaApi.quartosOcupados(dataStr, dataStr);
       // Filtramos apenas as que NÃO estão concluídas/canceladas
       const pendentes = (res.data || []).filter(r => 
-        r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA'
+        r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA' && !r.checkinReal
       );
       setReservas(pendentes);
     } catch (e) {
