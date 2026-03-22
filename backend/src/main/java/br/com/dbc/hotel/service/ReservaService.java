@@ -210,13 +210,30 @@ public class ReservaService {
     }
 
     private ReservaDTO entidadeParaDTO(Reserva reserva) {
-        ReservaDTO dto = objectMapper.convertValue(reserva, ReservaDTO.class);
+        ReservaDTO dto = new ReservaDTO();
+        dto.setIdReserva(reserva.getIdReserva());
+        dto.setDtInicio(reserva.getDtInicio());
+        dto.setDtFim(reserva.getDtFim());
+        dto.setHospedeNome(reserva.getHospedeNome());
+        dto.setHospedeEmail(reserva.getHospedeEmail());
+        dto.setObservacoes(reserva.getObservacoes());
+        dto.setAcompanhantes(reserva.getAcompanhantes());
+        dto.setCheckinReal(reserva.getCheckinReal());
+        dto.setCheckoutReal(reserva.getCheckoutReal());
+        dto.setConsumoExtra(reserva.getConsumoExtra());
+        dto.setValorDeposito(reserva.getValorDeposito());
+        dto.setTarifaAplicada(reserva.getTarifaAplicada());
+        dto.setFormaPagamento(reserva.getFormaPagamento());
+        dto.setPlacaVeiculo(reserva.getPlacaVeiculo());
+
         if (reserva.getQuarto() != null) {
             dto.setIdQuarto(reserva.getQuarto().getIdQuarto());
             dto.setQuartoNome(reserva.getQuarto().getNome());
             dto.setValorDiaria(reserva.getQuarto().getValorDiaria());
         }
-        if (reserva.getUsuario() != null) dto.setIdUsuario(reserva.getUsuario().getIdUsuario());
+        if (reserva.getUsuario() != null) {
+            dto.setIdUsuario(reserva.getUsuario().getIdUsuario());
+        }
         if (reserva.getStatusQuarto() != null) {
             dto.setStatusQuarto(reserva.getStatusQuarto().name());
         }
