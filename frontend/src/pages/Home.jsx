@@ -3,6 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { quartoApi, reservaApi } from "../services/api";
 import { toast } from "react-toastify";
 import { useAuth } from "../contexts/AuthContext";
+import { toInputDate, formatDate } from "../utils/date-utils";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ptBR } from "date-fns/locale/pt-BR";
+registerLocale("pt-BR", ptBR);
 
 export default function Home() {
   const navigate = useNavigate();
@@ -432,24 +437,35 @@ export default function Home() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Check-in</label>
-                            <input 
-                                required
-                                type="date"
-                                min={today}
-                                value={formReserva.dtInicio}
-                                onChange={e => setFormReserva({...formReserva, dtInicio: e.target.value})}
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
+                            <DatePicker
+                                selected={formReserva.dtInicio ? new Date(formReserva.dtInicio + "T12:00:00") : null}
+                                onChange={(date) => setFormReserva({ ...formReserva, dtInicio: toInputDate(date) })}
+                                minDate={new Date()}
+                                dateFormat="dd/MM/yyyy"
+                                locale="pt-BR"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                                placeholderText="Selecione entrada"
                             />
                         </div>
                         <div>
                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Check-out</label>
-                            <input 
-                                required
-                                type="date"
-                                min={formReserva.dtInicio || today}
-                                value={formReserva.dtFim}
-                                onChange={e => setFormReserva({...formReserva, dtFim: e.target.value})}
-                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" 
+                            <DatePicker
+                                selected={formReserva.dtFim ? new Date(formReserva.dtFim + "T12:00:00") : null}
+                                onChange={(date) => setFormReserva({ ...formReserva, dtFim: toInputDate(date) })}
+                                minDate={formReserva.dtInicio ? new Date(formReserva.dtInicio + "T12:00:00") : new Date()}
+                                dateFormat="dd/MM/yyyy"
+                                locale="pt-BR"
+                                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                                placeholderText="Selecione saída"
+                                dayClassName={(date) => {
+                                    const dateStr = toInputDate(date);
+                                    const isOccupied = datasOcupadas.some(r => {
+                                       const start = toInputDate(r.dtInicio);
+                                       const end = toInputDate(r.dtFim);
+                                       return dateStr >= start && dateStr <= end;
+                                    });
+                                    return isOccupied ? "text-red-500 font-bold underline decoration-red-500" : "";
+                                }}
                             />
                         </div>
                     </div>

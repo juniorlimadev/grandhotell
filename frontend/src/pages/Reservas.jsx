@@ -3,6 +3,10 @@ import { reservaApi, quartoApi, usuarioApi } from "../services/api";
 import { toast } from "react-toastify";
 import { toInputDate, formatDate } from "../utils/date-utils";
 import ConfirmModal from "../components/ConfirmModal";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ptBR } from "date-fns/locale/pt-BR";
+registerLocale("pt-BR", ptBR);
 
 
 export default function Reservas() {
@@ -408,13 +412,38 @@ export default function Reservas() {
                             {quartos.map(q => <option key={q.idQuarto} value={q.idQuarto}>{q.nome} - {q.tipo}</option>)}
                           </select>
                         </div>
-                        <div>
+                        <div className="space-y-2">
                           <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Entrada Prevista</label>
-                          <input type="date" required value={form.dtInicio} onChange={e => setForm({...form, dtInicio: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" />
+                          <DatePicker
+                            selected={form.dtInicio ? new Date(toInputDate(form.dtInicio) + "T12:00:00") : null}
+                            onChange={(date) => setForm({ ...form, dtInicio: toInputDate(date) })}
+                            minDate={new Date()}
+                            dateFormat="dd/MM/yyyy"
+                            locale="pt-BR"
+                            className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary"
+                            placeholderText="Selecione data"
+                          />
                         </div>
-                        <div>
+                        <div className="space-y-2">
                           <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Saída Prevista</label>
-                          <input type="date" required value={form.dtFim} onChange={e => setForm({...form, dtFim: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" />
+                          <DatePicker
+                             selected={form.dtFim ? new Date(toInputDate(form.dtFim) + "T12:00:00") : null}
+                             onChange={(date) => setForm({ ...form, dtFim: toInputDate(date) })}
+                             minDate={form.dtInicio ? new Date(toInputDate(form.dtInicio) + "T12:00:00") : new Date()}
+                             dateFormat="dd/MM/yyyy"
+                             locale="pt-BR"
+                             className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary"
+                             placeholderText="Selecione data"
+                             dayClassName={(date) => {
+                                const dateStr = toInputDate(date);
+                                const isOccupied = quartoSelecionadoReservas.some(r => {
+                                   const start = toInputDate(r.dtInicio);
+                                   const end = toInputDate(r.dtFim);
+                                   return dateStr >= start && dateStr <= end;
+                                });
+                                return isOccupied ? "text-red-500 font-black decoration-red-500 underline" : "";
+                             }}
+                          />
                         </div>
                     </div>
                   </div>
