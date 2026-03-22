@@ -43,7 +43,7 @@ export default function CheckOut() {
         idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
         idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
         statusQuarto: "CONCLUIDA",
-        checkoutReal: new Date().toISOString()
+        checkoutReal: new Date().toISOString().slice(0, 19)
       });
       toast.success("Check-out finalizado! Estadia encerrada e Quarto em LIMPEZA.");
       carregar();

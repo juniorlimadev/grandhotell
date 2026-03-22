@@ -49,8 +49,10 @@ public class ReservaCreateDTO {
 
     private String placaVeiculo;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private java.time.LocalDateTime checkinReal;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private java.time.LocalDateTime checkoutReal;
 
     private java.math.BigDecimal consumoExtra;

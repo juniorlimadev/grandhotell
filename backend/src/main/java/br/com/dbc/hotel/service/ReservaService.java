@@ -130,13 +130,13 @@ public class ReservaService {
             StatusQuarto novoStatus = StatusQuarto.fromString(reservaCreateDTO.getStatusQuarto());
             reserva.setStatusQuarto(novoStatus);
             
-            // Lógica de transição automática do status do Quarto
+            // Lógica de transição automática do status do Quarto (persistência direta para evitar erros de DTO)
             if (novoStatus == StatusQuarto.OCUPADO) {
                 quarto.setStatusOperacional(StatusQuarto.OCUPADO);
-                quartoService.update(quarto.getIdQuarto(), objectMapper.convertValue(quarto, br.com.dbc.hotel.dto.quarto.QuartoCreateDTO.class));
+                quartoRepository.save(quarto);
             } else if (novoStatus == StatusQuarto.CONCLUIDA) {
                 quarto.setStatusOperacional(StatusQuarto.LIMPEZA);
-                quartoService.update(quarto.getIdQuarto(), objectMapper.convertValue(quarto, br.com.dbc.hotel.dto.quarto.QuartoCreateDTO.class));
+                quartoRepository.save(quarto);
             }
         }
 

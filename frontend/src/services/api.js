@@ -109,6 +109,9 @@ export const reservaApi = {
       valorDeposito: data.valorDeposito,
       tarifaAplicada: data.tarifaAplicada,
       placaVeiculo: data.placaVeiculo,
+      checkinReal: data.checkinReal,
+      checkoutReal: data.checkoutReal,
+      consumoExtra: data.consumoExtra
     }),
   delete: (id) => api.delete(`/reserva/${id}`),
 };

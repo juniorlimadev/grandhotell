@@ -43,7 +43,7 @@ export default function CheckIn() {
         idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
         idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
         statusQuarto: "OCUPADO",
-        checkinReal: new Date().toISOString()
+        checkinReal: new Date().toISOString().slice(0, 19)
       });
       toast.success("Check-in realizado com sucesso! Quarto ativado como OCUPADO.");
       carregar();
