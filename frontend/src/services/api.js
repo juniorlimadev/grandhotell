@@ -98,6 +98,7 @@ export const reservaApi = {
       dtFim: toBackendDate(data.dtFim),
       hospedeNome: data.hospedeNome,
       observacoes: data.observacoes,
+      statusQuarto: data.statusQuarto,
     }),
   delete: (id) => api.delete(`/reserva/${id}`),
 };

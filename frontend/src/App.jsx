@@ -6,6 +6,10 @@ import Dashboard from "./pages/Dashboard";
 import Quartos from "./pages/Quartos";
 import Reservas from "./pages/Reservas";
 import Usuarios from "./pages/Usuarios";
+import Hospedagem from "./pages/Hospedagem";
+import Financeiro from "./pages/Financeiro";
+import Limpeza from "./pages/Limpeza";
+import Manutencao from "./pages/Manutencao";
 import Notificacoes from "./pages/Notificacoes";
 import Logs from "./pages/Logs";
 import { ToastContainer } from "react-toastify";
@@ -72,6 +76,10 @@ export default function App() {
         <Route path="quartos/:id" element={<Quartos />} />
         <Route path="reservas" element={<Reservas />} />
         <Route path="usuarios" element={<Usuarios />} />
+        <Route path="hospedagem" element={<Hospedagem />} />
+        <Route path="financeiro" element={<Financeiro />} />
+        <Route path="limpeza" element={<Limpeza />} />
+        <Route path="manutencao" element={<Manutencao />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="notificacoes" element={<Notificacoes />} />
         <Route path="logs" element={<Logs />} />

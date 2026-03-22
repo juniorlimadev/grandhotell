@@ -7,6 +7,10 @@ import { toast } from "react-toastify";
 
 const navItems = [
   { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
+  { to: "/admin/hospedagem", icon: "hotel_class", label: "Hospedagem", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/financeiro", icon: "account_balance_wallet", label: "Financeiro", permission: ["ADMIN"] },
+  { to: "/admin/limpeza", icon: "cleaning_services", label: "Governança", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/manutencao", icon: "build", label: "Manutenção", permission: ["ADMIN", "GESTAO_QUARTOS"] },
   { to: "/admin/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
   { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/usuarios", icon: "badge", label: "Gestão Staff", permission: ["ADMIN"] },

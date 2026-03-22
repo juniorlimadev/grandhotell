@@ -40,10 +40,16 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      if (dtFim < dtInicio) { setDtFim(dtInicio); return; }
+      const start = dtInicio || toInputDate(new Date());
+      const end = dtFim || toInputDate(new Date(Date.now() + 30 * 24 * 3600 * 1000));
+      
+      if (!dtInicio) setDtInicio(start);
+      if (!dtFim) setDtFim(end);
+
+      if (end < start) { setDtFim(start); return; }
       const [qRes, rRes] = await Promise.all([
         quartoApi.list(page, 10, "idQuarto", "DESC"),
-        reservaApi.quartosOcupados(dtInicio, dtFim),
+        reservaApi.quartosOcupados(start, end),
       ]);
       setQuartos(qRes.data.content || []);
       setTotalQuartos(qRes.data.totalElements || 0);
@@ -269,7 +275,31 @@ export default function Dashboard() {
                                             <tr key={q.idQuarto} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all">
                                                 <td className="px-6 py-4"><p className="font-black">{q.nome}</p><p className="text-[10px] text-slate-400 uppercase font-bold">#{q.idQuarto}</p></td>
                                                 <td className="px-6 py-4"><span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase ${st.bg} ${st.text}`}><span className={`size-1.5 rounded-full ${st.dot}`}></span>{st.label}</span></td>
-                                                <td className="px-6 py-4">{st.label === "Limpeza" ? <button onClick={() => toast.success("Quarto liberado!")} className="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-black uppercase rounded-xl">Pronto</button> : <Link to={`/admin/quartos/${q.idQuarto}`} className="text-primary font-black uppercase text-[10px]">Ficha</Link>}</td>
+                                                <td className="px-6 py-4 flex items-center gap-3">
+                                                    {st.label === "Limpeza" ? (
+                                                        <button onClick={() => toast.success("Quarto liberado!")} className="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-black uppercase rounded-xl">Pronto</button>
+                                                    ) : (
+                                                        <>
+                                                            <Link to={`/admin/quartos/${q.idQuarto}`} className="text-slate-400 hover:text-primary font-black uppercase text-[10px] transition-colors">Ficha</Link>
+                                                            {st.label === "Ocupado" && (
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        const hojStr = new Date().toISOString().split('T')[0];
+                                                                        const r = reservas.find(res => {
+                                                                            const ini = parseDate(res.dtInicio).toISOString().split('T')[0];
+                                                                            const fim = parseDate(res.dtFim).toISOString().split('T')[0];
+                                                                            return res.idQuarto === q.idQuarto && ini <= hojStr && fim >= hojStr && res.status !== 'CANCELADA';
+                                                                        });
+                                                                        if (r) handleActionReserva(r);
+                                                                    }} 
+                                                                    className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-slate-900 text-[9px] font-black uppercase rounded-lg transition-all"
+                                                                >
+                                                                    + Extras
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </td>
                                             </tr>
                                         );
                                     })
@@ -370,14 +400,23 @@ export default function Dashboard() {
                             <span className="text-3xl font-black text-slate-900">{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                         </div>
                     </div>
-                    <div className="flex gap-4 pt-4 print:hidden">
+                    
+                    <div className="grid grid-cols-2 gap-4 print:hidden">
+                        <div className="col-span-2 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-dashed border-slate-200">
+                           <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Forma de Pagamento</label>
+                           <div className="flex gap-4">
+                              {['PIX', 'Cartão', 'Dinheiro'].map(m => (
+                                 <button key={m} onClick={() => setNovoItem({...novoItem, metodo: m})} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all ${novoItem.metodo === m ? "border-primary bg-primary/10 text-primary" : "border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-200"}`}>{m}</button>
+                              ))}
+                           </div>
+                        </div>
                         <button onClick={() => window.print()} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl shadow-slate-900/20"><span className="material-symbols-outlined">print</span>IMPRIMIR</button>
-                         <button 
+                        <button 
                             onClick={() => handleStatusUpdate(reservaDetalhe, "CONCLUIDA")}
                             className="flex-1 py-4 bg-primary text-slate-900 rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-primary/20"
-                         >
-                            FINALIZAR ESTADIA
-                         </button>
+                        >
+                            FECHAR CONTA
+                        </button>
                     </div>
                 </div>
             </div>

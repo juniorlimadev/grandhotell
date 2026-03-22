@@ -31,6 +31,8 @@ public class ReservaCreateDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="dd-MM-yyyy")
     private LocalDate dtFim;
 
+    private String statusQuarto;
+
     private String hospedeNome;
 
     private String hospedeEmail;

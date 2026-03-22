@@ -115,6 +115,10 @@ public class ReservaService {
         reserva.setHospedeNome(reservaCreateDTO.getHospedeNome());
         reserva.setHospedeEmail(reservaCreateDTO.getHospedeEmail());
         reserva.setObservacoes(reservaCreateDTO.getObservacoes());
+        
+        if (reservaCreateDTO.getStatusQuarto() != null) {
+            reserva.setStatusQuarto(StatusQuarto.fromString(reservaCreateDTO.getStatusQuarto()));
+        }
 
         Reserva reservaSalva = reservaRepository.save(reserva);
         return entidadeParaDTO(reservaSalva);
