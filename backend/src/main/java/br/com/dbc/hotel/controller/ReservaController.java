@@ -61,7 +61,7 @@ public class ReservaController {
     public ResponseEntity<List<ReservaDTO>> buscarReservasPorIntervalo(
             @RequestParam("dtInicio") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtInicio,
             @RequestParam("dtFim") @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate dtFim) throws RegraDeNegocioException {
-        log.info("Buscando reservas no intervalo: {} até {}", dtInicio, dtFim);
+        log.info("Recebendo requisição de ocupação: {} ate {}", dtInicio, dtFim);
         List<ReservaDTO> reservas = reservaService.buscarReservasPorIntervalo(dtInicio, dtFim);
         return ResponseEntity.ok(reservas);
     }

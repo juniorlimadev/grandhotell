@@ -11,6 +11,8 @@ public enum StatusQuarto {
     CANCELADA,
     CONCLUIDA,
     PENDENTE,
+    AGENDADA,
+    VAGO,
     NO_SHOW;
 
 
@@ -21,6 +23,6 @@ public enum StatusQuarto {
                 return status;
             }
         }
-        throw new IllegalArgumentException("Valor inválido para StatusQuarto: " + value + ". Valores aceitos: DISPONIVEL, OCUPADO, LIMPEZA, CONFIRMADA, CANCELADA, CONCLUIDA");
+        throw new IllegalArgumentException("Valor inválido para StatusQuarto: " + value + ". Valores aceitos: DISPONIVEL, OCUPADO, LIMPEZA, CONFIRMADA, CANCELADA, CONCLUIDA, PENDENTE, AGENDADA, VAGO, NO_SHOW");
     }
 }
