@@ -30,10 +30,10 @@ public class Quarto {
     @Column(name = "valor_diaria")
     private Double valorDiaria;
 
-    @Column(name = "descricao")
+    @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
-    @Column(name = "foto_url")
+    @Column(name = "foto_url", columnDefinition = "TEXT")
     private String fotoUrl;
 
     @Column(name = "avaliacao")

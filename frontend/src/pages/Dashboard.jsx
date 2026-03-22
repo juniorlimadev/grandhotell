@@ -52,37 +52,88 @@ export default function Dashboard() {
     load();
   }, [page, dtInicio, dtFim]);
 
-  // Determina status visual de um quarto pelo cruzamento com reservas ativas NO DIA DE HOJE (ou início do filtro)
+  // Helper: converte data DD-MM-YYYY ou YYYY-MM-DD para Date de forma segura
+  const parseDate = (d) => {
+    if (!d) return new Date(NaN);
+    try {
+      if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
+        const [day, month, year] = d.split("-");
+        return new Date(`${year}-${month}-${day}T12:00:00`); // Meio-dia para evitar problemas de fuso
+      }
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return new Date(NaN);
+      return date;
+    } catch {
+      return new Date(NaN);
+    }
+  };
+
+  // Determina status visual de um quarto pelo cruzamento com reservas
   const statusDoQuarto = (idQuarto) => {
+    // Primeiro verifica ocupação HOJE
     const hoje = new Date().toISOString().split('T')[0];
-    const tem = reservas.find(r => r.idQuarto === idQuarto && r.dtInicio <= hoje && r.dtFim >= hoje);
-    if (!tem) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
-    const cfg = STATUS_CONFIG[tem.status] || STATUS_CONFIG["CONFIRMADA"];
-    return cfg;
+    const ocupadoHoje = reservas.find(r => {
+      const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
+      const fim = parseDate(r.dtFim).toISOString().split('T')[0];
+      return r.idQuarto === idQuarto && inicio <= hoje && fim >= hoje;
+    });
+
+    if (ocupadoHoje) {
+      const cfg = STATUS_CONFIG[ocupadoHoje.status] || STATUS_CONFIG["CONFIRMADA"];
+      return { ...cfg, statusReal: "Ocupado" };
+    }
+
+    // Se não está ocupado hoje, verifica se há QUALQUER reserva no período selecionado
+    const temReservaNoPeriodo = reservas.some(r => r.idQuarto === idQuarto);
+    if (temReservaNoPeriodo) {
+      return { 
+        label: "Reservado", 
+        dot: "bg-blue-400", 
+        bg: "bg-blue-50 dark:bg-blue-500/5", 
+        text: "text-blue-500",
+        statusReal: "Ocupado" // Para o filtro
+      };
+    }
+
+    return { 
+      label: "Disponível", 
+      dot: "bg-emerald-500", 
+      bg: "bg-emerald-50 dark:bg-emerald-500/10", 
+      text: "text-emerald-600 dark:text-emerald-400",
+      statusReal: "Disponível" 
+    };
   };
 
   // Filtra os quartos da tabela conforme o status
   const quartosExibidos = useMemo(() => {
     if (filtroStatus === "Todos") return quartos;
-    return quartos.filter(q => statusDoQuarto(q.idQuarto).label === filtroStatus);
+    return quartos.filter(q => statusDoQuarto(q.idQuarto).statusReal === filtroStatus);
   }, [quartos, filtroStatus, reservas]);
 
   // Calcula faturamento total do período
   const receitaNoPeriodo = useMemo(() => {
     return reservas.reduce((acc, r) => {
-      const d1 = new Date(r.dtInicio);
-      const d2 = new Date(r.dtFim);
-      const diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)));
-      return acc + (r.valorDiaria || 0) * diffDays;
+      const d1 = parseDate(r.dtInicio);
+      const d2 = parseDate(r.dtFim);
+      if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return acc;
+      
+      const diffMs = d2.getTime() - d1.getTime();
+      const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+      const valor = Number(r.valorDiaria) || 0;
+      
+      return acc + (valor * diffDays);
     }, 0);
   }, [reservas]);
 
   const taxaOcupacao = totalQuartos > 0
     ? Math.min(100, Math.round((reservas.filter(r => {
         const hoje = new Date().toISOString().split('T')[0];
-        return r.dtInicio <= hoje && r.dtFim >= hoje;
+        const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
+        const fim = parseDate(r.dtFim).toISOString().split('T')[0];
+        return inicio <= hoje && fim >= hoje;
       }).length / totalQuartos) * 100))
     : 0;
+
 
   // Top Quartos (Calculado com base nas reservas do período)
   const topQuartos = useMemo(() => {

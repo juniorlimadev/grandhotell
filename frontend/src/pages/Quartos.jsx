@@ -109,8 +109,8 @@ export default function Quartos() {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.warning("Imagem muito grande. Máximo 2MB.");
+      if (file.size > 10 * 1024 * 1024) {
+        toast.warning("Imagem muito grande. Máximo 10MB.");
         return;
       }
       const reader = new FileReader();

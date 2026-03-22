@@ -80,4 +80,19 @@
             <column name="hospede_email" type="VARCHAR(255)"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="7.8" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="quarto" columnName="foto_url"/>
+        </preConditions>
+        <modifyDataType tableName="quarto" columnName="foto_url" newDataType="TEXT"/>
+    </changeSet>
+
+    <changeSet id="7.9" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="quarto" columnName="descricao"/>
+        </preConditions>
+        <modifyDataType tableName="quarto" columnName="descricao" newDataType="TEXT"/>
+    </changeSet>
 </databaseChangeLog>
+
