@@ -185,13 +185,7 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public List<ReservaDTO> buscarReservasPorIntervalo(LocalDate dtInicio, LocalDate dtFim) throws RegraDeNegocioException {
         validarDatas(dtInicio, dtFim);
-
-        Specification<Reserva> spec = (root, query, criteriaBuilder) -> criteriaBuilder.and(
-                criteriaBuilder.lessThanOrEqualTo(root.get("dtInicio"), dtFim),
-                criteriaBuilder.greaterThanOrEqualTo(root.get("dtFim"), dtInicio)
-        );
-
-        return reservaRepository.findAll(spec).stream()
+        return reservaRepository.buscarReservasNoIntervalo(dtInicio, dtFim).stream()
                 .map(this::entidadeParaDTO)
                 .collect(Collectors.toList());
     }
@@ -223,7 +217,9 @@ public class ReservaService {
             dto.setValorDiaria(reserva.getQuarto().getValorDiaria());
         }
         if (reserva.getUsuario() != null) dto.setIdUsuario(reserva.getUsuario().getIdUsuario());
+        if (reserva.getStatusQuarto() != null) {
+            dto.setStatusQuarto(reserva.getStatusQuarto().name());
+        }
         return dto;
     }
 }
-

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,10 +19,11 @@ public interface ReservaRepository extends JpaRepository<Reserva, Integer>, JpaS
 
     @EntityGraph(attributePaths = {"quarto", "usuario"})
     @Query("SELECT r FROM Reserva r WHERE LOWER(r.usuario.nome) LIKE LOWER(CONCAT('%', :nomeUsuario, '%'))")
-    List<Reserva> findByUsuario_Nome(String nomeUsuario);
+    List<Reserva> findByUsuario_Nome(@Param("nomeUsuario") String nomeUsuario);
 
-    @Override
     @EntityGraph(attributePaths = {"quarto", "usuario"})
-    List<Reserva> findAll(Specification<Reserva> spec);
+    @Query("SELECT r FROM Reserva r WHERE r.dtInicio <= :dtFim AND r.dtFim >= :dtInicio")
+    List<Reserva> buscarReservasNoIntervalo(@Param("dtInicio") java.time.LocalDate dtInicio, 
+                                            @Param("dtFim") java.time.LocalDate dtFim);
 }
 
