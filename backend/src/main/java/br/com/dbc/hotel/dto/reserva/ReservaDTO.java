@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class ReservaDTO extends ReservaCreateDTO{
 
     private int idReserva;
-
     private String statusQuarto;
+    private Double valorDiaria;
+    private String quartoNome;
 }

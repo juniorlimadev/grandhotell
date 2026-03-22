@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { quartoApi } from "../services/api";
 import { toast } from "react-toastify";
@@ -31,6 +31,19 @@ export default function Quartos() {
   const { id } = useParams();
   const isEdicao = !!id && id !== "novo";
 
+  const mapAndarParaAla = (andar) => {
+    if (["1º Andar", "2º Andar", "3º Andar"].includes(andar)) return "BAIXA";
+    if (["4º Andar", "5º Andar", "6º Andar"].includes(andar)) return "MEDIA";
+    return "ALTA";
+  };
+
+  const mapAlaParaAndar = (ala) => {
+    if (ala === "BAIXA") return "1º Andar";
+    if (ala === "MEDIA") return "4º Andar";
+    if (ala === "ALTA") return "7º Andar";
+    return ala;
+  };
+
   const carregar = useCallback(async (page = 0) => {
     setLoading(true);
     try {
@@ -43,10 +56,12 @@ export default function Quartos() {
     }
   }, [sortField, sortDir]);
 
-  const quartosFiltrados = (lista.content || []).filter(q => 
-    q.nome?.toLowerCase().includes(busca.toLowerCase()) ||
-    q.tipo?.toLowerCase().includes(busca.toLowerCase())
-  );
+  const quartosFiltrados = useMemo(() => {
+    return (lista.content || []).filter(q => 
+      q.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+      q.tipo?.toLowerCase().includes(busca.toLowerCase())
+    );
+  }, [lista.content, busca]);
 
   useEffect(() => {
     carregar(0);
@@ -58,7 +73,7 @@ export default function Quartos() {
           const q = data.Quarto || data;
           setForm({
             nome: q.nome || "",
-            alaHotel: q.alaHotel || "MEDIA",
+            alaHotel: mapAlaParaAndar(q.alaHotel || "MEDIA"),
             valorDiaria: q.valorDiaria || "",
             descricao: q.descricao || "",
             fotoUrl: q.fotoUrl || "",
@@ -69,12 +84,12 @@ export default function Quartos() {
         })
         .catch(() => toast.error("Quarto não encontrado."));
     }
-  }, [carregar, id, isEdicao]);
+  }, [id, isEdicao]);
 
   const abrirNovo = () => {
     setForm({ 
       nome: "", 
-      alaHotel: "MEDIA", 
+      alaHotel: "1º Andar", 
       valorDiaria: "",
       descricao: "",
       fotoUrl: "",
@@ -91,15 +106,35 @@ export default function Quartos() {
     navigate("/admin/quartos");
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        toast.warning("Imagem muito grande. Máximo 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm(f => ({ ...f, fotoUrl: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSalvando(true);
     try {
+      const payload = { 
+        ...form, 
+        alaHotel: mapAndarParaAla(form.alaHotel) 
+      };
+      
       if (isEdicao) {
-        await quartoApi.update(id, form);
+        await quartoApi.update(id, payload);
         toast.success("Quarto atualizado com sucesso!");
       } else {
-        await quartoApi.create(form);
+        await quartoApi.create(payload);
         toast.success("Quarto criado com sucesso!");
       }
       fecharModal();
@@ -147,7 +182,7 @@ export default function Quartos() {
             placeholder="Pesquisar por nome ou tipo..."
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary transition-all text-slate-900 dark:text-white"
           />
         </div>
 
@@ -160,7 +195,7 @@ export default function Quartos() {
               setSortField(field);
               setSortDir(dir);
             }}
-            className="bg-transparent border-none text-xs font-bold uppercase tracking-wider focus:ring-0 cursor-pointer"
+            className="bg-transparent border-none text-xs font-bold uppercase tracking-wider focus:ring-0 cursor-pointer text-slate-900 dark:text-white"
           >
             <option value="idQuarto-DESC">Últimos Criados</option>
             <option value="nome-ASC">Nome (A-Z)</option>
@@ -174,7 +209,7 @@ export default function Quartos() {
 
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
+          <table className="w-full text-left border-collapse min-w-[600px] text-slate-900 dark:text-white">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
               <th className="px-6 py-4 text-xs font-bold uppercase text-slate-400">Quarto</th>
@@ -260,7 +295,7 @@ export default function Quartos() {
 
       {modalAberto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 w-full max-w-2xl shadow-2xl my-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 w-full max-w-2xl shadow-2xl my-auto text-slate-900 dark:text-white">
             <h3 className="text-2xl font-black mb-6">{isEdicao ? "Editar Quarto" : "Cadastrar Novo Quarto"}</h3>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -313,14 +348,18 @@ export default function Quartos() {
 
               <div className="space-y-4">
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">URL da Imagem</label>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Foto do Quarto (Max 2MB)</label>
                     <input
-                      type="text"
-                      value={form.fotoUrl}
-                      onChange={(e) => setForm((f) => ({ ...f, fotoUrl: e.target.value }))}
-                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm"
-                      placeholder="https://exemplo.com/foto.jpg"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-slate-900 hover:file:bg-primary/80"
                     />
+                    {form.fotoUrl && (
+                      <div className="mt-2 text-center">
+                        <img src={form.fotoUrl} alt="Preview" className="max-h-24 rounded-lg object-cover mx-auto" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Avaliação (1-5 estrelas)</label>

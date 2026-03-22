@@ -15,7 +15,6 @@ import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.repository.QuartoRepository;
 import br.com.dbc.hotel.repository.ReservaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import liquibase.pro.packaged.S;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -190,7 +189,11 @@ public class ReservaService {
 
     private ReservaDTO entidadeParaDTO(Reserva reserva) {
         ReservaDTO dto = objectMapper.convertValue(reserva, ReservaDTO.class);
-        if (reserva.getQuarto() != null) dto.setIdQuarto(reserva.getQuarto().getIdQuarto());
+        if (reserva.getQuarto() != null) {
+            dto.setIdQuarto(reserva.getQuarto().getIdQuarto());
+            dto.setQuartoNome(reserva.getQuarto().getNome());
+            dto.setValorDiaria(reserva.getQuarto().getValorDiaria());
+        }
         if (reserva.getUsuario() != null) dto.setIdUsuario(reserva.getUsuario().getIdUsuario());
         return dto;
     }

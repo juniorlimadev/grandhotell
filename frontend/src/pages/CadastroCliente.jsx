@@ -32,7 +32,12 @@ export default function CadastroCliente() {
     <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center p-6 font-['Plus_Jakarta_Sans']">
       <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-10 border border-slate-100">
         <div className="text-center mb-10">
-          <div className="text-2xl font-black text-[#006972] mb-4">GrandHotel</div>
+          <div className="flex items-center justify-center gap-2 mb-4">
+             <div className="size-10 bg-[#006972] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#006972]/20">
+                <span className="material-symbols-outlined text-2xl">apartment</span>
+             </div>
+             <div className="text-2xl font-black text-[#006972]">GrandHotel</div>
+          </div>
           <h1 className="text-3xl font-black text-[#131b30] tracking-tight">Criar sua Conta</h1>
           <p className="text-slate-500 font-medium mt-2">Junte-se ao nosso clube de exclusividade.</p>
         </div>

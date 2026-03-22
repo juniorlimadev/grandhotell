@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+    <changeSet id="7" author="antigravity">
+        <addColumn tableName="quarto">
+            <column name="valor_diaria" type="numeric(10,2)"/>
+            <column name="descricao" type="TEXT"/>
+            <column name="foto_url" type="TEXT"/>
+            <column name="avaliacao" type="numeric(3,1)"/>
+            <column name="tipo" type="VARCHAR(50)"/>
+            <column name="tags" type="VARCHAR(255)"/>
+        </addColumn>
+        <addColumn tableName="reserva">
+            <column name="hospede_email" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

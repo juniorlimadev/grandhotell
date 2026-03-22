@@ -55,7 +55,12 @@ export default function LoginCliente() {
 
       <div className="relative z-10 w-full max-w-xl p-8 md:p-12 lg:p-20 bg-white/10 lg:bg-white/5 backdrop-blur-xl lg:backdrop-blur-3xl lg:h-screen flex flex-col justify-center border-t lg:border-t-0 lg:border-l border-white/20 shadow-2xl m-4 lg:m-0 rounded-[2.5rem] lg:rounded-none">
         <div className="mb-10 lg:mb-12">
-          <Link to="/" className="inline-block text-2xl font-black text-[#8edce6] mb-8 hover:scale-105 transition-transform">GrandHotel</Link>
+          <Link to="/" className="inline-flex items-center gap-2 group mb-8 hover:scale-105 transition-transform">
+             <div className="size-10 bg-[#8edce6] rounded-xl flex items-center justify-center text-[#004f56] shadow-lg shadow-[#8edce6]/20">
+                <span className="material-symbols-outlined text-2xl">apartment</span>
+             </div>
+             <span className="text-2xl font-black text-[#8edce6]">GrandHotel</span>
+          </Link>
           <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter mb-4 leading-tight">
             Acesse seu <br />
             <span className="text-[#8edce6]">Refúgio Particular</span>

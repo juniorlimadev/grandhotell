@@ -34,7 +34,7 @@ export default function Dashboard() {
       setLoading(true);
       try {
         const [qRes, rRes] = await Promise.all([
-          quartoApi.list(page, 5, "idQuarto", "DESC"),
+          quartoApi.list(page, 10, "idQuarto", "DESC"),
           reservaApi.quartosOcupados(dtInicio, dtFim),
         ]);
 
@@ -52,47 +52,63 @@ export default function Dashboard() {
     load();
   }, [page, dtInicio, dtFim]);
 
-  // Calcula faturamento estimado do período
+  // Determina status visual de um quarto pelo cruzamento com reservas ativas NO DIA DE HOJE (ou início do filtro)
+  const statusDoQuarto = (idQuarto) => {
+    const hoje = new Date().toISOString().split('T')[0];
+    const tem = reservas.find(r => r.idQuarto === idQuarto && r.dtInicio <= hoje && r.dtFim >= hoje);
+    if (!tem) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
+    const cfg = STATUS_CONFIG[tem.status] || STATUS_CONFIG["CONFIRMADA"];
+    return cfg;
+  };
+
+  // Filtra os quartos da tabela conforme o status
+  const quartosExibidos = useMemo(() => {
+    if (filtroStatus === "Todos") return quartos;
+    return quartos.filter(q => statusDoQuarto(q.idQuarto).label === filtroStatus);
+  }, [quartos, filtroStatus, reservas]);
+
+  // Calcula faturamento total do período
   const receitaNoPeriodo = useMemo(() => {
-    return reservas.reduce((acc, r) => acc + (r.valorDiaria || 0), 0);
+    return reservas.reduce((acc, r) => {
+      const d1 = new Date(r.dtInicio);
+      const d2 = new Date(r.dtFim);
+      const diffDays = Math.max(1, Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24)));
+      return acc + (r.valorDiaria || 0) * diffDays;
+    }, 0);
   }, [reservas]);
 
   const taxaOcupacao = totalQuartos > 0
-    ? Math.min(100, Math.round((reservas.length / totalQuartos) * 100))
+    ? Math.min(100, Math.round((reservas.filter(r => {
+        const hoje = new Date().toISOString().split('T')[0];
+        return r.dtInicio <= hoje && r.dtFim >= hoje;
+      }).length / totalQuartos) * 100))
     : 0;
 
   // Top Quartos (Calculado com base nas reservas do período)
   const topQuartos = useMemo(() => {
     const contagem = {};
     reservas.forEach(r => {
-      contagem[r.idQuarto] = (contagem[r.idQuarto] || 0) + 1;
+      const nome = r.quartoNome || `Quarto ${r.idQuarto}`;
+      if (!contagem[nome]) contagem[nome] = { id: r.idQuarto, count: 0, nome };
+      contagem[nome].count += 1;
     });
     
-    return Object.entries(contagem)
-      .map(([id, count]) => ({ idQuarto: Number(id), count }))
+    return Object.values(contagem)
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }, [reservas]);
 
-  // Determina status visual de um quarto pelo cruzamento com reservas ativas
-  const statusDoQuarto = (idQuarto) => {
-    const tem = reservas.find(r => r.idQuarto === idQuarto);
-    if (!tem) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
-    const cfg = STATUS_CONFIG[tem.status] || STATUS_CONFIG["CONFIRMADA"];
-    return cfg;
-  };
-
   const cards = [
     { label: "Total de Quartos", val: totalQuartos, icon: "bed", color: "text-[#006972]", bg: "bg-[#006972]/10", badge: "Ativos", badgeColor: "text-[#006972]" },
-    { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: `${reservas.length} Reservas`, badgeColor: "text-blue-500" },
+    { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: `Hoje`, badgeColor: "text-blue-500" },
     { label: "Reservas no Período", val: reservas.length, icon: "event_note", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: "Filtrado", badgeColor: "text-orange-500" },
-    { label: "Receita no Período", val: receitaNoPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "Estimado", badgeColor: "text-emerald-500" },
+    { label: "Receita no Período", val: receitaNoPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "Total", badgeColor: "text-emerald-500" },
   ];
 
   return (
     <div className="space-y-8">
       {/* Header com Filtros de Data */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all text-slate-900 dark:text-white">
         <div>
            <h2 className="text-2xl font-black tracking-tight mb-1">Visão Geral</h2>
            <p className="text-sm text-slate-500 font-medium">Dados reais baseados no período selecionado</p>
@@ -103,14 +119,14 @@ export default function Dashboard() {
               type="date" 
               value={dtInicio}
               onChange={(e) => setDtInicio(e.target.value)}
-              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer"
+              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1"
            />
            <span className="text-[10px] font-black text-slate-300">ATÉ</span>
            <input 
               type="date" 
               value={dtFim}
               onChange={(e) => setDtFim(e.target.value)}
-              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer"
+              className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1"
            />
         </div>
       </div>
@@ -139,10 +155,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* Inventário de Quartos */}
-        <div className="xl:col-span-2 space-y-6">
+        <div className="xl:col-span-2 space-y-6 text-slate-900 dark:text-white">
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
             <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <h3 className="text-base font-black flex items-center gap-2">
                  <span className="material-symbols-outlined text-primary">bed</span>
                  Inventário de Quartos
               </h3>
@@ -150,11 +166,9 @@ export default function Dashboard() {
                 {["Todos", "Disponível", "Ocupado"].map(f => (
                   <button
                     key={f}
-                    onClick={() => setFiltroStatus(f === "Disponível" ? "Todos" : f === "Ocupado" ? "CONFIRMADA" : "Todos")}
+                    onClick={() => setFiltroStatus(f)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                      (f === "Todos" && filtroStatus === "Todos") ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" :
-                      ((f === "Ocupado" && filtroStatus === "CONFIRMADA")) ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" :
-                      "text-slate-400 hover:text-slate-600"
+                      filtroStatus === f ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600"
                     }`}
                   >
                     {f}
@@ -181,12 +195,12 @@ export default function Dashboard() {
                       </tr>
                     ))
                   ) : (
-                    quartos.map(q => {
+                    quartosExibidos.map(q => {
                       const st = statusDoQuarto(q.idQuarto);
                       return (
                         <tr key={q.idQuarto} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                           <td className="px-6 py-4">
-                             <p className="font-black text-slate-900 dark:text-white leading-tight">{q.nome}</p>
+                             <p className="font-black leading-tight">{q.nome}</p>
                              <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">ID #{q.idQuarto}</p>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-500 font-medium">{q.tipo || "—"}</td>
@@ -210,7 +224,7 @@ export default function Dashboard() {
             {/* Paginação */}
             <div className="px-6 py-4 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between">
               <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">
-                Mostrando {quartos.length} de {totalQuartos} quartos
+                Exibindo {quartosExibidos.length} de {totalQuartos} quartos
               </span>
               <div className="flex gap-2">
                 <button
@@ -243,11 +257,11 @@ export default function Dashboard() {
                       <p className="text-xs text-slate-400 italic">Dados insuficientes no período.</p>
                    ) : (
                       topQuartos.map((t, idx) => (
-                        <div key={t.idQuarto} className="flex items-center justify-between">
+                        <div key={idx} className="flex items-center justify-between">
                            <div className="flex items-center gap-3">
                               <span className={`text-xs font-black ${idx === 0 ? "text-primary" : "text-slate-400"}`}>#0{idx+1}</span>
                               <div>
-                                 <p className="text-sm font-bold">Quarto {t.idQuarto}</p>
+                                 <p className="text-sm font-bold">{t.nome}</p>
                                  <p className="text-[10px] text-slate-400 font-medium">Frequência de reservas</p>
                               </div>
                            </div>
@@ -273,7 +287,7 @@ export default function Dashboard() {
                 <p className="text-3xl font-black mb-6">Eficiência Alta</p>
                 <div className="space-y-4 relative z-10">
                    <div className="flex justify-between items-center text-xs font-bold">
-                      <span className="text-white/60">Taxa de Ocupação</span>
+                      <span className="text-white/60">Taxa de Ocupação Hoje</span>
                       <span>{taxaOcupacao}%</span>
                    </div>
                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
@@ -289,9 +303,9 @@ export default function Dashboard() {
         </div>
 
         {/* Reservas no Período */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full h-[600px] xl:h-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-full h-[600px] xl:h-auto text-slate-900 dark:text-white">
           <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-base font-black flex items-center gap-2">
                <span className="material-symbols-outlined text-primary">history</span>
                Período Selecionado
             </h3>
@@ -337,11 +351,11 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-1">
-                        <p className="font-black text-sm text-slate-900 dark:text-white truncate">{nomeHospede}</p>
+                        <p className="font-black text-sm truncate">{nomeHospede}</p>
                         <span className="text-[10px] font-black text-slate-300">#{r.idReserva}</span>
                       </div>
                       <p className="text-[10px] text-slate-500 font-black uppercase tracking-tight truncate">
-                         {r.idQuarto ? `Quarto ${r.idQuarto}` : "Quarto não definido"} • {formatDateStr(r.dtInicio)} – {formatDateStr(r.dtFim)}
+                         {r.quartoNome || `Quarto ${r.idQuarto}`} • {formatDateStr(r.dtInicio)} – {formatDateStr(r.dtFim)}
                       </p>
                     </div>
                   </div>
