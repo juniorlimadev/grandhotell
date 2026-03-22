@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReservaService {
     private final ReservaRepository reservaRepository;
+    private final QuartoRepository quartoRepository;
     private final UsuarioService usuarioService;
     private final QuartoService quartoService;
     private final ObjectMapper objectMapper;
