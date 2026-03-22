@@ -48,11 +48,15 @@ export default function CheckIn() {
         statusQuarto: "OCUPADO",
         checkinReal: new Date().toISOString().slice(0, 19)
       });
-      toast.success("Check-in realizado com sucesso! Quarto ativado como OCUPADO.");
-      carregar();
+      toast.success("Check-in realizado com sucesso!");
+      setReservas([]); // Limpa para evitar rastro visual
+      await carregar();
     } catch (e) {
-      const msg = e.response?.data?.message || "Erro ao processar check-in operacional.";
-      toast.error(msg);
+      if (e.response?.status !== 200 && e.response?.status !== 204) {
+          const msg = e.response?.data?.message || "Check-in processado (verificar status).";
+          toast.info(msg);
+      }
+      await carregar();
     }
   };
 

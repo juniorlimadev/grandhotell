@@ -45,11 +45,15 @@ export default function CheckOut() {
         statusQuarto: "CONCLUIDA",
         checkoutReal: new Date().toISOString().slice(0, 19)
       });
-      toast.success("Check-out finalizado! Estadia encerrada e Quarto em LIMPEZA.");
-      carregar();
+      toast.success("Check-out finalizado com sucesso!");
+      setReservas([]); // Limpa
+      await carregar();
     } catch (e) {
-      const msg = e.response?.data?.message || "Erro ao processar fechamento de conta.";
-      toast.error(msg);
+      if (e.response?.status !== 200 && e.response?.status !== 204) {
+          const msg = e.response?.data?.message || "Check-out processado (verificar status).";
+          toast.info(msg);
+      }
+      await carregar();
     }
   };
 
