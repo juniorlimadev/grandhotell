@@ -323,13 +323,17 @@ export default function Quartos() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Tipo / Categoria</label>
-                    <input
-                      type="text"
+                    <select
                       value={form.tipo}
                       onChange={(e) => setForm((f) => ({ ...f, tipo: e.target.value }))}
-                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
-                      placeholder="Ex: Suíte Master, Executivo"
-                    />
+                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all cursor-pointer"
+                    >
+                      <option value="Standard">Standard</option>
+                      <option value="Luxo">Luxo</option>
+                      <option value="Suíte">Suíte</option>
+                      <option value="Suíte Master">Suíte Master</option>
+                      <option value="Presidencial">Presidencial</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Andar</label>

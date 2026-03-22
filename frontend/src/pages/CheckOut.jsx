@@ -87,10 +87,10 @@ export default function CheckOut() {
               <span className="absolute -top-4 -right-4 text-[100px] material-symbols-outlined text-slate-50 dark:text-slate-800/10 group-hover:rotate-12 transition-transform duration-700">logout</span>
               
               {/* Badge Financeira se houver consumo */}
-              {r.consumoExtra > 0 && (
+              {(r.consumoExtra || 0) > 0 && (
                  <div className="absolute top-8 right-8 flex items-center gap-1.5 bg-red-50 dark:bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase ring-1 ring-red-100 z-20">
                     <span className="material-symbols-outlined text-xs">payments</span>
-                    Consumo: R$ {r.consumoExtra.toFixed(2)}
+                    Consumo: R$ {Number(r.consumoExtra || 0).toFixed(2)}
                  </div>
               )}
 

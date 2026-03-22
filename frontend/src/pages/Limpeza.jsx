@@ -93,11 +93,13 @@ export default function Limpeza() {
             </div>
           ) : (
             pendentesLimpeza.map(q => (
-                <div key={q.idQuarto} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center transition-all hover:scale-[1.02] hover:shadow-xl group">
+                 <div key={q.idQuarto} className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center transition-all hover:scale-[1.02] hover:shadow-xl group">
                   <div className="flex items-center gap-4">
-                     <div className="size-14 bg-orange-50 dark:bg-orange-500/10 text-orange-600 rounded-2xl flex items-center justify-center font-black text-xs ring-1 ring-orange-100">{q.nome.split(' ').pop()}</div>
+                     <div className="size-14 bg-orange-50 dark:bg-orange-500/10 text-orange-600 rounded-2xl flex items-center justify-center font-black text-xs ring-1 ring-orange-100">
+                        {q.nome ? q.nome.split(' ').pop() : q.idQuarto}
+                     </div>
                      <div>
-                        <p className="font-black text-slate-900 dark:text-white">{q.nome}</p>
+                        <p className="font-black text-slate-900 dark:text-white">{q.nome || `Quarto ${q.idQuarto}`}</p>
                         <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Aguardando Camareira</p>
                      </div>
                   </div>

@@ -47,8 +47,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Listagem pública de quartos
-        if (uri.startsWith("/quarto") && method.equals("GET")) {
+        // Listagem pública de quartos e disponibilidade
+        if ((uri.startsWith("/quarto") || uri.startsWith("/reserva/quartos-")) && method.equals("GET")) {
             filterChain.doFilter(request, response);
             return;
         }
