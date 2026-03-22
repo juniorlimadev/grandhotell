@@ -25,7 +25,7 @@ export default function Clientes() {
   const carregar = async (page = 0) => {
     setLoading(true);
     try {
-      const res = await usuarioApi.list(page, 100, "idUsuario", "DESC", "CLIENTE");
+      const res = await usuarioApi.list(page, 100, "nome", false, "CLIENTE");
       setLista(res.data);
     } catch (e) {
       toast.error("Erro ao carregar lista de clientes.");

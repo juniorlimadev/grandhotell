@@ -174,28 +174,28 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] lg:translate-x-0
+        border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 lg:translate-x-0
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        ${sidebarCollapsed ? "lg:w-22" : "lg:w-64"}
+        ${sidebarCollapsed ? "lg:w-24" : "lg:w-72"}
       `}>
         {/* Toggle Button integrado à borda lateral */}
         <button
           onClick={() => setSidebarCollapsed((prev) => !prev)}
-          className="absolute -right-3 top-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full size-6 hidden lg:flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-all shadow-md z-[60] text-slate-400 hover:text-primary active:scale-95"
+          className="absolute -right-3 top-24 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-full size-6 hidden lg:flex items-center justify-center hover:bg-primary hover:text-slate-900 transition-all shadow-md z-[60] text-slate-400 active:scale-95"
           title={sidebarCollapsed ? "Expandir" : "Recolher"}
         >
-          <span className="material-symbols-outlined text-[18px]">
+          <span className="material-symbols-outlined text-[16px]">
             {sidebarCollapsed ? "chevron_right" : "chevron_left"}
           </span>
         </button>
 
         {/* Logo / Brand Area */}
-        <div className={`p-6 flex items-center gap-3 transition-all duration-500 overflow-hidden ${sidebarCollapsed ? "justify-center px-0" : "justify-between"}`}>
+        <div className={`p-6 flex items-center transition-all duration-500 overflow-hidden ${sidebarCollapsed ? "justify-center px-0" : "justify-start gap-4"}`}>
           <div className="size-11 bg-primary/20 rounded-2xl flex items-center justify-center text-primary shadow-lg shadow-primary/10 flex-shrink-0">
              <span className="material-symbols-outlined text-2xl">apartment</span>
           </div>
           {!sidebarCollapsed && (
-            <div className="overflow-hidden animate-in fade-in slide-in-from-left-2 duration-500">
+            <div className="overflow-hidden animate-in fade-in slide-in-from-left-4 duration-500 flex-1">
               <h1 className="text-sm font-black leading-tight whitespace-nowrap">Grand Hotel</h1>
               <p className="text-[10px] uppercase tracking-widest text-slate-400 font-bold whitespace-nowrap">Console Admin</p>
             </div>
@@ -281,7 +281,7 @@ export default function Layout() {
       </aside>
 
 
-      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${sidebarCollapsed ? "lg:pl-22" : "lg:pl-64"}`}>
+      <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ${sidebarCollapsed ? "lg:pl-24" : "lg:pl-72"}`}>
         <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -295,21 +295,11 @@ export default function Layout() {
               <div className="flex items-center gap-4">
                 <Link 
                   to="/" 
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black transition-all"
+                  className="flex items-center gap-2.5 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-2xl text-xs font-black transition-all border border-primary/10 hover:border-primary/20 backdrop-blur-sm group"
                 >
-                  <span className="material-symbols-outlined text-sm">open_in_new</span>
-                  Ver Site Público
+                  <span className="material-symbols-outlined text-[18px] group-hover:rotate-12 transition-transform">open_in_new</span>
+                  Site Público
                 </Link>
-                <div className="relative hidden sm:block">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm w-48 xl:w-80 focus:ring-2 focus:ring-primary transition-all"
-                    placeholder="Pesquisar..."
-                  />
-                </div>
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-4">

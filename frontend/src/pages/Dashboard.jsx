@@ -194,16 +194,27 @@ export default function Dashboard() {
                     <input type="date" value={dtFim} onChange={e => setDtFim(e.target.value)} className="bg-transparent border-none text-xs font-black uppercase focus:ring-0 cursor-pointer p-1" />
                 </div>
             </div>
-            <div className="px-6 flex gap-8">
+            <div className="px-6 py-4 flex flex-wrap gap-3 bg-slate-50/50 dark:bg-slate-800/20">
                 {[
-                    { id: "Inventário", icon: "bed", count: totalQuartos },
-                    { id: "Check-in", icon: "login", count: checkinsHoje.length },
-                    { id: "Check-out", icon: "logout", count: checkoutsHoje.length },
-                    { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length }
+                    { id: "Inventário", icon: "bed", count: totalQuartos, color: "text-primary", bg: "bg-primary/10" },
+                    { id: "Check-in", icon: "login", count: checkinsHoje.length, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+                    { id: "Check-out", icon: "logout", count: checkoutsHoje.length, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
+                    { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" }
                 ].map(tab => (
-                    <button key={tab.id} onClick={() => setAbaAtiva(tab.id)} className={`flex items-center gap-2 py-5 text-sm font-black transition-all border-b-2 relative ${abaAtiva === tab.id ? "text-primary border-primary" : "text-slate-400 border-transparent hover:text-slate-600"}`}>
-                        <span className="material-symbols-outlined text-lg">{tab.icon}</span>
-                        {tab.id} {tab.count > 0 && <span className="bg-slate-100 dark:bg-slate-800 text-[9px] px-1.5 py-0.5 rounded-full ml-1">{tab.count}</span>}
+                    <button 
+                        key={tab.id} 
+                        onClick={() => setAbaAtiva(tab.id)} 
+                        className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl text-xs font-black transition-all border-2 ${
+                            abaAtiva === tab.id 
+                            ? `bg-white dark:bg-slate-800 border-primary shadow-lg shadow-primary/10 ${tab.color}` 
+                            : "bg-transparent border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        }`}
+                    >
+                        <span className={`material-symbols-outlined text-[20px] ${abaAtiva === tab.id ? tab.color : "text-slate-300"}`}>{tab.icon}</span>
+                        {tab.id.toUpperCase()}
+                        <span className={`px-2 py-0.5 rounded-lg text-[10px] ${abaAtiva === tab.id ? `${tab.bg} ${tab.color}` : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>
+                            {tab.count}
+                        </span>
                     </button>
                 ))}
             </div>
