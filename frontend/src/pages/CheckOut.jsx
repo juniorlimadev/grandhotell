@@ -48,7 +48,8 @@ export default function CheckOut() {
       toast.success("Check-out finalizado! Estadia encerrada e Quarto em LIMPEZA.");
       carregar();
     } catch (e) {
-      toast.error("Erro ao processar fechamento de conta.");
+      const msg = e.response?.data?.message || "Erro ao processar fechamento de conta.";
+      toast.error(msg);
     }
   };
 

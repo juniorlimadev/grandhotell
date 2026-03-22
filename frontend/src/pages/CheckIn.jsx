@@ -1,24 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
 import { reservaApi } from "../services/api";
 import { toast } from "react-toastify";
-import { toInputDate, formatDate } from "../utils/date-utils";
+import { toInputDate, formatDate, toBackendDate } from "../utils/date-utils";
+import DatePicker, { registerLocale } from "react-datepicker";
+import ptBR from "date-fns/locale/pt-BR";
+import "react-datepicker/dist/react-datepicker.css";
+registerLocale("pt-BR", ptBR);
 
 export default function CheckIn() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
+  const [filtroData, setFiltroData] = useState(new Date());
 
   const carregar = async () => {
     setLoading(true);
     try {
-      const hoje = toInputDate(new Date());
-      // No GrandHotel, check-in hoje são reservas que começam hoje
-      const res = await reservaApi.quartosOcupados(hoje, hoje);
-      // Filtramos apenas as que NÃO estão concluídas/canceladas e que começam HOJE
-      const pendentes = (res.data || []).filter(r => {
-        const dIniStr = toInputDate(r.dtInicio);
-        return dIniStr === hoje && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA';
-      });
+      const dataStr = toBackendDate(filtroData);
+      const res = await reservaApi.quartosOcupados(dataStr, dataStr);
+      // Filtramos apenas as que NÃO estão concluídas/canceladas
+      const pendentes = (res.data || []).filter(r => 
+        r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA'
+      );
       setReservas(pendentes);
     } catch (e) {
       toast.error("Erro ao carregar chegadas previstas.");
@@ -27,7 +30,7 @@ export default function CheckIn() {
     }
   };
 
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => { carregar(); }, [filtroData]);
 
   const filtradas = useMemo(() => {
     return reservas.filter(r => 
@@ -48,7 +51,8 @@ export default function CheckIn() {
       toast.success("Check-in realizado com sucesso! Quarto ativado como OCUPADO.");
       carregar();
     } catch (e) {
-      toast.error("Erro ao processar check-in operacional.");
+      const msg = e.response?.data?.message || "Erro ao processar check-in operacional.";
+      toast.error(msg);
     }
   };
 
@@ -56,11 +60,20 @@ export default function CheckIn() {
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black mb-2 flex items-center gap-3">
+          <h2 className="text-2xl font-black mb-2 flex items-center gap-3 text-slate-900 dark:text-white">
             <span className="material-symbols-outlined text-primary">login</span>
-            Chegadas de Hoje
+            Chegadas e Pré-Check-in
           </h2>
-          <p className="text-slate-500 font-medium">Hóspedes com reserva iniciando nesta data.</p>
+          <div className="flex items-center gap-3 text-slate-500 font-medium whitespace-nowrap">
+            <span>Data selecionada:</span>
+            <DatePicker
+              selected={filtroData}
+              onChange={date => setFiltroData(date)}
+              dateFormat="dd/MM/yyyy"
+              className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg px-3 py-1 text-sm font-black text-primary w-32 cursor-pointer focus:ring-2 focus:ring-primary transition-all"
+              locale="pt-BR"
+            />
+          </div>
         </div>
         <div className="relative w-full md:w-80">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
