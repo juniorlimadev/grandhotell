@@ -3,15 +3,79 @@
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <changeSet id="7" author="antigravity">
+    
+    <changeSet id="7.1" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="valor_diaria"/>
+            </not>
+        </preConditions>
         <addColumn tableName="quarto">
             <column name="valor_diaria" type="numeric(10,2)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7.2" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="descricao"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="quarto">
             <column name="descricao" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7.3" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="foto_url"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="quarto">
             <column name="foto_url" type="TEXT"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7.4" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="avaliacao"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="quarto">
             <column name="avaliacao" type="numeric(3,1)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7.5" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="tipo"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="quarto">
             <column name="tipo" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="7.6" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="quarto" columnName="tags"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="quarto">
             <column name="tags" type="VARCHAR(255)"/>
         </addColumn>
+    </changeSet>
+
+    <changeSet id="7.7" author="antigravity">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="reserva" columnName="hospede_email"/>
+            </not>
+        </preConditions>
         <addColumn tableName="reserva">
             <column name="hospede_email" type="VARCHAR(255)"/>
         </addColumn>
