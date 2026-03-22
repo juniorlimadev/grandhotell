@@ -22,7 +22,11 @@ export default function Quartos() {
     fotoUrl: "",
     avaliacao: 5.0,
     tipo: "Suíte",
-    tags: "Wi-Fi, Piscina, Ar"
+    tags: "Wi-Fi, Piscina, Ar",
+    capacidadeAdultos: 2,
+    capacidadeCriancas: 0,
+    metragem: 20,
+    statusOperacional: "DISPONIVEL"
   });
 
   const [salvando, setSalvando] = useState(false);
@@ -81,7 +85,11 @@ export default function Quartos() {
             fotoUrl: q.fotoUrl || "",
             avaliacao: q.avaliacao || 5.0,
             tipo: q.tipo || "Suíte",
-            tags: q.tags || ""
+            tags: q.tags || "",
+            capacidadeAdultos: q.capacidadeAdultos || 2,
+            capacidadeCriancas: q.capacidadeCriancas || 0,
+            metragem: q.metragem || 20,
+            statusOperacional: q.statusOperacional || "DISPONIVEL"
           });
         })
         .catch(() => toast.error("Quarto não encontrado."));
@@ -97,7 +105,11 @@ export default function Quartos() {
       fotoUrl: "",
       avaliacao: 5.0,
       tipo: "Suíte",
-      tags: "Wi-Fi, Piscina, Ar"
+      tags: "Wi-Fi, Piscina, Ar",
+      capacidadeAdultos: 2,
+      capacidadeCriancas: 0,
+      metragem: 20,
+      statusOperacional: "DISPONIVEL"
     });
     setModalAberto(true);
     navigate("/admin/quartos/novo", { replace: true });
@@ -361,16 +373,24 @@ export default function Quartos() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Avaliação (1-5 estrelas)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="5"
-                      step="0.1"
-                      value={form.avaliacao}
-                      onChange={(e) => setForm((f) => ({ ...f, avaliacao: e.target.value }))}
-                      className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all"
-                    />
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Capacidade (Adultos)</label>
+                    <input type="number" min="1" value={form.capacidadeAdultos} onChange={(e) => setForm((f) => ({ ...f, capacidadeAdultos: e.target.value }))} className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all shadow-sm" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Capacidade (Crianças)</label>
+                    <input type="number" min="0" value={form.capacidadeCriancas} onChange={(e) => setForm((f) => ({ ...f, capacidadeCriancas: e.target.value }))} className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all shadow-sm" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Metragem (m²)</label>
+                    <input type="number" step="0.1" value={form.metragem} onChange={(e) => setForm((f) => ({ ...f, metragem: e.target.value }))} className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all shadow-sm" required placeholder="Ex: 25.5" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status Operacional</label>
+                    <select value={form.statusOperacional} onChange={(e) => setForm((f) => ({ ...f, statusOperacional: e.target.value }))} className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all shadow-sm cursor-pointer">
+                      <option value="DISPONIVEL">Disponível / Vago</option>
+                      <option value="LIMPEZA">Em Limpeza (Sujo)</option>
+                      <option value="MANUTENCAO">Em Manutenção</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Facilidades (Tags)</label>

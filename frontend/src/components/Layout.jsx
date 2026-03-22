@@ -7,16 +7,14 @@ import { toast } from "react-toastify";
 
 const navItems = [
   { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
-  { to: "/admin/hospedagem", icon: "hotel_class", label: "Hospedagem", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/financeiro", icon: "account_balance_wallet", label: "Financeiro", permission: ["ADMIN"] },
-  { to: "/admin/limpeza", icon: "cleaning_services", label: "Governança", permission: ["ADMIN", "GESTAO_QUARTOS"] },
-  { to: "/admin/manutencao", icon: "build", label: "Manutenção", permission: ["ADMIN", "GESTAO_QUARTOS"] },
-  { to: "/admin/quartos", icon: "bed", label: "Gestão de Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
-  { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/usuarios", icon: "badge", label: "Gestão Staff", permission: ["ADMIN"] },
-  { to: "/admin/clientes", icon: "group", label: "Base de Clientes", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/notificacoes", icon: "notifications", label: "Notificacoes", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
-  { to: "/admin/logs", icon: "terminal", label: "Logs do Sistema", permission: ["ADMIN"] },
+  { to: "/admin/checkin", icon: "login", label: "Check-in", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/hospedagem", icon: "hotel_class", label: "Check-out / Ativas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/limpeza", icon: "cleaning_services", label: "Limpeza (Sujos)", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/produtos", icon: "shopping_cart", label: "Produtos / Consumo", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/quartos", icon: "bed", label: "Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/reservas", icon: "calendar_month", label: "Mapa Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/clientes", icon: "group", label: "Clientes (FNRH)", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/usuarios", icon: "badge", label: "Colaboradores", permission: ["ADMIN"] },
 ];
 
 export default function Layout() {

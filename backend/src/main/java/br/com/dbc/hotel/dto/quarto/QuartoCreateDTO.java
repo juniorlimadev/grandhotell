@@ -35,4 +35,15 @@ public class QuartoCreateDTO {
     private Double avaliacao;
     private String tipo;
     private String tags;
+
+    @NotNull(message = "Capacidade de adultos não pode ser nulo")
+    private Integer capacidadeAdultos;
+
+    @NotNull(message = "Capacidade de crianças não pode ser nulo")
+    private Integer capacidadeCriancas;
+
+    @NotNull(message = "Metragem não pode ser nulo")
+    private Double metragem;
+
+    private String statusOperacional;
 }

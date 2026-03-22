@@ -116,6 +116,16 @@ public class ReservaService {
         reserva.setHospedeEmail(reservaCreateDTO.getHospedeEmail());
         reserva.setObservacoes(reservaCreateDTO.getObservacoes());
         
+        // Novos campos operacionais e financeiros
+        reserva.setAcompanhantes(reservaCreateDTO.getAcompanhantes());
+        reserva.setFormaPagamento(reservaCreateDTO.getFormaPagamento());
+        reserva.setValorDeposito(reservaCreateDTO.getValorDeposito());
+        reserva.setTarifaAplicada(reservaCreateDTO.getTarifaAplicada());
+        reserva.setPlacaVeiculo(reservaCreateDTO.getPlacaVeiculo());
+        reserva.setCheckinReal(reservaCreateDTO.getCheckinReal());
+        reserva.setCheckoutReal(reservaCreateDTO.getCheckoutReal());
+        reserva.setConsumoExtra(reservaCreateDTO.getConsumoExtra());
+        
         if (reservaCreateDTO.getStatusQuarto() != null) {
             reserva.setStatusQuarto(StatusQuarto.fromString(reservaCreateDTO.getStatusQuarto()));
         }

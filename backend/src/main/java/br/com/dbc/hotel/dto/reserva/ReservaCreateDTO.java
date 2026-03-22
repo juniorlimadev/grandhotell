@@ -38,4 +38,20 @@ public class ReservaCreateDTO {
     private String hospedeEmail;
 
     private String observacoes;
+
+    private String acompanhantes;
+
+    private String formaPagamento;
+
+    private java.math.BigDecimal valorDeposito;
+
+    private java.math.BigDecimal tarifaAplicada;
+
+    private String placaVeiculo;
+
+    private java.time.LocalDateTime checkinReal;
+
+    private java.time.LocalDateTime checkoutReal;
+
+    private java.math.BigDecimal consumoExtra;
 }

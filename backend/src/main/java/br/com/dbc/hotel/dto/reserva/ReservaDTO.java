@@ -13,4 +13,7 @@ public class ReservaDTO extends ReservaCreateDTO{
     private String statusQuarto;
     private Double valorDiaria;
     private String quartoNome;
+    private java.time.LocalDateTime checkinReal;
+    private java.time.LocalDateTime checkoutReal;
+    private java.math.BigDecimal consumoExtra;
 }

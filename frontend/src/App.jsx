@@ -7,7 +7,9 @@ import Quartos from "./pages/Quartos";
 import Reservas from "./pages/Reservas";
 import Usuarios from "./pages/Usuarios";
 import Hospedagem from "./pages/Hospedagem";
-import Financeiro from "./pages/Financeiro";
+import CheckIn from "./pages/CheckIn";
+import CheckOut from "./pages/CheckOut";
+import Produtos from "./pages/Produtos";
 import Limpeza from "./pages/Limpeza";
 import Manutencao from "./pages/Manutencao";
 import Notificacoes from "./pages/Notificacoes";
@@ -76,8 +78,9 @@ export default function App() {
         <Route path="quartos/:id" element={<Quartos />} />
         <Route path="reservas" element={<Reservas />} />
         <Route path="usuarios" element={<Usuarios />} />
-        <Route path="hospedagem" element={<Hospedagem />} />
-        <Route path="financeiro" element={<Financeiro />} />
+        <Route path="hospedagem" element={<CheckOut />} />
+        <Route path="checkin" element={<CheckIn />} />
+        <Route path="produtos" element={<Produtos />} />
         <Route path="limpeza" element={<Limpeza />} />
         <Route path="manutencao" element={<Manutencao />} />
         <Route path="clientes" element={<Clientes />} />

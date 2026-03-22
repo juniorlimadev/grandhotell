@@ -10,7 +10,15 @@ export default function CadastroCliente() {
     nome: "",
     email: "",
     senha: "",
-    dataNascimento: ""
+    dataNascimento: "",
+    documento: "",
+    telefone: "",
+    endereco: "",
+    cidade: "",
+    estado: "",
+    pais: "Brasil",
+    profissao: "",
+    placaVeiculo: ""
   });
 
   const handleSubmit = async (e) => {
@@ -42,29 +50,55 @@ export default function CadastroCliente() {
           <p className="text-slate-500 font-medium mt-2">Junte-se ao nosso clube de exclusividade.</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nome Completo</label>
-            <input 
-              required
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
-              placeholder="Como deseja ser chamado?"
-              value={form.nome}
-              onChange={e => setForm({...form, nome: e.target.value})}
-            />
+        <form onSubmit={handleSubmit} className="space-y-5 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Nome Completo</label>
+              <input 
+                required
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                placeholder="Como deseja ser chamado?"
+                value={form.nome}
+                onChange={e => setForm({...form, nome: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">E-mail</label>
+              <input 
+                required
+                type="email"
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                placeholder="exemplo@email.com"
+                value={form.email}
+                onChange={e => setForm({...form, email: e.target.value})}
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">E-mail</label>
-            <input 
-              required
-              type="email"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
-              placeholder="exemplo@email.com"
-              value={form.email}
-              onChange={e => setForm({...form, email: e.target.value})}
-            />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">CPF / Passaporte</label>
+              <input 
+                required
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                placeholder="Apenas números ou Passaporte"
+                value={form.documento}
+                onChange={e => setForm({...form, documento: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Telefone / Celular</label>
+              <input 
+                required
+                className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                placeholder="(00) 00000-0000"
+                value={form.telefone}
+                onChange={e => setForm({...form, telefone: e.target.value})}
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-5">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
              <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Data de Nascimento</label>
                 <input 
@@ -75,25 +109,62 @@ export default function CadastroCliente() {
                   onChange={e => setForm({...form, dataNascimento: e.target.value})}
                 />
              </div>
+             <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Senha</label>
+                <input 
+                  required
+                  type="password"
+                  className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+                  placeholder="Sua senha secreta"
+                  value={form.senha}
+                  onChange={e => setForm({...form, senha: e.target.value})}
+                />
+             </div>
           </div>
+
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Senha</label>
-            <input 
-              required
-              type="password"
-              className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
-              placeholder="Sua senha secreta"
-              value={form.senha}
-              onChange={e => setForm({...form, senha: e.target.value})}
-            />
+             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Endereço Completo</label>
+             <input 
+               required
+               className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold"
+               placeholder="Rua, Número, Bairro"
+               value={form.endereco}
+               onChange={e => setForm({...form, endereco: e.target.value})}
+             />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Cidade</label>
+               <input required className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" value={form.cidade} onChange={e => setForm({...form, cidade: e.target.value})} />
+            </div>
+            <div>
+               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Estado</label>
+               <input required className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" value={form.estado} onChange={e => setForm({...form, estado: e.target.value})} />
+            </div>
+            <div>
+               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">País</label>
+               <input required className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" value={form.pais} onChange={e => setForm({...form, pais: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Profissão (Opcional)</label>
+               <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" value={form.profissao} onChange={e => setForm({...form, profissao: e.target.value})} />
+            </div>
+            <div>
+               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Placa do Veículo (Opcional)</label>
+               <input className="w-full px-6 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-[#006972] transition-all font-bold" value={form.placaVeiculo} onChange={e => setForm({...form, placaVeiculo: e.target.value})} />
+            </div>
           </div>
 
           <button 
             disabled={loading}
             type="submit"
-            className="w-full bg-[#006972] text-white py-5 rounded-[2rem] font-black text-base shadow-xl shadow-[#006972]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+            className="w-full bg-[#006972] text-white py-5 rounded-[2rem] font-black text-base shadow-xl shadow-[#006972]/30 hover:scale-[1.01] active:scale-95 transition-all disabled:opacity-50"
           >
-            {loading ? "Criando..." : "Confirmar Cadastro"}
+            {loading ? "Criando..." : "Finalizar Cadastro"}
           </button>
 
         </form>

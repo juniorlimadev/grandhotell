@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="14" author="antigravity">
+        <addColumn tableName="RESERVA">
+            <column name="checkin_real" type="datetime"/>
+            <column name="checkout_real" type="datetime"/>
+            <column name="acompanhantes" type="text"/>
+            <column name="forma_pagamento" type="varchar(50)"/>
+            <column name="valor_deposito" type="decimal(19,2)"/>
+            <column name="tarifa_aplicada" type="decimal(19,2)"/>
+            <column name="placa_veiculo" type="varchar(20)"/>
+            <column name="consumo_extra" type="decimal(19,2)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

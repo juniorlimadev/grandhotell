@@ -40,13 +40,17 @@ export default function Dashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const start = dtInicio || toInputDate(new Date());
-      const end = dtFim || toInputDate(new Date(Date.now() + 30 * 24 * 3600 * 1000));
+      const hoje = toInputDate(new Date());
+      const start = dtInicio || hoje;
+      const end = dtFim || hoje;
       
       if (!dtInicio) setDtInicio(start);
       if (!dtFim) setDtFim(end);
 
-      if (end < start) { setDtFim(start); return; }
+      if (end < start) { 
+        setDtFim(start); 
+        return; 
+      }
       const [qRes, rRes] = await Promise.all([
         quartoApi.list(page, 10, "idQuarto", "DESC"),
         reservaApi.quartosOcupados(start, end),
@@ -68,15 +72,23 @@ export default function Dashboard() {
 
   const handleStatusUpdate = async (reserva, novoStatus) => {
       try {
+          // Extrai apenas os campos necessários, pois o backend espera IDs numéricos, não objetos inteiros
           await reservaApi.update(reserva.idReserva, {
-              ...reserva,
+              idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
+              idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
+              dtInicio: reserva.dtInicio,
+              dtFim: reserva.dtFim,
+              hospedeNome: reserva.hospedeNome,
+              hospedeEmail: reserva.hospedeEmail || reserva.usuario?.email,
+              observacoes: reserva.observacoes,
               statusQuarto: novoStatus
           });
           toast.success(`Reserva ${novoStatus.toLowerCase()} com sucesso!`);
           loadData();
           setReservaDetalhe(null);
       } catch (e) {
-          toast.error("Erro ao atualizar status da reserva.");
+          const msg = e?.response?.data?.message || "Erro ao atualizar status da reserva.";
+          toast.error(msg);
       }
   };
 

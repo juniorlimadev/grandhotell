@@ -19,7 +19,15 @@ export default function Clientes() {
     nome: "",
     email: "",
     senha: "",
-    dataNascimento: ""
+    dataNascimento: "",
+    documento: "",
+    telefone: "",
+    endereco: "",
+    cidade: "",
+    estado: "",
+    pais: "Brasil",
+    profissao: "",
+    placaVeiculo: ""
   });
 
   const carregar = async (page = 0) => {
@@ -225,9 +233,17 @@ export default function Clientes() {
                                 <div key={h.idReserva} className="p-5 bg-slate-50 dark:bg-slate-800 rounded-2xl flex justify-between items-center">
                                     <div>
                                         <h4 className="font-bold text-slate-900 dark:text-white">Quarto {h.idQuarto}</h4>
-                                        <p className="text-xs text-slate-500">{formatDate(h.dtInicio)} — {formatDate(h.dtFim)}</p>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded uppercase font-black text-slate-500">{h.quarto?.tipo || "Standard"}</span>
+                                            <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded uppercase font-black text-slate-500">{h.quarto?.capacidadeAdultos || 2} AD / {h.quarto?.capacidadeCriancas || 0} CR</span>
+                                            <span className="text-[9px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded uppercase font-black text-slate-500">{h.quarto?.metragem || 20}m²</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-2">{formatDate(h.dtInicio)} — {formatDate(h.dtFim)}</p>
                                     </div>
-                                    <span className="text-[10px] font-black uppercase text-emerald-500">#{h.idReserva}</span>
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-black uppercase text-emerald-500 block">#{h.idReserva}</span>
+                                        <span className="text-[10px] font-black text-slate-400">R$ {h.valorTotal?.toFixed(2)}</span>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -276,64 +292,75 @@ export default function Clientes() {
               </button>
             </div>
             
-            <form onSubmit={handlesubmitNovo} className="p-8 space-y-5">
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nome Completo</label>
-                <input 
-                  type="text"
-                  required
-                  value={formNovo.nome}
-                  onChange={e => setFormNovo({...formNovo, nome: e.target.value})}
-                  className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Nome do cliente"
-                />
+            <form onSubmit={handlesubmitNovo} className="p-8 space-y-4 max-h-[85vh] overflow-y-auto bg-slate-50/20 dark:bg-slate-900/50">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nome Completo</label>
+                  <input required value={formNovo.nome} onChange={e => setFormNovo({...formNovo, nome: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="Nome do hóspede" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">E-mail</label>
+                  <input type="email" required value={formNovo.email} onChange={e => setFormNovo({...formNovo, email: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="email@exemplo.com" />
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">E-mail</label>
-                <input 
-                  type="email"
-                  required
-                  value={formNovo.email}
-                  onChange={e => setFormNovo({...formNovo, email: e.target.value})}
-                  className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="email@exemplo.com"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">CPF / Passaporte</label>
+                  <input required value={formNovo.documento} onChange={e => setFormNovo({...formNovo, documento: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="Doc. Identificação" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Telefone / Celular</label>
+                  <input required value={formNovo.telefone} onChange={e => setFormNovo({...formNovo, telefone: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="(00) 00000-0000" />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Senha Inicial</label>
-                  <input 
-                    type="password"
-                    required
-                    value={formNovo.senha}
-                    onChange={e => setFormNovo({...formNovo, senha: e.target.value})}
-                    className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="******"
-                  />
+                  <input type="password" required value={formNovo.senha} onChange={e => setFormNovo({...formNovo, senha: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="******" />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Data Nasc.</label>
-                  <input 
-                    type="date"
-                    required
-                    value={formNovo.dataNascimento}
-                    onChange={e => setFormNovo({...formNovo, dataNascimento: e.target.value})}
-                    className="w-full px-5 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary text-xs"
-                  />
+                  <input type="date" required value={formNovo.dataNascimento} onChange={e => setFormNovo({...formNovo, dataNascimento: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm text-xs" />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Endereço Completo</label>
+                <input required value={formNovo.endereco} onChange={e => setFormNovo({...formNovo, endereco: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" placeholder="Rua, Número, Bairro" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Cidade</label>
+                  <input required value={formNovo.cidade} onChange={e => setFormNovo({...formNovo, cidade: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Estado</label>
+                  <input required value={formNovo.estado} onChange={e => setFormNovo({...formNovo, estado: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">País</label>
+                  <input required value={formNovo.pais} onChange={e => setFormNovo({...formNovo, pais: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Profissão (Opcional)</label>
+                  <input value={formNovo.profissao} onChange={e => setFormNovo({...formNovo, profissao: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Placa (Opcional)</label>
+                  <input value={formNovo.placaVeiculo} onChange={e => setFormNovo({...formNovo, placaVeiculo: e.target.value})} className="w-full px-5 py-3 bg-white dark:bg-slate-800 border-none rounded-xl font-bold outline-none focus:ring-2 focus:ring-primary shadow-sm" />
                 </div>
               </div>
 
               <div className="pt-4 space-y-3">
-                <button 
-                  type="submit"
-                  disabled={salvando}
-                  className="w-full py-4 bg-primary text-slate-900 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-                >
-                  {salvando ? "Cadastrando..." : "Cadastrar Cliente"}
+                <button type="submit" disabled={salvando} className="w-full py-4 bg-primary text-slate-900 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 disabled:opacity-50">
+                  {salvando ? "Cadastrando..." : "Confirmar Cadastro Completo"}
                 </button>
-                <p className="text-[10px] text-center text-slate-400 font-bold uppercase tracking-tight">O cliente poderá realizar reservas usando este e-mail.</p>
               </div>
             </form>
           </div>

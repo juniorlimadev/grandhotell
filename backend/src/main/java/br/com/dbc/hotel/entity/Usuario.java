@@ -42,6 +42,30 @@ public class Usuario implements UserDetails {
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
 
+    @Column(name = "documento")
+    private String documento;
+
+    @Column(name = "telefone")
+    private String telefone;
+
+    @Column(name = "endereco")
+    private String endereco;
+
+    @Column(name = "cidade")
+    private String cidade;
+
+    @Column(name = "estado")
+    private String estado;
+
+    @Column(name = "pais")
+    private String pais;
+
+    @Column(name = "profissao")
+    private String profissao;
+
+    @Column(name = "placa_veiculo")
+    private String placaVeiculo;
+
 
 
     @JsonIgnore

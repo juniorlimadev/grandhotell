@@ -40,6 +40,15 @@ public class UsuarioCreateDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern="dd-MM-yyyy")
     private LocalDate dataNascimento;
 
+    private String documento;
+    private String telefone;
+    private String endereco;
+    private String cidade;
+    private String estado;
+    private String pais;
+    private String profissao;
+    private String placaVeiculo;
+
 
 
     @Schema(example = "['USER', 'ADMIN']")

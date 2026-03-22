@@ -38,9 +38,8 @@ public class SecurityConfiguration {
                 .antMatchers("/auth", "/").permitAll()
                 .antMatchers(HttpMethod.GET, "/quarto/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/reserva/quartos-livres").permitAll()
+                .antMatchers(HttpMethod.GET, "/reserva/quartos-ocupados").permitAll()
                 .antMatchers(HttpMethod.POST, "/usuario/cliente").permitAll()
-                // Endpoints de staff — requerem autenticação
-                .antMatchers(HttpMethod.GET, "/reserva/quartos-ocupados").hasAnyRole("USER", "ADMIN", "GESTAO_RESERVAS")
                 .antMatchers(HttpMethod.POST, "/usuario").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")

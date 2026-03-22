@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="9" author="antigravity">
+        <addColumn tableName="QUARTO">
+            <column name="capacidade_adultos" type="INT" defaultValue="2"/>
+            <column name="capacidade_criancas" type="INT" defaultValue="0"/>
+            <column name="metragem" type="DOUBLE" defaultValue="20.0"/>
+            <column name="status_operacional" type="VARCHAR(30)" defaultValue="DISPONIVEL"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

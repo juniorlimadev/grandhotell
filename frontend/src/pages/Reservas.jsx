@@ -22,6 +22,11 @@ export default function Reservas() {
     dtFim: toInputDate(new Date(Date.now() + 24 * 3600 * 1000)),
     hospedeNome: "",
     observacoes: "",
+    acompanhantes: "",
+    formaPagamento: "CARTAO",
+    valorDeposito: 0,
+    tarifaAplicada: 0,
+    placaVeiculo: "",
   });
 
   const [quartoSelecionadoReservas, setQuartoSelecionadoReservas] = useState([]);
@@ -50,7 +55,8 @@ export default function Reservas() {
           const nomeHospede = (r.hospedeNome || "").toLowerCase();
           const nomeUsuario = (r.usuario?.nome || "").toLowerCase();
           const id = String(r.idReserva);
-          return nomeHospede.includes(termo) || nomeUsuario.includes(termo) || id.includes(termo);
+          const placa = (r.placaVeiculo || "").toLowerCase();
+          return nomeHospede.includes(termo) || nomeUsuario.includes(termo) || id.includes(termo) || placa.includes(termo);
         })
         .sort((a, b) => {
           if (sortField === "id") {
@@ -77,7 +83,7 @@ export default function Reservas() {
       setLoading(true);
       try {
         const [rRes, uRes, qRes] = await Promise.all([
-          reservaApi.quartosOcupados(dtInicio, dtFim),
+          reservaApi.quartosOcupados(toInputDate(new Date()), toInputDate(new Date(Date.now() + 60 * 24 * 3600 * 1000))),
           usuarioApi.list(0, 500, "nome", false, "CLIENTE"), // Carrega apenas CLIENTES para associar
           quartoApi.list(0, 100)
         ]);
@@ -119,6 +125,11 @@ export default function Reservas() {
       dtFim: toInputDate(new Date(Date.now() + 24 * 3600 * 1000)),
       hospedeNome: "",
       observacoes: "",
+      acompanhantes: "",
+      formaPagamento: "CARTAO",
+      valorDeposito: 0,
+      tarifaAplicada: 0,
+      placaVeiculo: "",
     });
     setModalAberto(true);
   };
@@ -133,6 +144,11 @@ export default function Reservas() {
       dtFim: toInputDate(r.dtFim),
       hospedeNome: r.hospedeNome || "",
       observacoes: r.observacoes || "",
+      acompanhantes: r.acompanhantes || "",
+      formaPagamento: r.formaPagamento || "CARTAO",
+      valorDeposito: r.valorDeposito || 0,
+      tarifaAplicada: r.tarifaAplicada || 0,
+      placaVeiculo: r.placaVeiculo || "",
     });
     setModalAberto(true);
   };
@@ -148,19 +164,24 @@ export default function Reservas() {
         dtFim: form.dtFim,
         hospedeNome: form.hospedeNome,
         observacoes: form.observacoes,
+        acompanhantes: form.acompanhantes,
+        formaPagamento: form.formaPagamento,
+        valorDeposito: Number(form.valorDeposito),
+        tarifaAplicada: Number(form.tarifaAplicada),
+        placaVeiculo: form.placaVeiculo,
       };
 
       if (modoEdicao) {
         await reservaApi.update(reservaAtualId, data);
-        toast.success("Reserva atualizada com sucesso!");
+        toast.success("Hospedagem atualizada com sucesso!");
       } else {
         await reservaApi.create(data);
-        toast.success("Reserva criada com sucesso!");
+        toast.success("Check-in/Reserva criada com sucesso!");
       }
       setModalAberto(false);
       carregarReservas();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Erro ao processar reserva.");
+      toast.error(err.response?.data?.message || "Erro ao processar registro.");
     } finally {
       setSalvando(false);
     }
@@ -323,138 +344,155 @@ export default function Reservas() {
 
       {modalAberto && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl shadow-2xl my-auto">
-            <div className="p-8">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-2xl font-black">{modoEdicao ? "Editar reserva" : "Nova reserva"}</h3>
-                  <p className="text-sm text-slate-500">Preencha os dados da estadia do hóspede</p>
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 w-full max-w-4xl shadow-2xl my-8 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex flex-col h-[90vh]">
+              {/* Header */}
+              <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+                <div className="flex items-center gap-4">
+                  <div className="size-14 bg-primary rounded-2xl flex items-center justify-center text-slate-900 shadow-lg shadow-primary/20">
+                    <span className="material-symbols-outlined text-3xl">hotel_class</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black">{modoEdicao ? `Hospedagem #${reservaAtualId}` : "Novo Registro de Hospedagem"}</h3>
+                    <p className="text-sm text-slate-500 font-medium italic">Cruzamento de hóspede, unidade e dados financeiros.</p>
+                  </div>
                 </div>
-                <button onClick={() => setModalAberto(false)} className="size-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors">
-                  <span className="material-symbols-outlined">close</span>
+                <button onClick={() => setModalAberto(false)} className="size-12 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors">
+                  <span className="material-symbols-outlined text-2xl">close</span>
                 </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Responsável (Base de Clientes)</label>
-                        <Link to="/admin/clientes" className="text-[9px] font-black text-primary hover:underline uppercase">Ver Base</Link>
-                      </div>
-                      <select
-                        value={form.idUsuario}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          const userObj = usuarios.find(u => String(u.idUsuario) === val);
-                          setForm((f) => ({ 
-                            ...f, 
-                            idUsuario: val,
-                            // Se selecionou um usuário, preenche o nome do hóspede automaticamente
-                            hospedeNome: userObj ? userObj.nome : f.hospedeNome 
-                          }));
-                        }}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-black focus:ring-2 focus:ring-primary appearance-none transition-all"
-                        required
-                      >
-                        <option value="">Selecione um cliente cadastrado...</option>
-                        {usuarios.map((u) => (
-                          <option key={u.idUsuario} value={u.idUsuario}>{u.nome} ({u.email})</option>
-                        ))}
-                      </select>
-                      <p className="text-[9px] text-slate-400 mt-1 font-medium italic">* A reserva ficará vinculada ao histórico deste cliente.</p>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome para o Check-in</label>
-                      <input 
-                        type="text"
-                        value={form.hospedeNome}
-                        onChange={(e) => setForm({...form, hospedeNome: e.target.value})}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-black focus:ring-2 focus:ring-primary"
-                        placeholder="Nome que constará na ficha"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
+                {/* Seção 1: Identificação e Datas */}
+                <div className="space-y-6">
+                  <h4 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] flex items-center gap-2">
+                    <span className="size-1.5 bg-primary rounded-full" /> 01. Identificação da Estadia
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
                       <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Entrada</label>
-                        <input
-                          type="date"
-                          value={form.dtInicio}
-                          onChange={(e) => setForm((f) => ({ ...f, dtInicio: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Saída</label>
-                        <input
-                          type="date"
-                          value={form.dtFim}
-                          onChange={(e) => setForm((f) => ({ ...f, dtFim: e.target.value }))}
-                          className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-primary"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Quarto</label>
-                      <select
-                        value={form.idQuarto}
-                        onChange={(e) => setForm((f) => ({ ...f, idQuarto: e.target.value }))}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary"
-                        required
-                      >
-                        <option value="">Selecione o quarto</option>
-                        {quartos.map((q) => (
-                          <option key={q.idQuarto} value={q.idQuarto}>{q.nome}</option>
-                        ))}
-                      </select>
-                      {form.idQuarto && (
-                        <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Disponibilidade (Próximos 90 dias)</p>
-                          {quartoSelecionadoReservas.length === 0 ? (
-                            <p className="text-[10px] text-green-500 font-bold uppercase">Disponível em todo período</p>
-                          ) : (
-                            <div className="space-y-1 max-h-24 overflow-y-auto">
-                              {quartoSelecionadoReservas.map(qr => (
-                                <div key={qr.idReserva} className="flex justify-between text-[10px]">
-                                  <span className="font-medium text-slate-500">{formatDate(qr.dtInicio)} - {formatDate(qr.dtFim)}</span>
-                                  <span className="text-red-400 font-bold uppercase">Ocupado</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                        <div className="flex justify-between items-center mb-2">
+                          <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Responsável Legal</label>
                         </div>
-                      )}
+                        <select
+                          value={form.idUsuario}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const userObj = usuarios.find(u => String(u.idUsuario) === val);
+                            setForm((f) => ({ 
+                              ...f, 
+                              idUsuario: val,
+                              hospedeNome: userObj ? userObj.nome : f.hospedeNome 
+                            }));
+                          }}
+                          className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary transition-all"
+                          required
+                        >
+                          <option value="">Selecione na base de clientes...</option>
+                          {usuarios.map((u) => (
+                            <option key={u.idUsuario} value={u.idUsuario}>{u.nome} ({u.documento || "Sem CPF"})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Nome Completo (Check-in)</label>
+                        <input required type="text" value={form.hospedeNome} onChange={e => setForm({...form, hospedeNome: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" placeholder="Nome que constará na ficha" />
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Desejos / Observações</label>
-                      <textarea 
-                        value={form.observacoes}
-                        onChange={(e) => setForm({...form, observacoes: e.target.value})}
-                        className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm min-h-[100px] focus:ring-2 focus:ring-primary"
-                        placeholder="Ex: Cama de casal, andar alto, próximo ao elevador..."
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Unidade Habitacional (Quarto)</label>
+                          <select value={form.idQuarto} onChange={e => setForm({...form, idQuarto: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" required>
+                            <option value="">Selecione o quarto...</option>
+                            {quartos.map(q => <option key={q.idQuarto} value={q.idQuarto}>{q.nome} - {q.tipo}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Entrada Prevista</label>
+                          <input type="date" required value={form.dtInicio} onChange={e => setForm({...form, dtInicio: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Saída Prevista</label>
+                          <input type="date" required value={form.dtFim} onChange={e => setForm({...form, dtFim: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" />
+                        </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button type="button" onClick={() => setModalAberto(false)} className="flex-1 py-4 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                    Cancelar
-                  </button>
-                  <button type="submit" disabled={salvando} className="flex-[2] py-4 bg-primary text-slate-900 font-black rounded-xl hover:brightness-95 disabled:opacity-70 transition-all shadow-xl shadow-primary/20">
-                    {salvando ? "Salvando..." : (modoEdicao ? "Atualizar Reserva" : "Confirmar Estadia")}
-                  </button>
+                {/* Seção 2: Acompanhantes */}
+                <div className="space-y-6">
+                  <h4 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] flex items-center gap-2">
+                    <span className="size-1.5 bg-primary rounded-full" /> 02. Acompanhantes
+                  </h4>
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800/40 rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-700">
+                    <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">group</span>
+                        Nomes e Documentos dos Acompanhantes
+                    </label>
+                    <textarea 
+                      value={form.acompanhantes}
+                      onChange={e => setForm({...form, acompanhantes: e.target.value})}
+                      className="w-full px-5 py-4 bg-white dark:bg-slate-900 border-none rounded-2xl text-sm min-h-[120px] focus:ring-2 focus:ring-primary resize-none"
+                      placeholder="Ex: João Silva (CPF: 000.000...), Maria Souza (RG: ...)"
+                    />
+                    <p className="text-[9px] text-slate-400 mt-3 font-bold uppercase italic">* Exigência da Ficha Nacional de Registro de Hóspedes (FNRH)</p>
+                  </div>
+                </div>
+
+                {/* Seção 3: Financeiro e Veículo */}
+                <div className="space-y-6">
+                  <h4 className="text-[10px] font-black uppercase text-primary tracking-[0.2em] flex items-center gap-2">
+                    <span className="size-1.5 bg-primary rounded-full" /> 03. Financeiro e Segurança
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Forma de Pagamento</label>
+                      <select value={form.formaPagamento} onChange={e => setForm({...form, formaPagamento: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary">
+                        <option value="CARTAO">Cartão de Crédito/Débito</option>
+                        <option value="PIX">PIX (Instantâneo)</option>
+                        <option value="DINHEIRO">Dinheiro / Espécie</option>
+                        <option value="TRANSFERENCIA">Transferência Bancária</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Sinal / Depósito (R$)</label>
+                      <input type="number" step="0.01" value={form.valorDeposito} onChange={e => setForm({...form, valorDeposito: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Tarifa Especial (R$)</label>
+                      <input type="number" step="0.01" value={form.tarifaAplicada} onChange={e => setForm({...form, tarifaAplicada: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" placeholder="Valor fixo se houver" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+                     <div>
+                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Placa do Veículo</label>
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">directions_car</span>
+                          <input type="text" value={form.placaVeiculo} onChange={e => setForm({...form, placaVeiculo: e.target.value})} className="w-full pl-12 pr-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary uppercase" placeholder="ABC-1234" />
+                        </div>
+                     </div>
+                     <div>
+                        <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Desejos / Observações</label>
+                        <input type="text" value={form.observacoes} onChange={e => setForm({...form, observacoes: e.target.value})} className="w-full px-5 py-3.5 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-primary" placeholder="Ex: Cama extra, vista mar..." />
+                     </div>
+                  </div>
                 </div>
               </form>
+
+              {/* Footer */}
+              <div className="p-8 border-t border-slate-100 dark:border-slate-800 flex gap-4 bg-slate-50/30 dark:bg-slate-800/20">
+                <button type="button" onClick={() => setModalAberto(false)} className="flex-1 py-4 px-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                   Manter no Rascunho
+                </button>
+                <button 
+                  onClick={handleSubmit} 
+                  disabled={salvando} 
+                  className="flex-[2] py-4 px-6 bg-primary text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 disabled:opacity-50"
+                >
+                  {salvando ? "Processando..." : (modoEdicao ? "Atualizar Hospedagem" : "Confirmar e Registrar")}
+                </button>
+              </div>
             </div>
           </div>
         </div>

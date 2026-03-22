@@ -1,0 +1,41 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------------< br.com.dbc:hotel >--------------------------
+[INFO] Building API-HOTEL 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ hotel ---
+[INFO] Deleting C:\Users\Junior\Documents\grandhotell\backend\target
+[INFO] 
+[INFO] --- resources:3.2.0:resources (default-resources) @ hotel ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Using 'UTF-8' encoding to copy filtered properties files.
+[INFO] Copying 2 resources
+[INFO] Copying 13 resources
+[INFO] 
+[INFO] --- compiler:3.10.1:compile (default-compile) @ hotel ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 41 source files to C:\Users\Junior\Documents\grandhotell\backend\target\classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] No compiler is provided in this environment. Perhaps you are running on a JRE rather than a JDK?
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.108 s
+[INFO] Finished at: 2026-03-22T16:21:39-03:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project hotel: Compilation failure
+[ERROR] No compiler is provided in this environment. Perhaps you are running on a JRE rather than a JDK?
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

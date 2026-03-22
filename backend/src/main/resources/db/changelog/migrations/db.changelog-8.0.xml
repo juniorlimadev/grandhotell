@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="8" author="antigravity">
+        <addColumn tableName="USUARIO">
+            <column name="documento" type="VARCHAR(50)"/>
+            <column name="telefone" type="VARCHAR(20)"/>
+            <column name="endereco" type="VARCHAR(200)"/>
+            <column name="cidade" type="VARCHAR(100)"/>
+            <column name="estado" type="VARCHAR(50)"/>
+            <column name="pais" type="VARCHAR(50)"/>
+            <column name="profissao" type="VARCHAR(100)"/>
+            <column name="placa_veiculo" type="VARCHAR(15)"/>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -50,4 +51,28 @@ public class Reserva {
 
     @Column(name = "observacoes")
     private String observacoes;
+
+    @Column(name = "checkin_real")
+    private LocalDateTime checkinReal;
+
+    @Column(name = "checkout_real")
+    private LocalDateTime checkoutReal;
+
+    @Column(name = "acompanhantes")
+    private String acompanhantes;
+
+    @Column(name = "forma_pagamento")
+    private String formaPagamento;
+
+    @Column(name = "valor_deposito")
+    private BigDecimal valorDeposito;
+
+    @Column(name = "tarifa_aplicada")
+    private BigDecimal tarifaAplicada;
+
+    @Column(name = "placa_veiculo")
+    private String placaVeiculo;
+
+    @Column(name = "consumo_extra")
+    private BigDecimal consumoExtra;
 }

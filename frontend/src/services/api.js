@@ -89,6 +89,11 @@ export const reservaApi = {
       dtFim: toBackendDate(data.dtFim),
       hospedeNome: data.hospedeNome,
       observacoes: data.observacoes,
+      acompanhantes: data.acompanhantes,
+      formaPagamento: data.formaPagamento,
+      valorDeposito: data.valorDeposito,
+      tarifaAplicada: data.tarifaAplicada,
+      placaVeiculo: data.placaVeiculo,
     }),
   update: (id, data) =>
     api.put(`/reserva/${id}`, {
@@ -99,6 +104,11 @@ export const reservaApi = {
       hospedeNome: data.hospedeNome,
       observacoes: data.observacoes,
       statusQuarto: data.statusQuarto,
+      acompanhantes: data.acompanhantes,
+      formaPagamento: data.formaPagamento,
+      valorDeposito: data.valorDeposito,
+      tarifaAplicada: data.tarifaAplicada,
+      placaVeiculo: data.placaVeiculo,
     }),
   delete: (id) => api.delete(`/reserva/${id}`),
 };

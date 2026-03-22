@@ -43,5 +43,17 @@ public class Quarto {
     private String tipo;
 
     @Column(name = "tags")
-    private String tags; 
+    private String tags;
+
+    @Column(name = "capacidade_adultos")
+    private Integer capacidadeAdultos;
+
+    @Column(name = "capacidade_criancas")
+    private Integer capacidadeCriancas;
+
+    @Column(name = "metragem")
+    private Double metragem;
+
+    @Column(name = "status_operacional")
+    private String statusOperacional = "DISPONIVEL";
 }

@@ -156,7 +156,7 @@ export default function Home() {
 
         {/* Links centrais — agora centralizados de forma absoluta */}
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-10">
-          <a href="#" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
+          <a href="#quartos" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
           {isAuthenticated && (
             <Link to="/meus-agendamentos" className="text-slate-500 hover:text-[#006972] transition-colors text-sm font-bold tracking-tight">Meus Agendamentos</Link>
           )}
