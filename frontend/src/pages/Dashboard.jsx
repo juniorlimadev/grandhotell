@@ -108,17 +108,17 @@ export default function Dashboard() {
     const ocupadoHoje = reservas.find(r => {
       const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
       const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.status !== 'CANCELADA';
+      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.statusQuarto !== 'CANCELADA';
     });
 
     if (ocupadoHoje) {
-      const cfg = STATUS_CONFIG[ocupadoHoje.status] || STATUS_CONFIG["CONFIRMADA"];
+      const cfg = STATUS_CONFIG[ocupadoHoje.statusQuarto] || STATUS_CONFIG["CONFIRMADA"];
       return { ...cfg, statusReal: "Ocupado" };
     }
 
     const teveCheckoutHoje = reservas.some(r => {
         const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-        return r.idQuarto === idQuarto && fim === hojeStr && r.status !== 'CANCELADA';
+        return r.idQuarto === idQuarto && fim === hojeStr && r.statusQuarto !== 'CANCELADA';
     });
 
     if (teveCheckoutHoje) {
@@ -140,7 +140,7 @@ export default function Dashboard() {
     return reservas.reduce((acc, r) => {
       const dFim = parseDate(r.dtFim);
       const dInicio = parseDate(r.dtInicio);
-      if (dFim <= hoje && dFim.toISOString().split('T')[0] >= dtInicio && dFim.toISOString().split('T')[0] <= dtFim && r.status !== 'CANCELADA') {
+      if (dFim <= hoje && dFim.toISOString().split('T')[0] >= dtInicio && dFim.toISOString().split('T')[0] <= dtFim && r.statusQuarto !== 'CANCELADA') {
         const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
         return acc + ((Number(r.valorDiaria) || 150) * diffDays);
       }
@@ -152,7 +152,7 @@ export default function Dashboard() {
     const hojeStr = new Date().toISOString().split('T')[0];
     const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
     const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-    return inicio <= hojeStr && fim >= hojeStr && r.status !== 'CANCELADA';
+    return inicio <= hojeStr && fim >= hojeStr && r.statusQuarto !== 'CANCELADA';
   }).length / totalQuartos) * 100)) : 0;
 
   const topQuartos = useMemo(() => {
@@ -167,12 +167,12 @@ export default function Dashboard() {
 
   const checkinsHoje = useMemo(() => {
     const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.status !== 'CANCELADA');
+    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.statusQuarto !== 'CANCELADA');
   }, [reservas]);
 
   const checkoutsHoje = useMemo(() => {
     const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.status !== 'CANCELADA');
+    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto !== 'CANCELADA');
   }, [reservas]);
 
   const handleActionReserva = (reserva) => {
@@ -300,7 +300,7 @@ export default function Dashboard() {
                                                                         const r = reservas.find(res => {
                                                                             const ini = parseDate(res.dtInicio).toISOString().split('T')[0];
                                                                             const fim = parseDate(res.dtFim).toISOString().split('T')[0];
-                                                                            return res.idQuarto === q.idQuarto && ini <= hojStr && fim >= hojStr && res.status !== 'CANCELADA';
+                                                                            return res.idQuarto === q.idQuarto && ini <= hojStr && fim >= hojStr && res.statusQuarto !== 'CANCELADA';
                                                                         });
                                                                         if (r) handleActionReserva(r);
                                                                     }} 
