@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class ReservaService {
     /**
      * Busca reservas associadas ao nome de um usuário (responsável).
      */
+    @Transactional(readOnly = true)
     public List<ReservaDTO> buscarReservasPorNomeUsuario(String nomeUsuario) {
         List<Reserva> reservas = reservaRepository.findByUsuario_Nome(nomeUsuario);
         return reservas.stream()
@@ -155,6 +157,7 @@ public class ReservaService {
     /**
      * Retorna todas as reservas que ocorrem dentro do intervalo solicitado.
      */
+    @Transactional(readOnly = true)
     public List<ReservaDTO> buscarReservasPorIntervalo(LocalDate dtInicio, LocalDate dtFim) throws RegraDeNegocioException {
         validarDatas(dtInicio, dtFim);
 
