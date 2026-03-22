@@ -82,7 +82,7 @@ public class ReservaService {
         Reserva reserva = objectMapper.convertValue(reservaCreateDTO, Reserva.class);
         reserva.setUsuario(usuario);
         reserva.setQuarto(quarto);
-        reserva.setStatusQuarto(StatusQuarto.OCUPADO);
+        reserva.setStatusQuarto(StatusQuarto.CONFIRMADA);
         
         Reserva reservaSalva = reservaRepository.save(reserva);
         return entidadeParaDTO(reservaSalva);
@@ -127,7 +127,17 @@ public class ReservaService {
         reserva.setConsumoExtra(reservaCreateDTO.getConsumoExtra());
         
         if (reservaCreateDTO.getStatusQuarto() != null) {
-            reserva.setStatusQuarto(StatusQuarto.fromString(reservaCreateDTO.getStatusQuarto()));
+            StatusQuarto novoStatus = StatusQuarto.fromString(reservaCreateDTO.getStatusQuarto());
+            reserva.setStatusQuarto(novoStatus);
+            
+            // Lógica de transição automática do status do Quarto
+            if (novoStatus == StatusQuarto.OCUPADO) {
+                quarto.setStatusOperacional(StatusQuarto.OCUPADO);
+                quartoService.update(quarto.getIdQuarto(), objectMapper.convertValue(quarto, br.com.dbc.hotel.dto.quarto.QuartoCreateDTO.class));
+            } else if (novoStatus == StatusQuarto.CONCLUIDA) {
+                quarto.setStatusOperacional(StatusQuarto.LIMPEZA);
+                quartoService.update(quarto.getIdQuarto(), objectMapper.convertValue(quarto, br.com.dbc.hotel.dto.quarto.QuartoCreateDTO.class));
+            }
         }
 
         Reserva reservaSalva = reservaRepository.save(reserva);

@@ -77,6 +77,13 @@ public class QuartoService {
         quarto.setAvaliacao(quartoCreateDTO.getAvaliacao());
         quarto.setTipo(quartoCreateDTO.getTipo());
         quarto.setTags(quartoCreateDTO.getTags());
+        quarto.setMetragem(quartoCreateDTO.getMetragem());
+        quarto.setCapacidadeAdultos(quartoCreateDTO.getCapacidadeAdultos());
+        quarto.setCapacidadeCriancas(quartoCreateDTO.getCapacidadeCriancas());
+        
+        if (quartoCreateDTO.getStatusOperacional() != null) {
+            quarto.setStatusOperacional(StatusQuarto.fromString(quartoCreateDTO.getStatusOperacional()));
+        }
 
         quarto = quartoRepository.save(quarto);
         return objectMapper.convertValue(quarto, QuartoDTO.class);

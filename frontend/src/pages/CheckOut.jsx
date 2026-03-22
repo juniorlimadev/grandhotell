@@ -7,6 +7,7 @@ export default function CheckOut() {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
+  const [modalConsumo, setModalConsumo] = useState({ open: false, reserva: null, valor: "" });
 
   const carregar = async () => {
     setLoading(true);
@@ -44,10 +45,29 @@ export default function CheckOut() {
         statusQuarto: "CONCLUIDA",
         checkoutReal: new Date().toISOString()
       });
-      toast.success("Check-out finalizado! Estadia encerrada no sistema.");
+      toast.success("Check-out finalizado! Estadia encerrada e Quarto em LIMPEZA.");
       carregar();
     } catch (e) {
       toast.error("Erro ao processar fechamento de conta.");
+    }
+  };
+
+  const handleAddConsumo = async () => {
+    if (!modalConsumo.valor || isNaN(modalConsumo.valor)) return toast.warning("Digite um valor válido.");
+    const r = modalConsumo.reserva;
+    try {
+      const novoConsumo = Number(r.consumoExtra || 0) + Number(modalConsumo.valor);
+      await reservaApi.update(r.idReserva, {
+         ...r,
+         idUsuario: r.idUsuario || r.usuario?.idUsuario,
+         idQuarto: r.idQuarto || r.quarto?.idQuarto,
+         consumoExtra: novoConsumo
+      });
+      toast.success("Valor de consumo adicionado com sucesso!");
+      setModalConsumo({ open: false, reserva: null, valor: "" });
+      carregar();
+    } catch (e) {
+      toast.error("Erro ao registrar consumo.");
     }
   };
 
@@ -90,7 +110,7 @@ export default function CheckOut() {
               {(r.consumoExtra || 0) > 0 && (
                  <div className="absolute top-8 right-8 flex items-center gap-1.5 bg-red-50 dark:bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase ring-1 ring-red-100 z-20">
                     <span className="material-symbols-outlined text-xs">payments</span>
-                    Consumo: R$ {Number(r.consumoExtra || 0).toFixed(2)}
+                    Consumo Total: R$ {Number(r.consumoExtra || 0).toFixed(2)}
                  </div>
               )}
 
@@ -100,7 +120,7 @@ export default function CheckOut() {
                     <h3 className="font-black text-xl text-slate-900 dark:text-white leading-tight">{r.hospedeNome || r.usuario?.nome}</h3>
                     <p className="text-[10px] font-black uppercase text-orange-400 tracking-widest mt-1">Hospedagem #{r.idReserva}</p>
                   </div>
-                  {!r.consumoExtra && <div className="px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-[10px] font-black uppercase text-emerald-500">Ocupado</div>}
+                  {!r.consumoExtra && <div className="px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-[10px] font-black uppercase text-emerald-500">{r.statusQuarto}</div>}
                 </div>
 
                 <div className="space-y-4 mb-8">
@@ -115,12 +135,14 @@ export default function CheckOut() {
                     <div className="size-8 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-orange-500">
                         <span className="material-symbols-outlined text-sm">event_repeat</span>
                     </div>
-                    Check-in real: {r.checkinReal ? new Date(r.checkinReal).toLocaleString() : formatDate(r.dtInicio)}
+                    Entrada: {r.checkinReal ? new Date(r.checkinReal).toLocaleString() : formatDate(r.dtInicio)}
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                   <button className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">+ Consumo</button>
+                   <button 
+                     onClick={() => setModalConsumo({ open: true, reserva: r, valor: "" })}
+                     className="flex-1 py-4 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">+ Consumo</button>
                    <button 
                      onClick={() => handleCheckOut(r)}
                      className="flex-[2] py-4 bg-orange-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all"
@@ -133,6 +155,36 @@ export default function CheckOut() {
           ))
         )}
       </div>
+
+      {/* Modal de Consumo */}
+      {modalConsumo.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+           <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-sm p-8 shadow-2xl">
+              <h3 className="text-xl font-black mb-2 leading-tight">Lançar Consumo</h3>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-6">{modalConsumo.reserva?.hospedeNome}</p>
+              
+              <div className="space-y-4 mb-8">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor do Item (R$)</label>
+                  <input 
+                    autoFocus
+                    type="number" 
+                    step="0.01" 
+                    value={modalConsumo.valor}
+                    onChange={e => setModalConsumo({...modalConsumo, valor: e.target.value})}
+                    className="w-full px-5 py-4 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl text-lg font-black focus:ring-2 focus:ring-orange-500"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button onClick={() => setModalConsumo({ open: false, reserva: null, valor: "" })} className="flex-1 py-4 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors">Cancelar</button>
+                <button onClick={handleAddConsumo} className="flex-1 py-4 bg-orange-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-orange-500/20 hover:scale-[1.05] transition-all">Confirmar</button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

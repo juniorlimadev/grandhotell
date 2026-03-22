@@ -42,10 +42,10 @@ export default function CheckIn() {
         ...reserva,
         idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
         idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
-        statusQuarto: "CONFIRMADA", // No dashboard usamos CONFIRMADA para "Ocupado"
+        statusQuarto: "OCUPADO",
         checkinReal: new Date().toISOString()
       });
-      toast.success("Check-in realizado com sucesso! Entrada real registrada.");
+      toast.success("Check-in realizado com sucesso! Quarto ativado como OCUPADO.");
       carregar();
     } catch (e) {
       toast.error("Erro ao processar check-in operacional.");
