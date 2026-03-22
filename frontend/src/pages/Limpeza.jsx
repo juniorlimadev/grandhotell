@@ -28,21 +28,21 @@ export default function Limpeza() {
   useEffect(() => { carregar(); }, []);
 
   const pendentesLimpeza = useMemo(() => {
-    const hojeStr = new Date().toISOString().split('T')[0];
+    const hojeStr = toInputDate(new Date());
     return quartos.filter(q => {
         // Regra 1: Status manual no banco é LIMPEZA
         if (q.statusOperacional === "LIMPEZA") return true;
 
         // Regra 2: Se teve checkout hoje (data fim === hoje) e não está ocupado por outro hoje
         const teveCheckoutHoje = reservas.some(r => {
-            const fim = new Date(r.dtFim).toISOString().split('T')[0];
-            return r.idQuarto === q.idQuarto && fim === hojeStr && r.status === 'CONCLUIDA';
+            const fim = toInputDate(r.dtFim);
+            return r.idQuarto === q.idQuarto && fim === hojeStr && r.statusQuarto === 'CONCLUIDA';
         });
 
         const ocupadoAgora = reservas.some(r => {
-            const ini = new Date(r.dtInicio).toISOString().split('T')[0];
-            const fim = new Date(r.dtFim).toISOString().split('T')[0];
-            return r.idQuarto === q.idQuarto && ini <= hojeStr && fim >= hojeStr && (r.status === 'CONFIRMADA' || r.status === 'OCUPADO');
+            const ini = toInputDate(r.dtInicio);
+            const fim = toInputDate(r.dtFim);
+            return r.idQuarto === q.idQuarto && ini <= hojeStr && fim >= hojeStr && (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO');
         });
 
         return teveCheckoutHoje && !ocupadoAgora;

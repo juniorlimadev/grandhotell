@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { reservaApi } from "../services/api";
 import { toast } from "react-toastify";
-import { toInputDate } from "../utils/date-utils";
+import { toInputDate, formatDate } from "../utils/date-utils";
 
 export default function CheckIn() {
   const [reservas, setReservas] = useState([]);
@@ -17,7 +17,7 @@ export default function CheckIn() {
       // Filtramos apenas as que NÃO estão concluídas/canceladas e que começam HOJE
       const pendentes = (res.data || []).filter(r => {
         const dIniStr = toInputDate(r.dtInicio);
-        return dIniStr === hoje && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA' && r.statusQuarto !== 'CONFIRMADA';
+        return dIniStr === hoje && r.statusQuarto !== 'CANCELADA' && r.statusQuarto !== 'OCUPADO' && r.statusQuarto !== 'CONCLUIDA';
       });
       setReservas(pendentes);
     } catch (e) {

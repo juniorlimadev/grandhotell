@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { reservaApi } from "../services/api";
 import { toast } from "react-toastify";
-import { toInputDate } from "../utils/date-utils";
+import { toInputDate, formatDate } from "../utils/date-utils";
 
 export default function CheckOut() {
   const [reservas, setReservas] = useState([]);
