@@ -9,7 +9,9 @@ public enum StatusQuarto {
     LIMPEZA,
     CONFIRMADA,
     CANCELADA,
-    CONCLUIDA;
+    CONCLUIDA,
+    PENDENTE,
+    NO_SHOW;
 
 
     @JsonCreator
