@@ -111,11 +111,17 @@ export default function Home() {
     <div className="bg-[#faf8ff] text-[#131b30] min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm flex justify-between items-center px-4 md:px-8 h-16 md:h-20">
-        <div className="text-xl font-extrabold tracking-tighter text-[#006972]">
-           GrandHotel
-        </div>
-        {/* Links centrais — só desktop */}
-        <div className="hidden md:flex items-center gap-8">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="size-10 bg-[#006972] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#006972]/20 group-hover:scale-110 transition-transform">
+             <span className="material-symbols-outlined text-2xl">apartment</span>
+          </div>
+          <div className="text-xl font-extrabold tracking-tighter text-[#006972] hidden sm:block">
+             GrandHotel
+          </div>
+        </Link>
+
+        {/* Links centrais — agora centralizados de forma absoluta */}
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-10">
           <a href="#" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Acomodações</a>
           {isAuthenticated && (
             <Link to="/meus-agendamentos" className="text-slate-500 hover:text-[#006972] transition-colors text-sm font-bold tracking-tight">Meus Agendamentos</Link>

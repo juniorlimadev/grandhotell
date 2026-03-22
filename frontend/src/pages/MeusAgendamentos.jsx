@@ -46,10 +46,15 @@ export default function MeusAgendamentos() {
     <div className="min-h-screen bg-[#faf8ff] font-['Plus_Jakarta_Sans'] pb-20">
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-sm flex justify-between items-center px-4 md:px-8 h-20">
-        <div className="text-xl font-extrabold tracking-tighter text-[#006972]">
-           GrandHotel
-        </div>
-        <div className="hidden md:flex items-center gap-8">
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="size-10 bg-[#006972] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#006972]/20 group-hover:scale-110 transition-transform">
+             <span className="material-symbols-outlined text-2xl">apartment</span>
+          </div>
+          <div className="text-xl font-extrabold tracking-tighter text-[#006972] hidden sm:block">
+             GrandHotel
+          </div>
+        </Link>
+        <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-10">
           <Link to="/" className="text-slate-500 hover:text-[#006972] transition-colors text-sm font-bold tracking-tight">Acomodações</Link>
           <Link to="/meus-agendamentos" className="text-[#006972] font-black border-b-2 border-[#006972] pb-1 text-sm tracking-tight">Meus Agendamentos</Link>
         </div>
