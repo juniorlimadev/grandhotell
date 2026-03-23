@@ -110,10 +110,18 @@ export default function Dashboard() {
 
   const statusDoQuarto = (idQuarto) => {
     const hojeStr = new Date().toISOString().split('T')[0];
+    
+    // 1. Prioridade: Se o quarto foi marcado explicitamente como LIMPEZA (backend ou manual)
+    const qEntidade = quartos.find(item => item.idQuarto === idQuarto);
+    if (qEntidade?.statusOperacional === 'LIMPEZA') {
+        return { label: "Limpeza", dot: "bg-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", statusReal: "Limpeza" };
+    }
+
+    // 2. Se há reserva OCUPADA agora
     const ocupadoHoje = reservas.find(r => {
       const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
       const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.statusQuarto !== 'CANCELADA';
+      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.statusQuarto === 'OCUPADO';
     });
 
     if (ocupadoHoje) {
@@ -121,13 +129,14 @@ export default function Dashboard() {
       return { ...cfg, statusReal: "Ocupado" };
     }
 
-    const teveCheckoutHoje = reservas.some(r => {
+    // 3. Se teve checkout HOJE e a reserva está CONCLUÍDA
+    const foiConcluidaHoje = reservas.some(r => {
         const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-        return r.idQuarto === idQuarto && fim === hojeStr && r.statusQuarto !== 'CANCELADA';
+        return r.idQuarto === idQuarto && fim === hojeStr && r.statusQuarto === 'CONCLUIDA';
     });
 
-    if (teveCheckoutHoje) {
-        return { label: "Limpeza", dot: "bg-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", statusReal: "Limpeza" };
+    if (foiConcluidaHoje) {
+        return { label: "Concluído", dot: "bg-slate-400", bg: "bg-slate-50 dark:bg-slate-800", text: "text-slate-500", statusReal: "Concluído" };
     }
 
     return { label: "Livre", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", statusReal: "Disponível" };
@@ -278,7 +287,7 @@ export default function Dashboard() {
                     </h3>
                     {abaAtiva === "Inventário" && (
                         <div className="flex gap-1">
-                            {["Todos", "Disponível", "Ocupado", "Limpeza"].map(f => (
+                            {["Todos", "Disponível", "Ocupado", "Limpeza", "Concluído"].map(f => (
                                 <button key={f} onClick={() => setFiltroStatus(f)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filtroStatus === f ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200" : "text-slate-400 hover:text-slate-600"}`}>{f}</button>
                             ))}
                         </div>
