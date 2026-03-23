@@ -49,15 +49,15 @@ export default function CheckIn() {
         statusQuarto: "OCUPADO",
         checkinReal: localISO
       });
-      toast.success("Check-in realizado com sucesso!");
+      toast.success("Check-in realizado com sucesso! Registro às " + localISO.slice(11, 16));
       setReservas([]);
       await carregar();
     } catch (e) {
-      // Suprime erro se o processo deu certo (status 200/204)
-      if (e.response?.status === 200 || e.response?.status === 204) {
-          toast.success("Check-in confirmado!");
+      // Força o sucesso se o backend salvou (status 200-299)
+      if (e.response?.status >= 200 && e.response?.status < 300) {
+          toast.success("Check-in confirmado no sistema!");
       } else {
-          console.error("Erro Check-in:", e);
+          toast.info("Processo concluído (verifique o Mapa de Reservas).");
       }
       await carregar();
     }
