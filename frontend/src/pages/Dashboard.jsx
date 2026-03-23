@@ -181,7 +181,7 @@ export default function Dashboard() {
 
   const checkinsHoje = useMemo(() => {
     const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.statusQuarto !== 'CANCELADA');
+    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.statusQuarto === 'CONFIRMADA');
   }, [reservas]);
 
   const checkoutsHoje = useMemo(() => {
@@ -192,6 +192,12 @@ export default function Dashboard() {
   const concluidasHoje = useMemo(() => {
     const hoje = new Date().toISOString().split('T')[0];
     return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto === 'CONCLUIDA');
+  }, [reservas]);
+
+  const proximasChegadas = useMemo(() => {
+    const d = new Date(); d.setDate(d.getDate() + 1);
+    const amanha = d.toISOString().split('T')[0];
+    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === amanha && (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'PENDENTE'));
   }, [reservas]);
 
   const handleActionReserva = (reserva) => {
@@ -367,14 +373,31 @@ export default function Dashboard() {
             </div>
             {/* Sidebar Dash */}
             <div className="space-y-6">
-                <div className="bg-[#131b30] rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-                    <span className="material-symbols-outlined absolute -right-6 -bottom-6 text-white/5 text-[150px] rotate-12">monitoring</span>
-                    <h3 className="text-xs font-black uppercase text-white/40 mb-2">Performance Hoje</h3>
-                    <p className="text-3xl font-black mb-6">Eficiência Alta</p>
+                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 mb-6 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><span className="material-symbols-outlined text-primary text-lg">event_upcoming</span>Próximas Chegadas</span>
+                        <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[9px]">Amanhã</span>
+                    </h3>
                     <div className="space-y-4">
-                        <div className="flex justify-between items-center text-xs font-bold"><span>Ocupação</span><span>{taxaOcupacao}%</span></div>
-                        <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden"><div className="h-full bg-emerald-400" style={{ width: `${taxaOcupacao}%` }} /></div>
-                        <Link to="/admin/reservas" className="inline-flex items-center gap-2 text-[10px] font-black uppercase text-primary hover:brightness-110 mt-4">Calendário <span className="material-symbols-outlined text-sm">arrow_forward</span></Link>
+                        {proximasChegadas.length === 0 ? (
+                            <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma chegada prevista para amanhã.</p>
+                        ) : (
+                            proximasChegadas.slice(0, 4).map((r, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="size-8 rounded-full bg-primary flex items-center justify-center font-black text-[10px] text-slate-900">
+                                            {getInitials(r.hospedeNome || r.usuario?.nome)}
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold leading-tight line-clamp-1">{r.hospedeNome || r.usuario?.nome}</p>
+                                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{r.quartoNome || `Quarto ${r.idQuarto}`}</p>
+                                        </div>
+                                    </div>
+                                    <span className="material-symbols-outlined text-slate-300 text-sm">chevron_right</span>
+                                </div>
+                            ))
+                        )}
+                        <Link to="/admin/reservas" className="flex items-center justify-center gap-2 w-full py-3 mt-2 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl text-[10px] font-black text-slate-400 hover:text-primary hover:border-primary transition-all uppercase">Ver Agenda Completa</Link>
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-sm text-slate-900 dark:text-white">
