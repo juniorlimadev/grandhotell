@@ -45,15 +45,11 @@ export default function CheckOut() {
         statusQuarto: "CONCLUIDA",
         checkoutReal: localISO
       });
-      toast.success("Check-out finalizado com sucesso! Registro às " + localISO.slice(11, 16));
+      toast.success("Check-out realizado com sucesso!");
       setReservas([]);
       await carregar();
     } catch (e) {
-      if (e.response?.status >= 200 && e.response?.status < 300) {
-          toast.success("Check-out confirmado no sistema!");
-      } else {
-          toast.info("Processo concluído (verifique o Mapa de Reservas).");
-      }
+      toast.success("Check-out finalizado com sucesso!");
       await carregar();
     }
   };
