@@ -35,23 +35,25 @@ export default function CheckOut() {
       String(r.idReserva).includes(busca)
     );
   }, [reservas, busca]);
-
   const handleCheckOut = async (reserva) => {
     try {
+      const localISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
       await reservaApi.update(reserva.idReserva, {
         ...reserva,
         idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
         idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
         statusQuarto: "CONCLUIDA",
-        checkoutReal: new Date().toISOString().slice(0, 19)
+        checkoutReal: localISO
       });
       toast.success("Check-out finalizado com sucesso!");
-      setReservas([]); // Limpa
+      setReservas([]);
       await carregar();
     } catch (e) {
-      if (e.response?.status !== 200 && e.response?.status !== 204) {
-          const msg = e.response?.data?.message || "Check-out processado (verificar status).";
-          toast.info(msg);
+      // Suprime erro se o processo deu certo (status 200/204)
+      if (e.response?.status === 200 || e.response?.status === 204) {
+          toast.success("Check-out confirmado!");
+      } else {
+          console.error("Erro Check-out:", e);
       }
       await carregar();
     }

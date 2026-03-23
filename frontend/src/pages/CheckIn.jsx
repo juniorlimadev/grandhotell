@@ -41,20 +41,23 @@ export default function CheckIn() {
 
   const handleCheckIn = async (reserva) => {
     try {
+      const localISO = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
       await reservaApi.update(reserva.idReserva, {
         ...reserva,
         idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
         idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
         statusQuarto: "OCUPADO",
-        checkinReal: new Date().toISOString().slice(0, 19)
+        checkinReal: localISO
       });
       toast.success("Check-in realizado com sucesso!");
-      setReservas([]); // Limpa para evitar rastro visual
+      setReservas([]);
       await carregar();
     } catch (e) {
-      if (e.response?.status !== 200 && e.response?.status !== 204) {
-          const msg = e.response?.data?.message || "Check-in processado (verificar status).";
-          toast.info(msg);
+      // Suprime erro se o processo deu certo (status 200/204)
+      if (e.response?.status === 200 || e.response?.status === 204) {
+          toast.success("Check-in confirmado!");
+      } else {
+          console.error("Erro Check-in:", e);
       }
       await carregar();
     }

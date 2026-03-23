@@ -30,19 +30,22 @@ export default function Limpeza() {
   const pendentesLimpeza = useMemo(() => {
     const hojeStr = toInputDate(new Date());
     return quartos.filter(q => {
+        // Se já está DISPONÍVEL ou OCUPADO, não está em limpeza pendente
+        if (q.statusOperacional === "DISPONIVEL" || q.statusOperacional === "OCUPADO") return false;
+
         // Regra 1: Status manual no banco é LIMPEZA
         if (q.statusOperacional === "LIMPEZA") return true;
 
         // Regra 2: Se teve checkout hoje (data fim === hoje) e não está ocupado por outro hoje
         const teveCheckoutHoje = reservas.some(r => {
             const fim = toInputDate(r.dtFim);
-            return r.idQuarto === q.idQuarto && fim === hojeStr && r.statusQuarto === 'CONCLUIDA';
+            return (r.idQuarto === q.idQuarto || r.quarto?.idQuarto === q.idQuarto) && fim === hojeStr && r.statusQuarto === 'CONCLUIDA';
         });
 
         const ocupadoAgora = reservas.some(r => {
             const ini = toInputDate(r.dtInicio);
             const fim = toInputDate(r.dtFim);
-            return r.idQuarto === q.idQuarto && ini <= hojeStr && fim >= hojeStr && (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO');
+            return (r.idQuarto === q.idQuarto || r.quarto?.idQuarto === q.idQuarto) && ini <= hojeStr && fim >= hojeStr && (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO');
         });
 
         return teveCheckoutHoje && !ocupadoAgora;
