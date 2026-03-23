@@ -157,7 +157,7 @@ export default function Dashboard() {
     const hojeStr = new Date().toISOString().split('T')[0];
     const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
     const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-    return inicio <= hojeStr && fim >= hojeStr && r.statusQuarto !== 'CANCELADA';
+    return inicio <= hojeStr && fim >= hojeStr && r.statusQuarto === 'OCUPADO';
   }).length / totalQuartos) * 100)) : 0;
 
   const topQuartos = useMemo(() => {
@@ -177,7 +177,12 @@ export default function Dashboard() {
 
   const checkoutsHoje = useMemo(() => {
     const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto !== 'CANCELADA');
+    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto === 'OCUPADO');
+  }, [reservas]);
+
+  const concluidasHoje = useMemo(() => {
+    const hoje = new Date().toISOString().split('T')[0];
+    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto === 'CONCLUIDA');
   }, [reservas]);
 
   const handleActionReserva = (reserva) => {
@@ -222,6 +227,7 @@ export default function Dashboard() {
                     { id: "Inventário", icon: "bed", count: totalQuartos, color: "text-primary", bg: "bg-primary/10" },
                     { id: "Check-in", icon: "login", count: checkinsHoje.length, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
                     { id: "Check-out", icon: "logout", count: checkoutsHoje.length, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
+                    { id: "Concluído", icon: "task_alt", count: concluidasHoje.length, color: "text-slate-500", bg: "bg-slate-50 dark:bg-slate-500/10" },
                     { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" }
                 ].map(tab => (
                     <button 
@@ -321,7 +327,7 @@ export default function Dashboard() {
                                         );
                                     })
                                 ) : (
-                                    (abaAtiva === "Check-in" ? checkinsHoje : checkoutsHoje).map(r => (
+                                    (abaAtiva === "Check-in" ? checkinsHoje : abaAtiva === "Check-out" ? checkoutsHoje : abaAtiva === "Concluído" ? concluidasHoje : []).map(r => (
                                         <tr key={r.idReserva} className="hover:bg-slate-50/50 transition-all">
                                             <td className="px-6 py-4"><p className="font-black text-xs">{r.hospedeNome || r.usuario?.nome}</p><p className="text-[10px] text-slate-400">{r.quartoNome || `Quarto ${r.idQuarto}`}</p></td>
                                             <td className="px-6 py-4 text-[10px] font-black text-slate-400">{parseDate(r.dtInicio).toLocaleDateString()} - {parseDate(r.dtFim).toLocaleDateString()}</td>
@@ -339,7 +345,7 @@ export default function Dashboard() {
                                                             ? "bg-primary text-slate-900" 
                                                             : "bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white"
                                                  }`}>
-                                                     {abaAtiva === "Check-in" ? "Check-in" : "Saída"}
+                                                     {abaAtiva === "Check-in" ? "Check-in" : abaAtiva === "Check-out" ? "Saída" : "Finalizado"}
                                                  </button>
                                              </td>
                                         </tr>
