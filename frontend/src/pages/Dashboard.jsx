@@ -35,7 +35,8 @@ export default function Dashboard() {
   // Detalhes / Comprovante / Consumo
   const [reservaDetalhe, setReservaDetalhe] = useState(null);
   const [itensConsumo, setItensConsumo] = useState([]);
-  const [novoItem, setNovoItem] = useState({ nome: "Água mineral", preco: 5 });
+  const [produtosCatalogo, setProdutosCatalogo] = useState([]);
+  const [novoItem, setNovoItem] = useState({ idProduto: "", nome: "Água mineral", preco: 5 });
 
   const loadData = async () => {
     setLoading(true);
@@ -51,21 +52,22 @@ export default function Dashboard() {
         setDtFim(start); 
         return; 
       }
-      const [qRes, rRes] = await Promise.all([
+      const [qRes, rRes, pRes] = await Promise.all([
         quartoApi.list(page, 10, "idQuarto", "DESC"),
         reservaApi.quartosOcupados(start, end),
+        produtoApi.list()
       ]);
       setQuartos(qRes.data.content || []);
       setTotalQuartos(qRes.data.totalElements || 0);
       setTotalPages(qRes.data.totalPages || 1);
       setReservas(Array.isArray(rRes.data) ? rRes.data : []);
+      setProdutosCatalogo(pRes.data || []);
+      if (pRes.data?.length > 0) {
+        setNovoItem({ idProduto: pRes.data[0].idProduto, nome: pRes.data[0].nome, preco: pRes.data[0].preco });
+      }
     } catch (err) {
-      console.error("Dashboard Load Error Details:", {
-        message: err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      });
-      toast.error(err.response?.data?.message || "Erro ao carregar dados do dashboard.");
+      console.error("Dashboard Load Error:", err);
+      toast.error("Erro ao carregar dados.");
     } finally {
       setLoading(false);
     }
@@ -75,139 +77,31 @@ export default function Dashboard() {
     loadData();
   }, [page, dtInicio, dtFim]);
 
-  const handleStatusUpdate = async (reserva, novoStatus) => {
-      try {
-          // Extrai apenas os campos necessários, pois o backend espera IDs numéricos, não objetos inteiros
-          await reservaApi.update(reserva.idReserva, {
-              idUsuario: reserva.idUsuario || reserva.usuario?.idUsuario,
-              idQuarto: reserva.idQuarto || reserva.quarto?.idQuarto,
-              dtInicio: reserva.dtInicio,
-              dtFim: reserva.dtFim,
-              hospedeNome: reserva.hospedeNome,
-              hospedeEmail: reserva.hospedeEmail || reserva.usuario?.email,
-              observacoes: reserva.observacoes,
-              statusQuarto: novoStatus
-          });
-          toast.success(`Reserva ${novoStatus.toLowerCase()} com sucesso!`);
-          loadData();
-          setReservaDetalhe(null);
-      } catch (e) {
-          const msg = e?.response?.data?.message || "Erro ao atualizar status da reserva.";
-          toast.error(msg);
-      }
-  };
-
-  const parseDate = (d) => {
-    if (!d) return new Date(NaN);
-    try {
-      if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
-        const [day, month, year] = d.split("-");
-        return new Date(`${year}-${month}-${day}T12:00:00`);
-      }
-      return new Date(d);
-    } catch { return new Date(NaN); }
-  };
-
-  const statusDoQuarto = (idQuarto) => {
-    const hojeStr = new Date().toISOString().split('T')[0];
-    
-    // 1. Prioridade: Se o quarto foi marcado explicitamente como LIMPEZA (backend ou manual)
-    const qEntidade = quartos.find(item => item.idQuarto === idQuarto);
-    if (qEntidade?.statusOperacional === 'LIMPEZA') {
-        return { label: "Limpeza", dot: "bg-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", text: "text-orange-600 dark:text-orange-400", statusReal: "Limpeza" };
-    }
-
-    // 2. Se há reserva OCUPADA agora
-    const ocupadoHoje = reservas.find(r => {
-      const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
-      const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-      return r.idQuarto === idQuarto && inicio <= hojeStr && fim >= hojeStr && r.statusQuarto === 'OCUPADO';
-    });
-
-    if (ocupadoHoje) {
-      const cfg = STATUS_CONFIG[ocupadoHoje.statusQuarto] || STATUS_CONFIG["CONFIRMADA"];
-      return { ...cfg, statusReal: "Ocupado" };
-    }
-
-    // 3. Se teve checkout HOJE e a reserva está CONCLUÍDA
-    const foiConcluidaHoje = reservas.some(r => {
-        const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-        return r.idQuarto === idQuarto && fim === hojeStr && r.statusQuarto === 'CONCLUIDA';
-    });
-
-    if (foiConcluidaHoje) {
-        return { label: "Concluído", dot: "bg-slate-400", bg: "bg-slate-50 dark:bg-slate-800", text: "text-slate-500", statusReal: "Concluído" };
-    }
-
-    return { label: "Livre", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", statusReal: "Disponível" };
-  };
-
-  const quartosExibidos = useMemo(() => {
-    let base = quartos;
-    if (abaAtiva === "Limpeza") base = quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza");
-    if (filtroStatus === "Todos") return base;
-    return base.filter(q => statusDoQuarto(q.idQuarto).statusReal === filtroStatus);
-  }, [quartos, filtroStatus, reservas, abaAtiva]);
-
-  const receitaRealizada = useMemo(() => {
-    const hoje = new Date(); hoje.setHours(23, 59, 59, 999);
-    return reservas.reduce((acc, r) => {
-      const dFim = parseDate(r.dtFim);
-      const dInicio = parseDate(r.dtInicio);
-      if (dFim <= hoje && dFim.toISOString().split('T')[0] >= dtInicio && dFim.toISOString().split('T')[0] <= dtFim && r.statusQuarto !== 'CANCELADA') {
-        const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
-        return acc + ((Number(r.valorDiaria) || 150) * diffDays);
-      }
-      return acc;
-    }, 0);
-  }, [reservas, dtInicio, dtFim]);
-
-  const taxaOcupacao = totalQuartos > 0 ? Math.min(100, Math.round((reservas.filter(r => {
-    const hojeStr = new Date().toISOString().split('T')[0];
-    const inicio = parseDate(r.dtInicio).toISOString().split('T')[0];
-    const fim = parseDate(r.dtFim).toISOString().split('T')[0];
-    return inicio <= hojeStr && fim >= hojeStr && r.statusQuarto === 'OCUPADO';
-  }).length / totalQuartos) * 100)) : 0;
-
-  const topQuartos = useMemo(() => {
-    const contagem = {};
-    reservas.forEach(r => {
-      const nome = r.quartoNome || `Quarto ${r.idQuarto}`;
-      if (!contagem[nome]) contagem[nome] = { id: r.idQuarto, count: 0, nome };
-      contagem[nome].count += 1;
-    });
-    return Object.values(contagem).sort((a, b) => b.count - a.count).slice(0, 5);
-  }, [reservas]);
-
-  const checkinsHoje = useMemo(() => {
-    const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === hoje && r.statusQuarto === 'CONFIRMADA');
-  }, [reservas]);
-
-  const checkoutsHoje = useMemo(() => {
-    const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto === 'OCUPADO');
-  }, [reservas]);
-
-  const concluidasHoje = useMemo(() => {
-    const hoje = new Date().toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtFim).toISOString().split('T')[0] === hoje && r.statusQuarto === 'CONCLUIDA');
-  }, [reservas]);
-
-  const proximasChegadas = useMemo(() => {
-    const d = new Date(); d.setDate(d.getDate() + 1);
-    const amanha = d.toISOString().split('T')[0];
-    return reservas.filter(r => parseDate(r.dtInicio).toISOString().split('T')[0] === amanha && (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'PENDENTE'));
-  }, [reservas]);
-
-  const handleActionReserva = (reserva) => {
+  const handleActionReserva = async (reserva) => {
     setReservaDetalhe(reserva);
-    setItensConsumo([]);
+    try {
+        const res = await consumoApi.listByReserva(reserva.idReserva);
+        setItensConsumo(res.data || []);
+    } catch (e) {
+        toast.error("Erro ao carregar itens de consumo.");
+    }
   };
 
-  const handleAdicionarItem = () => {
-    setItensConsumo([...itensConsumo, { ...novoItem, id: Date.now() }]);
-    toast.success(`${novoItem.nome} adicionado!`);
+  const handleAdicionarItem = async () => {
+    if (!reservaDetalhe) return;
+    try {
+        await consumoApi.create({
+            idReserva: reservaDetalhe.idReserva,
+            idProduto: novoItem.idProduto,
+            quantidade: 1
+        });
+        toast.success(`${novoItem.nome} adicionado!`);
+        // Recarrega lista
+        const res = await consumoApi.listByReserva(reservaDetalhe.idReserva);
+        setItensConsumo(res.data);
+    } catch (e) {
+        toast.error("Erro ao lançar item.");
+    }
   };
 
   const totalComprovante = useMemo(() => {
@@ -216,9 +110,10 @@ export default function Dashboard() {
     const dFim = parseDate(reservaDetalhe.dtFim);
     const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
     const diárias = diffDays * (Number(reservaDetalhe.valorDiaria) || 150);
-    const extras = itensConsumo.reduce((acc, it) => acc + it.preco, 0);
+    const extras = itensConsumo.reduce((acc, it) => acc + (it.precoUnitario * it.quantidade), 0);
     return diárias + extras;
   }, [reservaDetalhe, itensConsumo]);
+
 
   return (
     <div className="space-y-8 print:p-0">
@@ -242,8 +137,8 @@ export default function Dashboard() {
                     { id: "Inventário", icon: "bed", count: totalQuartos, color: "text-primary", bg: "bg-primary/10" },
                     { id: "Check-in", icon: "login", count: checkinsHoje.length, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
                     { id: "Check-out", icon: "logout", count: checkoutsHoje.length, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
-                    { id: "Concluído", icon: "task_alt", count: concluidasHoje.length, color: "text-slate-500", bg: "bg-slate-50 dark:bg-slate-500/10" },
-                    { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" }
+                    { id: "Limpeza", icon: "cleaning_services", count: quartos.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza").length, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
+                    { id: "Concluído", icon: "task_alt", count: concluidasHoje.length, color: "text-slate-500", bg: "bg-slate-50 dark:bg-slate-500/10" }
                 ].map(tab => (
                     <button 
                         key={tab.id} 
@@ -435,11 +330,17 @@ export default function Dashboard() {
                     <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl space-y-4 print:hidden">
                         <label className="text-[10px] font-black uppercase text-primary tracking-widest flex items-center gap-2"><span className="material-symbols-outlined text-sm">shopping_cart</span>Produtos e Extras</label>
                         <div className="flex gap-4">
-                            <select className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 outline-none" onChange={e => {
-                                const opts = { "Água mineral": 5, "Refrigerante": 8, "Cerveja": 12, "Snacks": 10, "Lavanderia": 25, "Frigobar": 45 };
-                                setNovoItem({ nome: e.target.value, preco: opts[e.target.value] });
-                            }}>
-                                <option value="Água mineral">Água mineral - R$ 5,00</option><option value="Refrigerante">Refrigerante - R$ 8,00</option><option value="Cerveja">Cerveja - R$ 12,00</option><option value="Snacks">Snacks - R$ 10,00</option><option value="Lavanderia">Lavanderia - R$ 25,00</option><option value="Frigobar">Frigobar - R$ 45,00</option>
+                            <select 
+                                className="flex-1 px-4 py-2 text-xs font-bold rounded-xl bg-white dark:bg-slate-700 outline-none" 
+                                value={novoItem.idProduto}
+                                onChange={e => {
+                                    const p = produtosCatalogo.find(prod => String(prod.idProduto) === e.target.value);
+                                    if (p) setNovoItem({ idProduto: p.idProduto, nome: p.nome, preco: p.preco });
+                                }}
+                            >
+                                {produtosCatalogo.map(p => (
+                                    <option key={p.idProduto} value={p.idProduto}>{p.nome} - {Number(p.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</option>
+                                ))}
                             </select>
                             <button onClick={handleAdicionarItem} className="px-6 py-2 bg-primary text-slate-900 rounded-xl text-[10px] font-black uppercase hover:scale-105 active:scale-95 transition-all">Lançar</button>
                         </div>
@@ -448,8 +349,9 @@ export default function Dashboard() {
                         <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 pb-2 border-b border-slate-50"><span>Descrição</span><span>Subtotal</span></div>
                         <div className="space-y-3">
                             <div className="flex justify-between text-xs font-bold"><span>Diárias ({Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24)))}x)</span><span>{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                            {itensConsumo.map(it => <div key={it.id} className="flex justify-between text-xs text-slate-500 font-medium"><span>{it.nome}</span><span>{it.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>)}
+                            {itensConsumo.map(it => <div key={it.idConsumo} className="flex justify-between text-xs text-slate-500 font-medium"><span>{it.nomeProduto} {it.quantidade > 1 ? `(x${it.quantidade})` : ""}</span><span>{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>)}
                         </div>
+
                         <div className="pt-6 border-t-2 border-slate-900 flex justify-between items-center">
                             <span className="text-primary font-black uppercase tracking-tighter text-lg">Total a Pagar</span>
                             <span className="text-3xl font-black text-slate-900">{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>

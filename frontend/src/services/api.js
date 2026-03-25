@@ -157,3 +157,22 @@ export const clienteApi = {
     return api.post("/usuario/cliente", d);
   },
 };
+
+/**
+ * Endpoints de Produtos
+ */
+export const produtoApi = {
+  list: () => api.get("/produto"),
+  create: (data) => api.post("/produto", data),
+  update: (id, data) => api.put(`/produto/${id}`, data),
+  delete: (id) => api.delete(`/produto/${id}`),
+};
+
+/**
+ * Endpoints de Consumo
+ */
+export const consumoApi = {
+  listByReserva: (idReserva) => api.get(`/consumo/reserva/${idReserva}`),
+  create: (data) => api.post("/consumo", data),
+};
+

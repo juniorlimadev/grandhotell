@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="15" author="antigravity">
+        <createSequence sequenceName="seq_produto" startValue="1" incrementBy="1"/>
+        <createTable tableName="PRODUTO">
+            <column name="id_produto" type="integer">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nome" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="preco" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="categoria" type="varchar(50)"/>
+            <column name="icone" type="varchar(50)"/>
+            <column name="ativo" type="boolean" defaultValue="true"/>
+        </createTable>
+
+        <createSequence sequenceName="seq_consumo" startValue="1" incrementBy="1"/>
+        <createTable tableName="CONSUMO">
+            <column name="id_consumo" type="integer">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id_reserva" type="integer">
+                <constraints nullable="false" foreignKeyName="fk_consumo_reserva" referencedTableName="RESERVA" referencedColumnNames="id_reserva"/>
+            </column>
+            <column name="id_produto" type="integer">
+                <constraints nullable="true" foreignKeyName="fk_consumo_produto" referencedTableName="PRODUTO" referencedColumnNames="id_produto"/>
+            </column>
+            <column name="nome_produto" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="preco_unitario" type="decimal(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantidade" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dt_consumo" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="16" author="antigravity">
+        <insert tableName="PRODUTO">
+            <column name="id_produto" valueNumeric="nextval('seq_produto')"/>
+            <column name="nome" value="Água Mineral 500ml"/>
+            <column name="preco" valueNumeric="5.50"/>
+            <column name="categoria" value="Bebidas"/>
+            <column name="icone" value="water_drop"/>
+        </insert>
+        <insert tableName="PRODUTO">
+            <column name="id_produto" valueNumeric="nextval('seq_produto')"/>
+            <column name="nome" value="Refrigerante Lata"/>
+            <column name="preco" valueNumeric="8.00"/>
+            <column name="categoria" value="Bebidas"/>
+            <column name="icone" value="liquor"/>
+        </insert>
+        <insert tableName="PRODUTO">
+            <column name="id_produto" valueNumeric="nextval('seq_produto')"/>
+            <column name="nome" value="Cerveja Heineken 330ml"/>
+            <column name="preco" valueNumeric="14.00"/>
+            <column name="categoria" value="Bebidas"/>
+            <column name="icone" value="sports_bar"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
