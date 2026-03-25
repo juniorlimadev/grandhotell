@@ -10,6 +10,7 @@ import br.com.dbc.hotel.repository.ProdutoRepository;
 import br.com.dbc.hotel.repository.ReservaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class ConsumoService {
     public ConsumoDTO create(ConsumoCreateDTO createDTO) throws RegraDeNegocioException {
         // Valida se a reserva existe
         reservaRepository.findById(createDTO.getIdReserva())
-                .orElseThrow(() -> new RegraDeNegocioException("Reserva não encontrada"));
+                .orElseThrow(() -> new RegraDeNegocioException("Reserva não encontrada", HttpStatus.NOT_FOUND));
 
         Consumo consumo = objectMapper.convertValue(createDTO, Consumo.class);
         consumo.setDtConsumo(LocalDateTime.now());
@@ -41,7 +42,7 @@ public class ConsumoService {
         // Se informou um ID de produto, busca nome e preço atuais para fixar no consumo
         if (createDTO.getIdProduto() != null) {
             Produto produto = produtoRepository.findById(createDTO.getIdProduto())
-                    .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado"));
+                    .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado", HttpStatus.NOT_FOUND));
             
             consumo.setNomeProduto(produto.getNome());
             consumo.setPrecoUnitario(produto.getPreco());

@@ -7,6 +7,7 @@ import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.repository.ProdutoRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,6 +48,6 @@ public class ProdutoService {
 
     protected Produto findById(Integer id) throws RegraDeNegocioException {
         return produtoRepository.findById(id)
-                .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado"));
+                .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado", HttpStatus.NOT_FOUND));
     }
 }
