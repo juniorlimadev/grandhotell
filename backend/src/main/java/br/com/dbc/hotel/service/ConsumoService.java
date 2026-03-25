@@ -26,8 +26,18 @@ public class ConsumoService {
     private final ObjectMapper objectMapper;
 
     public List<ConsumoDTO> listByReserva(Integer idReserva) {
-        return consumoRepository.findAllByIdReserva(idReserva).stream()
-                .map(c -> objectMapper.convertValue(c, ConsumoDTO.class))
+        return consumoRepository.findAllByReserva_IdReserva(idReserva).stream()
+                .map(c -> {
+                    ConsumoDTO dto = new ConsumoDTO();
+                    dto.setIdConsumo(c.getIdConsumo());
+                    dto.setIdReserva(c.getReserva().getIdReserva());
+                    dto.setIdProduto(c.getProduto() != null ? c.getProduto().getIdProduto() : null);
+                    dto.setNomeProduto(c.getNomeProduto());
+                    dto.setPrecoUnitario(c.getPrecoUnitario());
+                    dto.setQuantidade(c.getQuantidade());
+                    dto.setDtConsumo(c.getDtConsumo());
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
