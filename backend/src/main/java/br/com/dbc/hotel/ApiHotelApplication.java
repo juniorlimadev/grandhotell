@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ApiHotelApplication {
 
 	public static void main(String[] args) {
+		System.out.println(">>> [GRANDHOTEL-DIAG] INICIANDO JVM - AGUARDANDO SPRING BOOT...");
 		SpringApplication.run(ApiHotelApplication.class, args);
 	}
 
