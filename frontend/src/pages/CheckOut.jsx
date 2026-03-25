@@ -222,7 +222,7 @@ export default function CheckOut() {
                    <div className="relative group">
                      <select 
                         value={modalConsumo.idProduto}
-                        onChange={e => setModalConsumo({...modalConsumo, idProduto: e.target.value})}
+                        onChange={e => setModalConsumo({...modalConsumo, idProduto: Number(e.target.value)})}
                         className="w-full pl-4 pr-10 py-4 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-sm font-black focus:ring-2 focus:ring-orange-500 appearance-none transition-all"
                      >
                         {produtos.map(p => (

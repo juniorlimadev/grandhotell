@@ -149,22 +149,23 @@ export default function Dashboard() {
     const hojeStr = new Date().toISOString().split('T')[0];
     const amanhaStr = new Date(Date.now() + 24 * 3600 * 1000).toISOString().split('T')[0];
 
-    const cis = reservas.filter(r => toInputDate(r.dtInicio) === hojeStr && (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA'));
-    const cos = reservas.filter(r => toInputDate(r.dtFim) === hojeStr && r.statusQuarto === 'CONFIRMADA');
-    const conc = reservas.filter(r => toInputDate(r.dtFim) === hojeStr && r.statusQuarto === 'CONCLUIDA');
+    // Contadores agora refletem todo o período selecionado
+    const cis = reservas.filter(r => (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA'));
+    const cos = reservas.filter(r => r.statusQuarto === 'CONFIRMADA');
+    const conc = reservas.filter(r => r.statusQuarto === 'CONCLUIDA');
     
     const ocupadosCount = quartos.filter(q => {
         const st = statusDoQuarto(q.idQuarto);
         return st.label === "Ocupado";
     }).length;
 
-    const taxa = totalQuartos > 0 ? Math.round((ocupadosCount / totalQuartos) * 100) : 0;
+    const taxa = totalQuartos > 0 ? Math.round((reservas.filter(r => r.statusQuarto === 'CONFIRMADA').length / totalQuartos) * 100) : 0;
 
     const receita = conc.reduce((acc, r) => {
         const dInicio = parseDate(r.dtInicio);
         const dFim = parseDate(r.dtFim);
         const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
-        const diarias = diffDays * (Number(r.valorDiaria) || 0);
+        const diarias = diffDays * (Number(r.valorDiaria) || 150);
         const consumo = Number(r.consumoExtra) || 0;
         return acc + diarias + consumo;
     }, 0);
@@ -255,7 +256,7 @@ export default function Dashboard() {
             {[
                 { label: "Total de Quartos", val: totalQuartos, icon: "bed", color: "text-[#006972]", bg: "bg-[#006972]/10", badge: "Ativos" },
                 { label: "Taxa de Ocupação", val: `${taxaOcupacao}%`, icon: "person_raised_hand", color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10", badge: "Hoje" },
-                { label: "Check-ins Pendentes", val: checkinsHoje.length, icon: "login", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: "Hoje" },
+                { label: "Check-ins Pendentes", val: checkinsHoje.length, icon: "login", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10", badge: "Período" },
                 { label: "Receita Realizada", val: receitaRealizada.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: "payments", color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", badge: "Filtro" }
             ].map((c, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:scale-[1.02]">
@@ -303,25 +304,7 @@ export default function Dashboard() {
                                                     {st.label === "Limpeza" ? (
                                                         <button onClick={() => toast.success("Quarto liberado!")} className="px-4 py-2 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[10px] font-black uppercase rounded-xl">Pronto</button>
                                                     ) : (
-                                                        <>
-                                                            <Link to={`/admin/quartos/${q.idQuarto}`} className="text-slate-400 hover:text-primary font-black uppercase text-[10px] transition-colors">Ficha</Link>
-                                                            {st.label === "Ocupado" && (
-                                                                <button 
-                                                                    onClick={() => {
-                                                                        const hojStr = new Date().toISOString().split('T')[0];
-                                                                        const r = reservas.find(res => {
-                                                                            const ini = parseDate(res.dtInicio).toISOString().split('T')[0];
-                                                                            const fim = parseDate(res.dtFim).toISOString().split('T')[0];
-                                                                            return res.idQuarto === q.idQuarto && ini <= hojStr && fim >= hojStr && res.statusQuarto !== 'CANCELADA';
-                                                                        });
-                                                                        if (r) handleActionReserva(r);
-                                                                    }} 
-                                                                    className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-slate-900 text-[9px] font-black uppercase rounded-lg transition-all"
-                                                                >
-                                                                    + Extras
-                                                                </button>
-                                                            )}
-                                                        </>
+                                                        <Link to={`/admin/quartos/${q.idQuarto}`} className="text-slate-400 hover:text-primary font-black uppercase text-[10px] transition-colors">Ficha</Link>
                                                     )}
                                                 </td>
                                             </tr>
@@ -345,7 +328,7 @@ export default function Dashboard() {
                                                         abaAtiva === "Check-in" 
                                                             ? "bg-primary text-slate-900" 
                                                             : "bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white"
-                                                 }`}>
+                                                  }`}>
                                                      {abaAtiva === "Check-in" ? "Check-in" : abaAtiva === "Check-out" ? "Saída" : "Finalizado"}
                                                  </button>
                                              </td>

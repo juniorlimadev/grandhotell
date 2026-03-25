@@ -52,6 +52,8 @@ export default function Usuarios() {
     { id: "ADMIN", label: "Gestão de Usuários" },
     { id: "GESTAO_QUARTOS", label: "Gestão de Quartos" },
     { id: "GESTAO_RESERVAS", label: "Gestão de Reservas" },
+    { id: "GESTAO_PRODUTOS", label: "Gestão de Produtos / Consumo" },
+    { id: "GESTAO_CLIENTES", label: "Gestão de Clientes" },
   ];
 
   const handleToggleAll = () => {
@@ -194,6 +196,8 @@ export default function Usuarios() {
                           c === 'ADMIN' ? 'bg-red-100 text-red-600' :
                           c === 'GESTAO_QUARTOS' ? 'bg-emerald-100 text-emerald-600' :
                           c === 'GESTAO_RESERVAS' ? 'bg-blue-100 text-blue-600' :
+                          c === 'GESTAO_PRODUTOS' ? 'bg-orange-100 text-orange-600' :
+                          c === 'GESTAO_CLIENTES' ? 'bg-indigo-100 text-indigo-600' :
                           'bg-slate-100 text-slate-600'
                         }`}>
                           {c.replace('GESTAO_', '')}

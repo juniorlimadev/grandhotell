@@ -8,12 +8,12 @@ import { toast } from "react-toastify";
 const navItems = [
   { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
   { to: "/admin/checkin", icon: "login", label: "Check-in", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/hospedagem", icon: "hotel_class", label: "Check-out", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/hospedagem", icon: "hotel_class", label: "Check-out", permission: ["ADMIN", "GESTAO_RESERVAS", "GESTAO_PRODUTOS"] },
   { to: "/admin/limpeza", icon: "cleaning_services", label: "Limpeza", permission: ["ADMIN", "GESTAO_QUARTOS"] },
   { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
-  { to: "/admin/produtos", icon: "shopping_cart", label: "Produtos", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/produtos", icon: "shopping_cart", label: "Produtos", permission: ["ADMIN", "GESTAO_PRODUTOS"] },
   { to: "/admin/quartos", icon: "bed", label: "Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
-  { to: "/admin/clientes", icon: "group", label: "Clientes", permission: ["ADMIN", "GESTAO_RESERVAS"] },
+  { to: "/admin/clientes", icon: "group", label: "Clientes", permission: ["ADMIN", "GESTAO_CLIENTES", "GESTAO_RESERVAS"] },
   { to: "/admin/usuarios", icon: "badge", label: "Colaboradores", permission: ["ADMIN"] },
 ];
 
@@ -369,7 +369,7 @@ export default function Layout() {
                       )}
                     </div>
                     <Link 
-                      to="/notificacoes"
+                      to="/admin/notificacoes"
                       onClick={() => setShowNotifications(false)}
                       className="block w-full py-3 text-center text-xs font-black uppercase tracking-widest text-slate-500 hover:text-primary transition-colors bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800"
                     >
