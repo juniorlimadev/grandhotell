@@ -2,6 +2,7 @@ package br.com.dbc.hotel.dto.produto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Data
