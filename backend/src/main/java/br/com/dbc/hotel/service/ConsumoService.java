@@ -32,12 +32,13 @@ public class ConsumoService {
     }
 
     public ConsumoDTO create(ConsumoCreateDTO createDTO) throws RegraDeNegocioException {
-        // Valida se a reserva existe
-        reservaRepository.findById(createDTO.getIdReserva())
+        // Valida se a reserva existe e a vincula explicitamente
+        br.com.dbc.hotel.entity.Reserva reserva = reservaRepository.findById(createDTO.getIdReserva())
                 .orElseThrow(() -> new RegraDeNegocioException("Reserva não encontrada", HttpStatus.NOT_FOUND));
 
         Consumo consumo = objectMapper.convertValue(createDTO, Consumo.class);
         consumo.setDtConsumo(LocalDateTime.now());
+        consumo.setReserva(reserva);
 
         // Se informou um ID de produto, busca nome e preço atuais para fixar no consumo
         if (createDTO.getIdProduto() != null) {

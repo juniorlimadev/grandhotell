@@ -176,7 +176,7 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`
-        border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 lg:translate-x-0
+        border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-50 transition-[width,transform] duration-500 lg:translate-x-0 print:hidden
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         ${sidebarCollapsed ? "lg:w-24" : "lg:w-72"}
       `}>
@@ -284,7 +284,7 @@ export default function Layout() {
 
 
       <main className={`flex-1 min-h-screen w-full overflow-x-hidden transition-all duration-500 ${sidebarCollapsed ? "lg:pl-24" : "lg:pl-72"}`}>
-        <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4">
+        <header className="sticky top-0 z-[40] bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 lg:px-8 py-4 print:hidden">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button

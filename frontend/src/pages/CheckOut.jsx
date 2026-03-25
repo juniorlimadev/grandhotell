@@ -270,54 +270,168 @@ export default function CheckOut() {
 
       {/* Modal de Comprovante (Ocupa tela toda no print) */}
       {reservaDetalhe && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:relative print:inset-auto print:bg-white print:p-0">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none">
-                <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 print:hidden">
-                    <h3 className="text-xl font-black">Finalização de Estadia</h3>
-                    <button onClick={() => setReservaDetalhe(null)} className="size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors"><span className="material-symbols-outlined">close</span></button>
-                </div>
-                <div className="p-10 space-y-8 text-slate-900">
-                    <div className="flex justify-between items-start border-b-2 border-slate-100 pb-6">
-                        <div><h2 className="text-3xl font-black text-primary tracking-tighter">GrandHotel</h2><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comprovante de Estadia • #{reservaDetalhe.idReserva}</p></div>
-                        <div className="text-right"><p className="text-xs font-black text-slate-500">{new Date().toLocaleDateString('pt-BR')}</p><p className="text-[10px] font-bold text-slate-400 uppercase italic">Emitido por: {user?.nome}</p></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-8 divide-x divide-slate-50 font-['Plus_Jakarta_Sans']">
-                        <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Hóspede</label><p className="text-sm font-black">{reservaDetalhe.hospedeNome || reservaDetalhe.usuario?.nome}</p><p className="text-xs text-slate-500">{reservaDetalhe.usuario?.email || "Reserva Direta"}</p></div>
-                        <div className="pl-8"><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Acomodação</label><p className="text-sm font-black">{reservaDetalhe.quartoNome || `Quarto ${reservaDetalhe.idQuarto}`}</p><p className="text-xs text-slate-500">{parseDate(reservaDetalhe.dtInicio).toLocaleDateString()} — {parseDate(reservaDetalhe.dtFim).toLocaleDateString()}</p></div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 pb-2 border-b border-slate-50"><span>Descrição</span><span>Subtotal</span></div>
-                        <div className="space-y-3">
-                            <div className="flex justify-between text-xs font-bold"><span>Diárias ({Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24)))}x)</span><span>{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                            {itensConsumo.map(it => <div key={it.idConsumo} className="flex justify-between text-xs text-slate-500 font-medium"><span>{it.nomeProduto} {it.quantidade > 1 ? `(x${it.quantidade})` : ""}</span><span>{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>)}
-                        </div>
+        <>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              @page { margin: 0; }
+              body { margin: 1.6cm; background: white !important; font-family: 'Times New Roman', serif; }
+              .fixed { position: relative !important; backdrop-filter: none !important; background: white !important; padding: 0 !important; }
+              .shadow-2xl { shadow: none !important; border: none !important; }
+              .rounded-[2.5rem] { border-radius: 0 !important; }
+              .bg-white { background: white !important; color: black !important; }
+              .dark\:bg-slate-900 { background: white !important; color: black !important; }
+              .no-print { display: none !important; }
+              button, .print\:hidden { display: none !important; }
+            }
+          `}} />
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:relative print:inset-auto print:bg-white print:p-0">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none">
+                  {/* Cabeçalho Pro (Escondido no Site, visível no print se necessário, mas aqui visível em ambos) */}
+                  <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 print:bg-white print:border-slate-900 print:pb-4">
+                      <div className="flex items-center gap-3">
+                         <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-slate-900 print:bg-white print:border print:border-black">
+                            <span className="material-symbols-outlined">apartment</span>
+                         </div>
+                         <div>
+                            <h3 className="text-xl font-black print:text-2xl">GrandHotel</h3>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest print:text-black">Sua melhor estadia • {new Date().getFullYear()}</p>
+                         </div>
+                      </div>
+                      <button onClick={() => setReservaDetalhe(null)} className="size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors print:hidden"><span className="material-symbols-outlined">close</span></button>
+                      <div className="hidden print:block text-right">
+                         <p className="text-[10px] font-black uppercase">Fatura / Recibo</p>
+                         <p className="text-xs font-bold text-primary">Nº {reservaDetalhe.idReserva}</p>
+                      </div>
+                  </div>
 
-                        <div className="pt-6 border-t-2 border-slate-900 flex justify-between items-center">
-                            <span className="text-primary font-black uppercase tracking-tighter text-lg">Total a Pagar</span>
-                            <span className="text-3xl font-black text-slate-900">{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                        </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 print:hidden">
-                        <div className="col-span-2 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-dashed border-slate-200">
-                           <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Forma de Pagamento</label>
-                           <div className="flex gap-4">
-                              {['PIX', 'Cartão', 'Dinheiro'].map(m => (
-                                 <button key={m} onClick={() => setMetodoPagamento(m)} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all ${metodoPagamento === m ? "border-primary bg-primary/10 text-primary" : "border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-200"}`}>{m}</button>
-                              ))}
-                           </div>
-                        </div>
-                        <button onClick={() => window.print()} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl shadow-slate-900/20"><span className="material-symbols-outlined">print</span>IMPRIMIR NOTA</button>
-                        <button 
-                            onClick={() => handleFinalizarCheckOut(reservaDetalhe)}
-                            className="flex-1 py-4 bg-orange-500 text-white rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-orange-500/20"
-                        >
-                            CONFIRMAR SAÍDA
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+                  <div className="p-10 space-y-10 text-slate-900 print:text-black print:p-0 print:mt-8">
+                      {/* Dados da Empresa e Cliente */}
+                      <div className="grid grid-cols-2 gap-10 border-b-2 border-slate-50 pb-8 print:border-black/10">
+                          <div className="space-y-2">
+                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Emitido por</label>
+                             <div className="text-sm">
+                                <p className="font-black">Grand Hotel Ltda.</p>
+                                <p className="text-slate-500 font-medium text-xs print:text-black">CNPJ: 00.000.000/0001-00</p>
+                                <p className="text-slate-500 font-medium text-xs print:text-black">Av. Principal, 1000 - Centro</p>
+                                <p className="text-slate-500 font-medium text-xs print:text-black">contato@grandhotel.com.br</p>
+                             </div>
+                          </div>
+                          <div className="text-right space-y-2">
+                             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Hóspede / Cliente</label>
+                             <div className="text-sm">
+                                <p className="font-black">{reservaDetalhe.hospedeNome || reservaDetalhe.usuario?.nome}</p>
+                                <p className="text-slate-500 font-medium text-xs print:text-black">{reservaDetalhe.usuario?.email || "Reserva Direta"}</p>
+                                <p className="text-slate-500 font-medium text-xs print:text-black">ID: {reservaDetalhe.idUsuario || reservaDetalhe.usuario?.idUsuario}</p>
+                             </div>
+                          </div>
+                      </div>
+
+                      {/* Dados da Estadia */}
+                      <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl grid grid-cols-3 gap-6 print:bg-white print:border print:border-black/10 print:rounded-none">
+                          <div>
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Entrada</label>
+                            <p className="text-xs font-black">{parseDate(reservaDetalhe.dtInicio).toLocaleDateString()}</p>
+                          </div>
+                          <div className="border-x border-slate-200 dark:border-slate-700 px-6">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Saída</label>
+                            <p className="text-xs font-black">{parseDate(reservaDetalhe.dtFim).toLocaleDateString()}</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Acomodação</label>
+                            <p className="text-xs font-black truncate">{reservaDetalhe.quartoNome || `Quarto ${reservaDetalhe.idQuarto}`}</p>
+                          </div>
+                      </div>
+
+                      {/* Tabela de Itens */}
+                      <div className="space-y-6">
+                          <table className="w-full text-left border-collapse">
+                             <thead>
+                                <tr className="border-b-2 border-slate-900 text-[10px] font-black uppercase text-slate-400 print:text-black print:border-black">
+                                   <th className="py-3">Descrição do Serviço/Produto</th>
+                                   <th className="py-3 w-20 text-center">Qtd</th>
+                                   <th className="py-3 w-32 text-right">Preço Un.</th>
+                                   <th className="py-3 w-32 text-right">Subtotal</th>
+                                </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100 print:divide-black/10">
+                                <tr className="text-xs font-bold">
+                                   <td className="py-4">Hospedagem (Diárias - Quarto {reservaDetalhe.idQuarto})</td>
+                                   <td className="py-4 text-center">{Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24)))}</td>
+                                   <td className="py-4 text-right">{(Number(reservaDetalhe.valorDiaria) || 150).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                   <td className="py-4 text-right">{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                </tr>
+                                {itensConsumo.map(it => (
+                                  <tr key={it.idConsumo} className="text-xs text-slate-600 print:text-black italic">
+                                     <td className="py-3 px-2 flex items-center gap-2">
+                                        <span className="size-1 bg-slate-300 rounded-full print:hidden"></span>
+                                        {it.nomeProduto}
+                                     </td>
+                                     <td className="py-3 text-center">{it.quantidade}</td>
+                                     <td className="py-3 text-right">{(it.precoUnitario || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                     <td className="py-3 text-right font-bold text-slate-900 print:text-black">{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                  </tr>
+                                ))}
+                             </tbody>
+                          </table>
+
+                          {/* Totais */}
+                          <div className="flex justify-end pt-4">
+                             <div className="w-full max-w-xs space-y-4">
+                                <div className="flex justify-between text-xs font-black uppercase text-slate-400 print:text-black">
+                                   <span>Subtotal</span>
+                                   <span>{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                </div>
+                                <div className="flex justify-between text-xs font-black uppercase text-slate-400 print:text-black">
+                                   <span>Taxas (0%)</span>
+                                   <span>R$ 0,00</span>
+                                </div>
+                                <div className="pt-4 border-t-4 border-slate-900 flex justify-between items-center print:border-black">
+                                   <span className="text-primary font-black uppercase text-xl print:text-black">Total Pago</span>
+                                   <span className="text-3xl font-black">{totalComprovante.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                </div>
+                                <p className="text-[10px] text-right text-slate-400 font-bold italic print:text-black">Forma de Pagamento: {metodoPagamento}</p>
+                             </div>
+                          </div>
+                      </div>
+
+                      {/* Rodapé do Print */}
+                      <div className="hidden print:grid grid-cols-2 gap-20 pt-16 mt-auto">
+                          <div className="border-t border-black pt-4 text-center">
+                             <p className="text-[9px] font-black uppercase">Assinatura do Hóspede</p>
+                             <p className="text-[8px] text-slate-500">{reservaDetalhe.hospedeNome || reservaDetalhe.usuario?.nome}</p>
+                          </div>
+                          <div className="border-t border-black pt-4 text-center">
+                             <p className="text-[9px] font-black uppercase">Responsável GrandHotel</p>
+                             <p className="text-[8px] text-slate-500">{user?.nome}</p>
+                          </div>
+                          <div className="col-span-2 text-center pt-8">
+                             <p className="text-[10px] font-black italic">Obrigado pela preferência! Volte sempre.</p>
+                             <p className="text-[8px] text-slate-400 mt-1 uppercase tracking-widest">Documento gerado eletronicamente em {new Date().toLocaleString()}</p>
+                          </div>
+                      </div>
+                      
+                      {/* Ações Site */}
+                      <div className="grid grid-cols-2 gap-4 print:hidden">
+                          <div className="col-span-2 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-dashed border-slate-200">
+                             <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Confirmar Forma de Pagamento</label>
+                             <div className="flex gap-4">
+                                {['PIX', 'Cartão', 'Dinheiro'].map(m => (
+                                   <button key={m} onClick={() => setMetodoPagamento(m)} className={`flex-1 py-3 text-[10px] font-black uppercase rounded-xl border-2 transition-all ${metodoPagamento === m ? "border-primary bg-primary/10 text-primary" : "border-slate-100 dark:border-slate-700 text-slate-400 hover:border-slate-200"}`}>{m}</button>
+                                ))}
+                             </div>
+                          </div>
+                          <button onClick={() => window.print()} className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl shadow-slate-900/20"><span className="material-symbols-outlined">print</span>IMPRIMIR NOTA</button>
+                          <button 
+                              onClick={() => handleFinalizarCheckOut(reservaDetalhe)}
+                              className="flex-1 py-4 bg-orange-500 text-white rounded-2xl font-black text-sm hover:scale-105 transition-all shadow-xl shadow-orange-500/20"
+                          >
+                              CONCLUIR SAÍDA
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+        </>
       )}
     </div>
   );
