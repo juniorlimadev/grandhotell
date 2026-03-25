@@ -7,9 +7,11 @@ import { useAuth } from "../contexts/AuthContext";
 
 const STATUS_CONFIG = {
   "CONFIRMADA": { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
+  "OCUPADO":    { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
   "PENDENTE":   { label: "Pendente",   dot: "bg-yellow-500",  bg: "bg-yellow-50 dark:bg-yellow-500/10", text: "text-yellow-600 dark:text-yellow-400" },
   "CANCELADA":  { label: "Cancelado",  dot: "bg-red-500",     bg: "bg-red-50 dark:bg-red-500/10",     text: "text-red-600 dark:text-red-400" },
-  "CONCLUIDA":  { label: "Concluída",  dot: "bg-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",    text: "text-slate-500" },
+  "CONCLUIDA":  { label: "Concluído",  dot: "bg-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",    text: "text-slate-500" },
+  "LIMPEZA":    { label: "Limpeza",    dot: "bg-blue-300",    bg: "bg-blue-50/50",                    text: "text-blue-400" },
   "AGENDADA":   { label: "Agendada",   dot: "bg-indigo-500",  bg: "bg-indigo-50 dark:bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
 };
 
@@ -50,6 +52,10 @@ export default function Dashboard() {
   };
 
   const statusDoQuarto = (idQuarto) => {
+    // Primeiro verifica se o quarto FISICAMENTE está em limpeza ou manutenção
+    const quartoObj = quartos.find(q => q.idQuarto === idQuarto);
+    if (quartoObj?.statusOperacional === "LIMPEZA") return STATUS_CONFIG["LIMPEZA"];
+
     const hojeStr = new Date().toISOString().split('T')[0];
     const r = reservas.find(res => {
       const ini = toInputDate(res.dtInicio);
@@ -57,6 +63,7 @@ export default function Dashboard() {
       return res.idQuarto === idQuarto && ini <= hojeStr && fim >= hojeStr && res.statusQuarto !== 'CANCELADA';
     });
     if (!r) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
+    
     return STATUS_CONFIG[r.statusQuarto] || STATUS_CONFIG["PENDENTE"];
   };
 
@@ -151,7 +158,7 @@ export default function Dashboard() {
 
     // Contadores agora refletem todo o período selecionado
     const cis = reservas.filter(r => (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA'));
-    const cos = reservas.filter(r => r.statusQuarto === 'CONFIRMADA');
+    const cos = reservas.filter(r => (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO'));
     const conc = reservas.filter(r => r.statusQuarto === 'CONCLUIDA');
     
     const ocupadosCount = quartos.filter(q => {

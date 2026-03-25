@@ -44,7 +44,7 @@ public class SecurityConfiguration {
                 .antMatchers(HttpMethod.GET, "/usuario").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.PUT, "/usuario/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/usuario").hasRole("ADMIN")
-                .antMatchers("/quarto/**").hasAnyRole("ADMIN", "GESTAO_QUARTOS")
+                .antMatchers("/quarto/**").hasAnyRole("ADMIN", "GESTAO_QUARTOS", "GESTAO_LIMPEZA")
                 .antMatchers("/produto/**").hasAnyRole("ADMIN", "GESTAO_PRODUTOS")
                 .antMatchers("/consumo/**").hasAnyRole("ADMIN", "GESTAO_RESERVAS", "GESTAO_PRODUTOS")
                 .antMatchers("/cliente/**").hasAnyRole("ADMIN", "GESTAO_CLIENTES", "GESTAO_RESERVAS")

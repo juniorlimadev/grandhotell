@@ -51,6 +51,7 @@ export default function Usuarios() {
   const permissoesDisponiveis = [
     { id: "ADMIN", label: "Gestão de Usuários" },
     { id: "GESTAO_QUARTOS", label: "Gestão de Quartos" },
+    { id: "GESTAO_LIMPEZA", label: "Gestão de Limpeza" },
     { id: "GESTAO_RESERVAS", label: "Gestão de Reservas" },
     { id: "GESTAO_PRODUTOS", label: "Gestão de Produtos / Consumo" },
     { id: "GESTAO_CLIENTES", label: "Gestão de Clientes" },
@@ -195,6 +196,7 @@ export default function Usuarios() {
                         <span key={c} className={`text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-tighter ${
                           c === 'ADMIN' ? 'bg-red-100 text-red-600' :
                           c === 'GESTAO_QUARTOS' ? 'bg-emerald-100 text-emerald-600' :
+                          c === 'GESTAO_LIMPEZA' ? 'bg-cyan-100 text-cyan-600' :
                           c === 'GESTAO_RESERVAS' ? 'bg-blue-100 text-blue-600' :
                           c === 'GESTAO_PRODUTOS' ? 'bg-orange-100 text-orange-600' :
                           c === 'GESTAO_CLIENTES' ? 'bg-indigo-100 text-indigo-600' :

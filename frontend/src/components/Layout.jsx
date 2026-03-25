@@ -9,7 +9,7 @@ const navItems = [
   { to: "/admin", icon: "dashboard", label: "Dashboard", permission: ["USER", "ADMIN", "GESTAO_QUARTOS", "GESTAO_RESERVAS"] },
   { to: "/admin/checkin", icon: "login", label: "Check-in", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/hospedagem", icon: "hotel_class", label: "Check-out", permission: ["ADMIN", "GESTAO_RESERVAS", "GESTAO_PRODUTOS"] },
-  { to: "/admin/limpeza", icon: "cleaning_services", label: "Limpeza", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/limpeza", icon: "cleaning_services", label: "Limpeza", permission: ["ADMIN", "GESTAO_QUARTOS", "GESTAO_LIMPEZA"] },
   { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/produtos", icon: "shopping_cart", label: "Produtos", permission: ["ADMIN", "GESTAO_PRODUTOS"] },
   { to: "/admin/quartos", icon: "bed", label: "Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
