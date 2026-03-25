@@ -21,16 +21,10 @@ public class Consumo {
     @Column(name = "id_consumo")
     private Integer idConsumo;
 
-    @Column(name = "id_reserva", insertable = false, updatable = false)
-    private Integer idReserva;
-
-    @Column(name = "id_produto", insertable = false, updatable = false)
-    private Integer idProduto;
-
-    @Column(name = "nome_produto")
+    @Column(name = "nome_produto", length = 100)
     private String nomeProduto;
 
-    @Column(name = "preco_unitario")
+    @Column(name = "preco_unitario", precision = 19, scale = 2)
     private BigDecimal precoUnitario;
 
     @Column(name = "quantidade")
@@ -41,11 +35,11 @@ public class Consumo {
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reserva", referencedColumnName = "id_reserva")
+    @JoinColumn(name = "id_reserva", nullable = false)
     private Reserva reserva;
 
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_produto", referencedColumnName = "id_produto")
+    @JoinColumn(name = "id_produto", nullable = true)
     private Produto produto;
 }

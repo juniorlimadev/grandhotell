@@ -33,35 +33,46 @@ public class ConsumoService {
 
     public ConsumoDTO create(ConsumoCreateDTO createDTO) throws RegraDeNegocioException {
         System.out.println("[GRANDHOTEL-CONSUMO] Criando consumo para reserva: " + createDTO.getIdReserva());
-        // Valida se a reserva existe e a vincula explicitamente
+        
         br.com.dbc.hotel.entity.Reserva reserva = reservaRepository.findById(createDTO.getIdReserva())
                 .orElseThrow(() -> new RegraDeNegocioException("Reserva não encontrada", HttpStatus.NOT_FOUND));
 
-        Consumo consumo = objectMapper.convertValue(createDTO, Consumo.class);
-        consumo.setDtConsumo(LocalDateTime.now());
+        Consumo consumo = new Consumo();
         consumo.setReserva(reserva);
+        consumo.setQuantidade(createDTO.getQuantidade());
+        consumo.setDtConsumo(LocalDateTime.now());
 
-        // Se informou um ID de produto, busca nome e preço atuais para fixar no consumo
         if (createDTO.getIdProduto() != null) {
             System.out.println("[GRANDHOTEL-CONSUMO] Buscando produto: " + createDTO.getIdProduto());
             Produto produto = produtoRepository.findById(createDTO.getIdProduto())
                     .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado", HttpStatus.NOT_FOUND));
             
+            consumo.setProduto(produto);
             consumo.setNomeProduto(produto.getNome());
             consumo.setPrecoUnitario(produto.getPreco());
-            consumo.setProduto(produto);
         } else {
-            System.out.println("[GRANDHOTEL-CONSUMO] ID de produto é nulo!");
+            // Caso seja um item manual (não cadastrado no catálogo)
+            consumo.setNomeProduto(createDTO.getNomeProduto());
+            consumo.setPrecoUnitario(createDTO.getPrecoUnitario());
         }
 
         try {
             Consumo salvo = consumoRepository.save(consumo);
             System.out.println("[GRANDHOTEL-CONSUMO] Consumo salvo com sucesso: " + salvo.getIdConsumo());
-            return objectMapper.convertValue(salvo, ConsumoDTO.class);
+            
+            ConsumoDTO dto = new ConsumoDTO();
+            dto.setIdConsumo(salvo.getIdConsumo());
+            dto.setIdReserva(reserva.getIdReserva());
+            dto.setIdProduto(salvo.getProduto() != null ? salvo.getProduto().getIdProduto() : null);
+            dto.setNomeProduto(salvo.getNomeProduto());
+            dto.setPrecoUnitario(salvo.getPrecoUnitario());
+            dto.setQuantidade(salvo.getQuantidade());
+            dto.setDtConsumo(salvo.getDtConsumo());
+            return dto;
         } catch (Exception e) {
-            System.err.println("[GRANDHOTEL-CONSUMO] Erro ao salvar: " + e.getMessage());
+            System.err.println("[GRANDHOTEL-CONSUMO] Erro fatal ao salvar: " + e.getMessage());
             e.printStackTrace();
-            throw new RegraDeNegocioException("Erro técnico ao salvar consumo no banco.", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new RegraDeNegocioException("Erro ao persistir consumo. Verifique se todos os campos obrigatórios estão presentes.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
