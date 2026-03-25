@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { quartoApi, reservaApi } from "../services/api";
+import { quartoApi, reservaApi, produtoApi, consumoApi } from "../services/api";
 import { toast } from "react-toastify";
 import { toInputDate } from "../utils/date-utils";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,6 +10,7 @@ const STATUS_CONFIG = {
   "PENDENTE":   { label: "Pendente",   dot: "bg-yellow-500",  bg: "bg-yellow-50 dark:bg-yellow-500/10", text: "text-yellow-600 dark:text-yellow-400" },
   "CANCELADA":  { label: "Cancelado",  dot: "bg-red-500",     bg: "bg-red-50 dark:bg-red-500/10",     text: "text-red-600 dark:text-red-400" },
   "CONCLUIDA":  { label: "Concluída",  dot: "bg-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",    text: "text-slate-500" },
+  "AGENDADA":   { label: "Agendada",   dot: "bg-indigo-500",  bg: "bg-indigo-50 dark:bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
 };
 
 function getInitials(name) {
@@ -36,7 +37,28 @@ export default function Dashboard() {
   const [reservaDetalhe, setReservaDetalhe] = useState(null);
   const [itensConsumo, setItensConsumo] = useState([]);
   const [produtosCatalogo, setProdutosCatalogo] = useState([]);
-  const [novoItem, setNovoItem] = useState({ idProduto: "", nome: "Água mineral", preco: 5 });
+  const [novoItem, setNovoItem] = useState({ idProduto: "", nome: "Água mineral", preco: 5, metodo: "PIX" });
+
+  const parseDate = (d) => {
+    if (!d) return new Date();
+    if (d instanceof Date) return d;
+    if (typeof d === "string" && d.includes("-") && d.split("-")[0].length === 2) {
+      const [day, mon, yr] = d.split("-");
+      return new Date(Number(yr), Number(mon) - 1, Number(day));
+    }
+    return new Date(d);
+  };
+
+  const statusDoQuarto = (idQuarto) => {
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const r = reservas.find(res => {
+      const ini = toInputDate(res.dtInicio);
+      const fim = toInputDate(res.dtFim);
+      return res.idQuarto === idQuarto && ini <= hojeStr && fim >= hojeStr && res.statusQuarto !== 'CANCELADA';
+    });
+    if (!r) return { label: "Disponível", dot: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" };
+    return STATUS_CONFIG[r.statusQuarto] || STATUS_CONFIG["PENDENTE"];
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -63,7 +85,7 @@ export default function Dashboard() {
       setReservas(Array.isArray(rRes.data) ? rRes.data : []);
       setProdutosCatalogo(pRes.data || []);
       if (pRes.data?.length > 0) {
-        setNovoItem({ idProduto: pRes.data[0].idProduto, nome: pRes.data[0].nome, preco: pRes.data[0].preco });
+        setNovoItem(prev => ({ ...prev, idProduto: pRes.data[0].idProduto, nome: pRes.data[0].nome, preco: pRes.data[0].preco }));
       }
     } catch (err) {
       console.error("Dashboard Load Error:", err);
@@ -76,6 +98,26 @@ export default function Dashboard() {
   useEffect(() => {
     loadData();
   }, [page, dtInicio, dtFim]);
+
+  const handleStatusUpdate = async (reserva, novoStatus) => {
+    try {
+      let backendStatus = novoStatus;
+      if (novoStatus === "OCUPADO") backendStatus = "CONFIRMADA";
+
+      await reservaApi.update(reserva.idReserva, {
+        ...reserva,
+        statusQuarto: backendStatus,
+        checkinReal: novoStatus === "OCUPADO" ? new Date().toISOString() : reserva.checkinReal,
+        checkoutReal: novoStatus === "CONCLUIDA" ? new Date().toISOString() : reserva.checkoutReal
+      });
+
+      toast.success(`Estadia ${novoStatus === "OCUPADO" ? "iniciada" : "concluída"}!`);
+      if (novoStatus === "CONCLUIDA") setReservaDetalhe(null);
+      loadData();
+    } catch (e) {
+      toast.error("Erro ao atualizar status.");
+    }
+  };
 
   const handleActionReserva = async (reserva) => {
     setReservaDetalhe(reserva);
@@ -96,13 +138,62 @@ export default function Dashboard() {
             quantidade: 1
         });
         toast.success(`${novoItem.nome} adicionado!`);
-        // Recarrega lista
         const res = await consumoApi.listByReserva(reservaDetalhe.idReserva);
         setItensConsumo(res.data);
     } catch (e) {
         toast.error("Erro ao lançar item.");
     }
   };
+
+  const { checkinsHoje, checkoutsHoje, concluidasHoje, taxaOcupacao, receitaRealizada, proximasChegadas, topQuartos } = useMemo(() => {
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const amanhaStr = new Date(Date.now() + 24 * 3600 * 1000).toISOString().split('T')[0];
+
+    const cis = reservas.filter(r => toInputDate(r.dtInicio) === hojeStr && (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA'));
+    const cos = reservas.filter(r => toInputDate(r.dtFim) === hojeStr && r.statusQuarto === 'CONFIRMADA');
+    const conc = reservas.filter(r => toInputDate(r.dtFim) === hojeStr && r.statusQuarto === 'CONCLUIDA');
+    
+    const ocupadosCount = quartos.filter(q => {
+        const st = statusDoQuarto(q.idQuarto);
+        return st.label === "Ocupado";
+    }).length;
+
+    const taxa = totalQuartos > 0 ? Math.round((ocupadosCount / totalQuartos) * 100) : 0;
+
+    const receita = conc.reduce((acc, r) => {
+        const dInicio = parseDate(r.dtInicio);
+        const dFim = parseDate(r.dtFim);
+        const diffDays = Math.max(1, Math.ceil((dFim - dInicio) / (1000 * 60 * 60 * 24)));
+        const diarias = diffDays * (Number(r.valorDiaria) || 0);
+        const consumo = Number(r.consumoExtra) || 0;
+        return acc + diarias + consumo;
+    }, 0);
+
+    const prox = reservas.filter(r => toInputDate(r.dtInicio) === amanhaStr);
+    
+    const counts = {};
+    reservas.forEach(r => {
+        const key = r.quartoNome || `Quarto ${r.idQuarto}`;
+        counts[key] = (counts[key] || 0) + 1;
+    });
+    const top = Object.entries(counts)
+        .map(([nome, count]) => ({ nome, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+
+    return { checkinsHoje: cis, checkoutsHoje: cos, concluidasHoje: conc, taxaOcupacao: taxa, receitaRealizada: receita, proximasChegadas: prox, topQuartos: top };
+  }, [reservas, quartos, totalQuartos]);
+
+  const quartosExibidos = useMemo(() => {
+    let list = (abaAtiva === "Inventário" || abaAtiva === "Limpeza") ? quartos : [];
+    if (filtroStatus !== "Todos") {
+      list = list.filter(q => statusDoQuarto(q.idQuarto).label === filtroStatus);
+    }
+    if (abaAtiva === "Limpeza") {
+       list = list.filter(q => statusDoQuarto(q.idQuarto).label === "Limpeza");
+    }
+    return list;
+  }, [quartos, abaAtiva, filtroStatus, reservas]);
 
   const totalComprovante = useMemo(() => {
     if (!reservaDetalhe) return 0;
