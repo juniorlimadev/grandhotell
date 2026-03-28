@@ -13,6 +13,7 @@ import br.com.dbc.hotel.enums.StatusQuarto;
 import br.com.dbc.hotel.exceptions.NotFoundException;
 import br.com.dbc.hotel.exceptions.RegraDeNegocioException;
 import br.com.dbc.hotel.repository.QuartoRepository;
+import br.com.dbc.hotel.repository.ConsumoRepository;
 import br.com.dbc.hotel.repository.ReservaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
