@@ -42,6 +42,7 @@ public class ReservaService {
     private final QuartoRepository quartoRepository;
     private final UsuarioService usuarioService;
     private final QuartoService quartoService;
+    private final ConsumoRepository consumoRepository;
     private final ObjectMapper objectMapper;
 
     /**
@@ -72,6 +73,7 @@ public class ReservaService {
     /**
      * Cria uma nova reserva validando conflitos de agenda.
      */
+    @Transactional
     public ReservaDTO save(ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
         validarDatas(reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim());
         
@@ -92,14 +94,19 @@ public class ReservaService {
     /**
      * Remove uma reserva do sistema.
      */
+    @Transactional
     public void deletarReserva(Integer idReserva) throws RegraDeNegocioException {
         Reserva byId = findById(idReserva);
+        log.info("Limpando histórico de consumo para reserva ID: {}", idReserva);
+        consumoRepository.deleteByReserva_IdReserva(idReserva);
+        log.info("Excluindo reserva ID: {}", idReserva);
         reservaRepository.delete(byId);
     }
 
     /**
      * Atualiza os dados de uma reserva existente.
      */
+    @Transactional
     public ReservaDTO update(Integer idReserva, ReservaCreateDTO reservaCreateDTO) throws RegraDeNegocioException {
         Reserva reserva = findById(idReserva);
         validarDatas(reservaCreateDTO.getDtInicio(), reservaCreateDTO.getDtFim());
