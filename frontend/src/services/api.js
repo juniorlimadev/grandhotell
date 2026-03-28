@@ -5,7 +5,7 @@ import { toBackendDate } from "../utils/date-utils";
  * Configuração central da API do Grand Hotel.
  * Define a baseURL, interceptores de requisição (Token JWT) e resposta (Erros 401).
  */
-const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const baseURL = import.meta.env.VITE_API_URL || "https://hotel-api-main.onrender.com";
 
 export const api = axios.create({
   baseURL,

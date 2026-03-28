@@ -12,6 +12,8 @@ const navItems = [
   { to: "/admin/limpeza", icon: "cleaning_services", label: "Limpeza", permission: ["ADMIN", "GESTAO_QUARTOS", "GESTAO_LIMPEZA"] },
   { to: "/admin/reservas", icon: "calendar_month", label: "Reservas", permission: ["ADMIN", "GESTAO_RESERVAS"] },
   { to: "/admin/produtos", icon: "shopping_cart", label: "Produtos", permission: ["ADMIN", "GESTAO_PRODUTOS"] },
+  { to: "/admin/manutencao", icon: "build", label: "Manutenção", permission: ["ADMIN", "GESTAO_QUARTOS"] },
+  { to: "/admin/relatorios", icon: "analytics", label: "Relatórios", permission: ["ADMIN"] },
   { to: "/admin/quartos", icon: "bed", label: "Quartos", permission: ["ADMIN", "GESTAO_QUARTOS"] },
   { to: "/admin/clientes", icon: "group", label: "Clientes", permission: ["ADMIN", "GESTAO_CLIENTES", "GESTAO_RESERVAS"] },
   { to: "/admin/usuarios", icon: "badge", label: "Colaboradores", permission: ["ADMIN"] },

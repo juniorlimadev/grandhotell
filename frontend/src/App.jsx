@@ -12,6 +12,8 @@ import Produtos from "./pages/Produtos";
 import Limpeza from "./pages/Limpeza";
 import Notificacoes from "./pages/Notificacoes";
 import Logs from "./pages/Logs";
+import Manutencao from "./pages/Manutencao";
+import Relatorios from "./pages/Relatorios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import LoadingScreen from "./components/LoadingScreen";
@@ -81,6 +83,7 @@ export default function App() {
         <Route path="produtos" element={<Produtos />} />
         <Route path="limpeza" element={<Limpeza />} />
         <Route path="manutencao" element={<Manutencao />} />
+        <Route path="relatorios" element={<Relatorios />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="notificacoes" element={<Notificacoes />} />
         <Route path="logs" element={<Logs />} />
