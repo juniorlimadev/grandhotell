@@ -39,7 +39,7 @@ export default function Dashboard() {
   const [reservaDetalhe, setReservaDetalhe] = useState(null);
   const [itensConsumo, setItensConsumo] = useState([]);
   const [produtosCatalogo, setProdutosCatalogo] = useState([]);
-  const [novoItem, setNovoItem] = useState({ idProduto: "", nome: "Água mineral", preco: 5, metodo: "PIX" });
+  const [novoItem, setNovoItem] = useState({ idProduto: "", nome: "", preco: 0, metodo: "PIX" });
 
   const parseDate = (d) => {
     if (!d) return new Date();
@@ -149,6 +149,18 @@ export default function Dashboard() {
         setItensConsumo(res.data);
     } catch (e) {
         toast.error("Erro ao lançar item.");
+    }
+  };
+
+  const handleRemoverItem = async (idConsumo) => {
+    if (!window.confirm("Deseja remover este item?")) return;
+    try {
+        await consumoApi.delete(idConsumo);
+        toast.success("Item removido!");
+        const res = await consumoApi.listByReserva(reservaDetalhe.idReserva);
+        setItensConsumo(res.data);
+    } catch (e) {
+        toast.error("Erro ao remover item.");
     }
   };
 
@@ -394,7 +406,7 @@ export default function Dashboard() {
       {/* Modal / Comprovante (Ocupa tela toda no print) */}
       {reservaDetalhe && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:relative print:inset-auto print:bg-white print:p-0">
-            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none print:w-[210mm] print:mx-auto print:scale-[0.85] print:origin-top">
                 <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 print:hidden">
                     <h3 className="text-xl font-black">Finalização de Estadia</h3>
                     <button onClick={() => setReservaDetalhe(null)} className="size-10 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors"><span className="material-symbols-outlined">close</span></button>
@@ -430,7 +442,15 @@ export default function Dashboard() {
                         <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 pb-2 border-b border-slate-50"><span>Descrição</span><span>Subtotal</span></div>
                         <div className="space-y-3">
                             <div className="flex justify-between text-xs font-bold"><span>Diárias ({Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24)))}x)</span><span>{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>
-                            {itensConsumo.map(it => <div key={it.idConsumo} className="flex justify-between text-xs text-slate-500 font-medium"><span>{it.nomeProduto} {it.quantidade > 1 ? `(x${it.quantidade})` : ""}</span><span>{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span></div>)}
+                            {itensConsumo.map(it => (
+                                <div key={it.idConsumo} className="flex justify-between items-center text-xs text-slate-500 font-medium group">
+                                    <span>{it.nomeProduto} {it.quantidade > 1 ? `(x${it.quantidade})` : ""}</span>
+                                    <div className="flex items-center gap-4">
+                                        <span>{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                        <button onClick={() => handleRemoverItem(it.idConsumo)} className="material-symbols-outlined text-sm text-red-300 hover:text-red-500 transition-colors print:hidden opacity-0 group-hover:opacity-100">delete</button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
                         <div className="pt-6 border-t-2 border-slate-900 flex justify-between items-center">

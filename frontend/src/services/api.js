@@ -174,5 +174,6 @@ export const produtoApi = {
 export const consumoApi = {
   listByReserva: (idReserva) => api.get(`/consumo/reserva/${idReserva}`),
   create: (data) => api.post("/consumo", data),
+  delete: (id) => api.delete(`/consumo/${id}`),
 };
 

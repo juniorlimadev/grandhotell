@@ -10,6 +10,7 @@ import br.com.dbc.hotel.repository.ProdutoRepository;
 import br.com.dbc.hotel.repository.ReservaRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ConsumoService {
@@ -42,7 +44,7 @@ public class ConsumoService {
     }
 
     public ConsumoDTO create(ConsumoCreateDTO createDTO) throws RegraDeNegocioException {
-        System.out.println("[GRANDHOTEL-CONSUMO] Criando consumo para reserva: " + createDTO.getIdReserva());
+        log.info("Criando lançamento de consumo para reserva ID: {}", createDTO.getIdReserva());
         
         br.com.dbc.hotel.entity.Reserva reserva = reservaRepository.findById(createDTO.getIdReserva())
                 .orElseThrow(() -> new RegraDeNegocioException("Reserva não encontrada", HttpStatus.NOT_FOUND));
@@ -53,7 +55,7 @@ public class ConsumoService {
         consumo.setDtConsumo(LocalDateTime.now());
 
         if (createDTO.getIdProduto() != null) {
-            System.out.println("[GRANDHOTEL-CONSUMO] Buscando produto: " + createDTO.getIdProduto());
+            log.info("Buscando produto ID: {}", createDTO.getIdProduto());
             Produto produto = produtoRepository.findById(createDTO.getIdProduto())
                     .orElseThrow(() -> new RegraDeNegocioException("Produto não encontrado", HttpStatus.NOT_FOUND));
             
@@ -68,7 +70,7 @@ public class ConsumoService {
 
         try {
             Consumo salvo = consumoRepository.save(consumo);
-            System.out.println("[GRANDHOTEL-CONSUMO] Consumo salvo com sucesso: " + salvo.getIdConsumo());
+            log.info("Consumo ID {} salvo com sucesso.", salvo.getIdConsumo());
             
             ConsumoDTO dto = new ConsumoDTO();
             dto.setIdConsumo(salvo.getIdConsumo());
@@ -80,9 +82,14 @@ public class ConsumoService {
             dto.setDtConsumo(salvo.getDtConsumo());
             return dto;
         } catch (Exception e) {
-            System.err.println("[GRANDHOTEL-CONSUMO] Erro fatal ao salvar: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Erro fatal ao salvar consumo: {}", e.getMessage());
             throw new RegraDeNegocioException("Erro ao persistir consumo. Verifique se todos os campos obrigatórios estão presentes.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public void delete(Integer idConsumo) throws RegraDeNegocioException {
+        Consumo consumo = consumoRepository.findById(idConsumo)
+                .orElseThrow(() -> new RegraDeNegocioException("Consumo não encontrado", HttpStatus.NOT_FOUND));
+        consumoRepository.delete(consumo);
     }
 }

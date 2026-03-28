@@ -1,68 +1,70 @@
 # 🏨 Grand Hotel - Documentation & Project Overview
 
-Bem-vindo à documentação oficial do **Grand Hotel**, um sistema moderno de gerenciamento hoteleiro. Este documento apresenta a arquitetura, funcionalidades e as melhorias de código implementadas para garantir escalabilidade e manutenção simplificada.
+Bem-vindo à documentação oficial do **Grand Hotel**, um sistema moderno de gerenciamento hoteleiro de alto desempenho. Este documento apresenta a arquitetura, funcionalidades e as melhorias de engenharia implementadas para garantir escalabilidade e manutenção simplificada.
 
 ---
 
 ## 🏗️ Arquitetura do Sistema
 
-O projeto adota uma arquitetura **Full Stack** desacoplada:
+O projeto adota uma arquitetura **Full Stack Cloud-Native**:
 
-1.  **Frontend (React + Vite)**: Interface rica e responsiva, utilizando Tailwind CSS para estilização e Axios para comunicação assíncrona com a API.
-2.  **Backend (Java + Spring Boot)**: API RESTful robusta, seguindo os padrões de camadas (Controller -> Service -> Repository), com segurança via JWT.
-3.  **Banco de Dados (PostgreSQL)**: Persistência de dados relacional.
+1.  **Frontend (React 18 + Vite)**: SPA (Single Page Application) com interface rica e reativa. Utiliza **Tailwind CSS** para design system flexível, **Context API** para gestão de estado global (Auth e Temas) e **Axios** para consumo da API REST.
+2.  **Backend (Java 17 + Spring Boot 3)**: API RESTful robusta seguindo os padrões de camadas (**Controller -> Service -> Repository**). Segurança baseada em **JWT (JSON Web Token)** e **Spring Security**. Documentação integrada com **OpenAPI (Swagger)**.
+3.  **Banco de Dados (PostgreSQL)**: Persistência relacional otimizada, com versionamento de schema via **Liquibase**.
 
 ---
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades Principais Implementadas
 
-| Módulo | Descrição |
+| Módulo | Descrição Impactante |
 | :--- | :--- |
-| **Painel (Dashboard)** | Visão em tempo real da ocupação do hotel e receita estimada. |
-| **Gestão de Reservas** | Mapa de reservas dinâmico com fluxos de Check-in e Check-out. |
-| **Inventário de Quartos** | Cadastro detalhado de quartos, alas e valores de diárias. |
-| **Gestão de Usuários** | Controle de acesso via Cargos (Roles), permitindo diferentes níveis de permissão. |
+| **Dashboard Operacional** | Painel central com métricas dinâmicas: taxa de ocupação real, receita projetada e alertas de manutenções. |
+| **Check-out Financeiro** | Sistema completo de fechamento de conta, integrando diárias, consumos extras de frigobar e geração de recibos. |
+| **Gestão de Produtos** | CRUD completo de inventário com controle de preços históricos e categorias. |
+| **Segurança & Perfis** | Gestão de usuários com upload de fotos (processamento Base64 otimizado) e controle de permissões por Role. |
+| **Frontend Adaptativo** | UX Premium com animações de entrada, skeletons de carregamento e suporte a Dark/Light Mode. |
 
 ---
 
-## 🛠️ Melhores Práticas & Refatoração Implementada
+## 🛠️ Melhores Práticas & Refatoração (Clean Code)
 
-Durante a fase de limpeza e comentários, foram aplicadas as seguintes melhorias:
+### 1. Centralização e Reuso (DRY)
+- **Data Utils**: Padronização global de tratamento de datas através de `frontend/src/utils/date-utils.js`, garantindo consistência entre o backend e os selects do frontend.
+- **Layout Unificado**: Estrutura de Sidebar e Navbar persistente que detecta dinamicamente as permissões do usuário logado.
 
-### 1. Centralização de Lógica (DRY - Don't Repeat Yourself)
-- **Frontend**: Criado o utilitário `frontend/src/utils/date-utils.js` para padronizar o tratamento de datas. Isso eliminou mais de 100 linhas de código duplicado e reduziu bugs de conversão entre formatos BR (DD/MM/YYYY), Backend (DD-MM-YYYY) e Input HTML (YYYY-MM-DD).
+### 2. Otimização Financeira
+- **Cálculo de Consumo**: Implementado no backend (Spring Boot) com validação de estoque e vínculo direto com reservas ativas, evitando lançamentos em contas já encerradas.
 
-### 2. Documentação Técnica (Clean Code)
-- **Backend (JavaDocs)**: Foram adicionados comentários técnicos em todos os serviços (`ReservaService`, `UsuarioService`, `QuartoService`), explicando a responsabilidade de cada método e regras de negócio complexas.
-- **Frontend (Code Comments)**: Componentes React agora possuem cabeçalhos explicativos sobre seu estado e efeitos (`useEffect`).
+### 3. Experiência de Desenvolvedor (DX)
+- **Logging Inteligente**: Substituição de logs genéricos por tags de diagnóstico estruturadas (`@Slf4j`) no backend.
+- **Scripts de Build**: Automação de instâncias e migrações via Maven e Liquibase.
 
-### 3. Otimização de Performance
-- **Remoção de Código Ineficiente**: No backend, removemos a exclusão automática de registros dentro de métodos de busca ("getters"), o que impactava negativamente a performance e a integridade dos dados (substituído por recomendações de Soft Delete/Scheduled Tasks).
-
-### 4. Limpeza de Arquivos
-- Removidos diretórios duplicados (`hotel-api-main/target`) e arquivos de build redundantes para manter o repositório leve e organizado.
+### 4. UI/UX Refinada
+- **Impressão de Recibos**: Estilização via @media print para que os comprovantes de check-out saiam perfeitos direto do navegador.
+- **Identidade Visual**: Integração de favicon e logotipos personalizados em todas as superfícies da plataforma.
 
 ---
 
-## 📦 Como Iniciar o Projeto
+## 📦 Como Iniciar o Desenvolvimento
 
 ### Backend
-Localizado na pasta `/backend`.
-1. Certifique-se de ter o **Java 17** e **Maven** instalados.
-2. Execute `./mvnw spring-boot:run`.
-3. A API estará disponível em `http://localhost:8080`.
+Pasta `/backend`.
+1. Certifique-se de ter o **JDK 17** e **Maven** configurados.
+2. O banco de dados Postgres deve estar ativo (conforme `application.properties`).
+3. Execute `./mvnw spring-boot:run`.
 
 ### Frontend
-Localizado na pasta `/frontend`.
-1. Execute `npm install` para as dependências.
-2. Execute `npm run dev` para iniciar o servidor de desenvolvimento.
+Pasta `/frontend`.
+1. Execute `npm install`.
+2. Execute `npm run dev`.
+3. Acesse `http://localhost:5173`.
 
 ---
 
-## 👨‍💻 Próximos Passos Sugeridos
-- Implementar **Soft Delete** em reservas para manter histórico (em vez de exclusão física).
-- Adicionar **Testes Unitários** (JUnit/Mockito) nos serviços refatorados.
-- Implementar **Upload de Imagens** para fotos de perfil dos usuários e quartos.
+## 📈 Roadmap & Evolução
+- [ ] Implementação de **Dashboard Estatístico** (Gráficos Anuais).
+- [ ] Módulo de **Controle de Estoque automático** (baixa no produto ao consumir).
+- [ ] Integração com **Gateway de Pagamento (PIX API)**.
 
 ---
-*Documentação gerada automaticamente para apresentação do projeto Grand Hotel.*
+*Documentação atualizada em Março de 2026 para refletir o estado atual do Produto.*

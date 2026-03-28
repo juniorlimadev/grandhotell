@@ -53,9 +53,7 @@ export default function CheckIn() {
       setReservas([]);
       await carregar();
     } catch (e) {
-      // Se entrou aqui mas o usuário garante que está funcionando, mostramos sucesso
-      toast.success("Check-in confirmado com sucesso!");
-      await carregar();
+      toast.error("Erro ao realizar check-in.");
     }
   };
 

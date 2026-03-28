@@ -108,6 +108,19 @@ export default function CheckOut() {
     }
   };
 
+  const handleRemoverItem = async (idConsumo) => {
+    if (!window.confirm("Deseja remover este item?")) return;
+    try {
+        await consumoApi.delete(idConsumo);
+        toast.success("Item removido!");
+        const res = await consumoApi.listByReserva(reservaDetalhe.idReserva);
+        setItensConsumo(res.data || []);
+        carregar();
+    } catch (e) {
+        toast.error("Erro ao remover item.");
+    }
+  };
+
   const totalComprovante = useMemo(() => {
     if (!reservaDetalhe) return 0;
     const dInicio = parseDate(reservaDetalhe.dtInicio);
@@ -285,7 +298,7 @@ export default function CheckOut() {
             }
           `}} />
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm print:relative print:inset-auto print:bg-white print:p-0">
-              <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none">
+              <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 print:shadow-none print:rounded-none print:w-[210mm] print:mx-auto print:scale-[0.85] print:origin-top">
                   {/* Cabeçalho Pro (Escondido no Site, visível no print se necessário, mas aqui visível em ambos) */}
                   <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 print:bg-white print:border-slate-900 print:pb-4">
                       <div className="flex items-center gap-3">
@@ -361,15 +374,18 @@ export default function CheckOut() {
                                    <td className="py-4 text-right">{(Math.max(1, Math.ceil((parseDate(reservaDetalhe.dtFim) - parseDate(reservaDetalhe.dtInicio)) / (1000 * 60 * 60 * 24))) * (reservaDetalhe.valorDiaria || 150)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                                 </tr>
                                 {itensConsumo.map(it => (
-                                  <tr key={it.idConsumo} className="text-xs text-slate-600 print:text-black italic">
+                                  <tr key={it.idConsumo} className="text-xs text-slate-600 print:text-black italic group">
                                      <td className="py-3 px-2 flex items-center gap-2">
                                         <span className="size-1 bg-slate-300 rounded-full print:hidden"></span>
                                         {it.nomeProduto}
                                      </td>
                                      <td className="py-3 text-center">{it.quantidade}</td>
                                      <td className="py-3 text-right">{(it.precoUnitario || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                     <td className="py-3 text-right font-bold text-slate-900 print:text-black">{(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                  </tr>
+                                     <td className="py-3 text-right font-bold text-slate-900 print:text-black relative">
+                                        {(it.precoUnitario * it.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                        <button onClick={() => handleRemoverItem(it.idConsumo)} className="material-symbols-outlined absolute -right-6 top-1/2 -translate-y-1/2 text-sm text-red-300 hover:text-red-500 transition-colors print:hidden opacity-0 group-hover:opacity-100">delete</button>
+                                      </td>
+                                   </tr>
                                 ))}
                              </tbody>
                           </table>

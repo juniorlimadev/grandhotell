@@ -32,4 +32,11 @@ public class ConsumoController {
     public ResponseEntity<ConsumoDTO> create(@Valid @RequestBody ConsumoCreateDTO createDTO) throws RegraDeNegocioException {
         return new ResponseEntity<>(consumoService.create(createDTO), HttpStatus.CREATED);
     }
+
+    @Operation(summary = "Remove um item de consumo")
+    @DeleteMapping("/{idConsumo}")
+    public ResponseEntity<Void> delete(@PathVariable("idConsumo") Integer idConsumo) throws RegraDeNegocioException {
+        consumoService.delete(idConsumo);
+        return ResponseEntity.noContent().build();
+    }
 }
