@@ -6,9 +6,9 @@ import { toInputDate } from "../utils/date-utils";
 import { useAuth } from "../contexts/AuthContext";
 
 const STATUS_CONFIG = {
-  "CONFIRMADA": { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
   "OCUPADO":    { label: "Ocupado",    dot: "bg-blue-500",    bg: "bg-blue-50 dark:bg-blue-500/10",    text: "text-blue-600 dark:text-blue-400" },
   "PENDENTE":   { label: "Pendente",   dot: "bg-yellow-500",  bg: "bg-yellow-50 dark:bg-yellow-500/10", text: "text-yellow-600 dark:text-yellow-400" },
+  "CONFIRMADA": { label: "Agendado",   dot: "bg-indigo-500",  bg: "bg-indigo-50 dark:bg-indigo-500/10", text: "text-indigo-600 dark:text-indigo-400" },
   "CANCELADA":  { label: "Cancelado",  dot: "bg-red-500",     bg: "bg-red-50 dark:bg-red-500/10",     text: "text-red-600 dark:text-red-400" },
   "CONCLUIDA":  { label: "Concluído",  dot: "bg-slate-400",   bg: "bg-slate-50 dark:bg-slate-800",    text: "text-slate-500" },
   "LIMPEZA":    { label: "Limpeza",    dot: "bg-blue-300",    bg: "bg-blue-50/50",                    text: "text-blue-400" },
@@ -108,14 +108,13 @@ export default function Dashboard() {
 
   const handleStatusUpdate = async (reserva, novoStatus) => {
     try {
-      let backendStatus = novoStatus;
-      if (novoStatus === "OCUPADO") backendStatus = "CONFIRMADA";
+      const dateStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 19);
 
       await reservaApi.update(reserva.idReserva, {
         ...reserva,
-        statusQuarto: backendStatus,
-        checkinReal: novoStatus === "OCUPADO" ? new Date().toISOString() : reserva.checkinReal,
-        checkoutReal: novoStatus === "CONCLUIDA" ? new Date().toISOString() : reserva.checkoutReal
+        statusQuarto: novoStatus,
+        checkinReal: novoStatus === "OCUPADO" ? dateStr : reserva.checkinReal,
+        checkoutReal: novoStatus === "CONCLUIDA" ? dateStr : reserva.checkoutReal
       });
 
       toast.success(`Estadia ${novoStatus === "OCUPADO" ? "iniciada" : "concluída"}!`);
@@ -169,9 +168,11 @@ export default function Dashboard() {
     const amanhaStr = new Date(Date.now() + 24 * 3600 * 1000).toISOString().split('T')[0];
 
     // Contadores agora refletem todo o período selecionado
-    const cis = reservas.filter(r => (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA'));
-    const cos = reservas.filter(r => (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO'));
-    const conc = reservas.filter(r => r.statusQuarto === 'CONCLUIDA');
+    // Check-ins: Aquelas agendadas ou confirmadas que não entraram.
+    const cis = reservas.filter(r => (r.statusQuarto === 'PENDENTE' || r.statusQuarto === 'AGENDADA' || r.statusQuarto === 'CONFIRMADA') && !r.checkinReal);
+    // Check-outs: Confirmadas ou Ocupadas que ESTÃO no hotel (checkin ok, checkout null).
+    const cos = reservas.filter(r => (r.statusQuarto === 'CONFIRMADA' || r.statusQuarto === 'OCUPADO') && r.checkinReal && !r.checkoutReal);
+    const conc = reservas.filter(r => r.statusQuarto === 'CONCLUIDA' || (r.statusQuarto !== 'CANCELADA' && r.checkoutReal));
     
     const ocupadosCount = quartos.filter(q => {
         const st = statusDoQuarto(q.idQuarto);

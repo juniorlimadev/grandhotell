@@ -194,10 +194,22 @@ export default function Reservas() {
 
   const handleDelete = async (idReserva) => {
     try {
-      await reservaApi.delete(idReserva);
+      // Em vez de exclusão física (que falha se houver histórico/consumo),
+      // efetuamos o cancelamento lógico através do status.
+      const r = reservas.find(res => res.idReserva === idReserva);
+      if (!r) return;
+
+      await reservaApi.update(idReserva, {
+        ...r,
+        idUsuario: r.usuario?.idUsuario ?? r.idUsuario,
+        idQuarto: r.quarto?.idQuarto ?? r.idQuarto,
+        statusQuarto: "CANCELADA"
+      });
+      
       toast.success("Reserva cancelada com sucesso!");
       carregarReservas();
     } catch (e) {
+      console.error("Erro ao cancelar:", e);
       toast.error(e.response?.data?.message || "Erro ao cancelar reserva.");
     }
   };
