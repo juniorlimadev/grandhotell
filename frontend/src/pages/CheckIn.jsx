@@ -50,10 +50,13 @@ export default function CheckIn() {
         checkinReal: localISO
       });
       toast.success("Check-in realizado com sucesso!");
-      setReservas([]);
-      await carregar();
+      carregar(); // Recarrega para remover o item processado
     } catch (e) {
-      toast.error("Erro ao realizar check-in.");
+      console.error("Erro no Check-in:", e);
+      const msg = e.response?.data?.message || "Erro inesperado ao realizar check-in.";
+      toast.error(msg);
+      // Tentamos carregar novamente mesmo em erro, caso o backend tenha processado mas retornado erro de parsing no JSON
+      carregar();
     }
   };
 
